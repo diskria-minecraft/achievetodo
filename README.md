@@ -1,4 +1,4 @@
-![Logo](https://cdn.modrinth.com/data/cached_images/aea8fb87daa644150ed280db7ac94e0811fe40bd.png)
+# AchieveToDo
 
 Minecraft, but the world has stolen your abilities. Reclaim them one by one by completing BlazeandCave's advancements!
 
@@ -86,6 +86,12 @@ This makes it easy to create all kinds of custom challenges or special gameplay 
 
 </details>
 
+### Video
+
+See the mod in action! In this video, Nugget takes on the ultimate challenge and manages to beat Minecraft despite every restriction:
+
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/ChubVJsC9Lo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
 ---
 
 <details>
@@ -96,6 +102,12 @@ This makes it easy to create all kinds of custom challenges or special gameplay 
 - The "Goat Simulator" advancement is buggy in vanilla Minecraft, use [MC-264204 Fix](https://modrinth.com/mod/mc+264204-fix) to solve it.
 
 </details>
+
+### Logo!
+
+This is a PNG version of a logo I personally drew in Adobe Illustrator. Feel free to use it anywhere :)
+
+![Logo](https://cdn.modrinth.com/data/cached_images/aea8fb87daa644150ed280db7ac94e0811fe40bd.png)
 
 ## Acknowledgments
 
