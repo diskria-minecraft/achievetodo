@@ -88,9 +88,7 @@ This makes it easy to create all kinds of custom challenges or special gameplay 
 
 ### Video
 
-See the mod in action! In this video, Nugget takes on the ultimate challenge and manages to beat Minecraft despite every restriction:
-
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/ChubVJsC9Lo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+See the mod in action! In [this video](https://www.youtube-nocookie.com/embed/ChubVJsC9Lo), Nugget takes on the ultimate challenge and manages to beat Minecraft despite every restriction:
 
 ---
 
