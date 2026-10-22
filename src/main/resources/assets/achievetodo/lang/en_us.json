@@ -1,0 +1,699 @@
+{
+  "achievetodo.world_creation_tab.progression.chaos": "Chaos",
+
+  "achievetodo.world_creation_tab.progression.chaos.tooltip": "The recommended mode, in which abilities get randomly shuffled according to the world seed. Every run turns into a unique experience and challenge that embodies the true spirit of AchieveToDo.",
+  "achievetodo.world_creation_tab.progression.hard.tooltip": "This mode is closer to an RPG experience, where advancements take center stage over the core AchieveToDo idea. Abilities unlock in a way that covers all BlazeandCaves advancements, and the first one you earn must be done blindly.",
+  "achievetodo.world_creation_tab.progression.normal.tooltip": "Similar to Hard mode, but abilities unlock faster to maintain a constant level of engagement — you’ll often be just a step away from the next unlock. Only vision is available by default among the basic abilities.",
+  "achievetodo.world_creation_tab.progression.easy.tooltip": "Similar to Normal mode, but abilities unlock even more rapidly. All basic abilities are available right from the start.",
+  "achievetodo.world_creation_tab.progression.custom.tooltip": "User-created configuration",
+
+  "achievetodo.world_creation_tab.cooperative_mode": "Cooperative mode",
+  "achievetodo.world_creation_tab.cooperative_mode.tooltip": "When playing over LAN, you can enable a cooperative advancements mode. In this mode, any advancement earned by one player is automatically shared with everyone else. If you prefer a competitive approach, simply turn this mode off, and each player keeps their own separate advancement.",
+
+  "achievetodo.world_creation_tab.rewards.title": "Rewards",
+  "achievetodo.world_creation_tab.rewards.items": "Items",
+  "achievetodo.world_creation_tab.rewards.items.tooltip": "You will receive items for completing advancements. For example, several logs for the first felling of a tree.",
+  "achievetodo.world_creation_tab.rewards.experience": "Experience",
+  "achievetodo.world_creation_tab.rewards.experience.tooltip": "You will receive experience for completing advancements. The most difficult advancements are especially well rewarded.",
+  "achievetodo.world_creation_tab.rewards.trophy": "Trophies",
+  "achievetodo.world_creation_tab.rewards.trophy.tooltip": "You will receive exclusive collectibles for completing advancements. Perfect for those who love gathering rare trophies—and who might even build their very own hall of fame!",
+
+  "achievetodo.world_creation_tab.generation.title": "Custom generation",
+  "achievetodo.world_creation_tab.generation.overworld": "Overworld",
+  "achievetodo.world_creation_tab.generation.overworld.tooltip": "Terralith - Explore almost 100 new biomes consisting of both realism and light fantasy, using just Vanilla blocks.",
+  "achievetodo.world_creation_tab.generation.nether": "Nether",
+  "achievetodo.world_creation_tab.generation.nether.tooltip": "Amplified Nether - The nether explorer's simple dream: doubled height and amplified terrain. What more is needed?",
+  "achievetodo.world_creation_tab.generation.end": "End",
+  "achievetodo.world_creation_tab.generation.end.tooltip": "Nullscape - Transforms the boring Vanilla end into an alien dimension with the most surreal terrain imaginable. Topped with a couple of new biomes to add to the experience, whilst keeping the end desolate.",
+
+  "achievetodo.downloader.download": "Download",
+  "achievetodo.downloader.download.tooltip": "This file will be downloaded using your browser.",
+  "achievetodo.downloader.select_file": "Select File",
+  "achievetodo.downloader.learn_more": "Learn More…",
+  "achievetodo.downloader.learn_more.tooltip": "Check out the project page to appreciate the creators!",
+  "achievetodo.downloader.title_prefix": "To play you need to download ",
+
+  "achievetodo.downloader.reason.bacap": "The core advancements pack",
+  "achievetodo.downloader.reason.bacap_hardcore": "Supports hardcore mode in BACAP",
+  "achievetodo.downloader.reason.bacap_terralith": "Supports Terralith features in BACAP",
+  "achievetodo.downloader.reason.bacap_amplified_nether": "Supports Amplified Nether features in BACAP",
+  "achievetodo.downloader.reason.bacap_nullscape": "Supports Nullscape features in BACAP",
+  "achievetodo.downloader.reason.terralith": "Required for playing with Terralith as you have enabled it",
+  "achievetodo.downloader.reason.amplified_nether": "Required for playing with Amplified Nether as you have enabled it",
+  "achievetodo.downloader.reason.nullscape": "Required for playing with Nullscape as you have enabled it",
+  "achievetodo.downloader.reason.outdated": "Selected world is using an outdated version of the required datapack.",
+
+  "achievetodo.downloader.manually_info": "In-game downloading is not supported for this file.\nPlease download it manually and then proceed.",
+  "achievetodo.downloader.automatically_info": "This file can be downloaded directly in-game.",
+
+  "achievetodo.error.title": "Oops!",
+  "achievetodo.error.wrong_datapack_file": "This file is incorrect. Please check that you downloaded the file using the «Download» button, then try again.",
+  "achievetodo.error.integrity_check_failed": "This world cannot be loaded because the integrity check failed.",
+  "achievetodo.error.not_ready_yet": "Unavailable: advancements count hasn’t been loaded yet",
+  "achievetodo.error.unknown": "Unknown error. Please check your free disk space or reboot your computer and try again.",
+
+  "achievetodo.tutorial.open_advancements.title": "Open advancements",
+  "achievetodo.tutorial.open_advancements.description": "Press %s",
+
+  "achievetodo.description": "All your favorite Minecraft mechanics are locked away! Complete advancements to reclaim them.",
+
+  "achievetodo.advancements_tab_mystified_tooltip.biomes": "Kill a mob to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.adventure": "Kill a mob to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.weaponry": "Obtain a sword to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.husbandry": "Eat something to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.monsters": "Obtain a sword to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.mining": "Obtain a pickaxe to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.building": "Obtain a crafting table to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.farming": "Obtain a hoe to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.nether": "Travel to the Nether to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.end": "Travel to the End to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.statistics": "Survive the first night to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.redstone": "Obtain redstone to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.potion": "Brew a potion to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.enchanting": "Enchant an item at the enchantment table to unlock this tab",
+  "achievetodo.advancements_tab_mystified_tooltip.challenges": "Kill the ender dragon to unlock this tab",
+
+  "achievetodo.suggest_install_advancements_search_mod": "To navigate to advancements, install the ",
+
+  "achievetodo.ability.eat_apple.name": "Apple",
+  "achievetodo.ability.eat_apple.description": "Ability to eat an apple",
+  "achievetodo.ability.eat_apple.locked_message": "You can't eat an apple",
+
+  "achievetodo.ability.eat_baked_potato.name": "Baked Potato",
+  "achievetodo.ability.eat_baked_potato.description": "Ability to eat a baked potato",
+  "achievetodo.ability.eat_baked_potato.locked_message": "You can't eat a baked potato",
+
+  "achievetodo.ability.eat_beef.name": "Raw beef",
+  "achievetodo.ability.eat_beef.description": "Ability to eat raw beef",
+  "achievetodo.ability.eat_beef.locked_message": "You can't eat raw beef",
+
+  "achievetodo.ability.eat_beetroot.name": "Beetroot",
+  "achievetodo.ability.eat_beetroot.description": "Ability to eat a beetroot",
+  "achievetodo.ability.eat_beetroot.locked_message": "You can't eat a beetroot",
+
+  "achievetodo.ability.eat_beetroot_soup.name": "Beetroot soup",
+  "achievetodo.ability.eat_beetroot_soup.description": "Ability to eat beetroot soup",
+  "achievetodo.ability.eat_beetroot_soup.locked_message": "You can't eat beetroot soup",
+
+  "achievetodo.ability.eat_bread.name": "Bread",
+  "achievetodo.ability.eat_bread.description": "Ability to eat bread",
+  "achievetodo.ability.eat_bread.locked_message": "You can't eat bread",
+
+  "achievetodo.ability.eat_carrot.name": "Carrot",
+  "achievetodo.ability.eat_carrot.description": "Ability to eat a carrot",
+  "achievetodo.ability.eat_carrot.locked_message": "You can't eat a carrot",
+
+  "achievetodo.ability.eat_chicken.name": "Raw chicken",
+  "achievetodo.ability.eat_chicken.description": "Ability to eat a raw chicken",
+  "achievetodo.ability.eat_chicken.locked_message": "You can't eat a raw chicken",
+
+  "achievetodo.ability.eat_chorus_fruit.name": "Chorus fruit",
+  "achievetodo.ability.eat_chorus_fruit.description": "Ability to eat a chorus fruit",
+  "achievetodo.ability.eat_chorus_fruit.locked_message": "You can't eat a chorus fruit",
+
+  "achievetodo.ability.eat_cod.name": "Raw cod",
+  "achievetodo.ability.eat_cod.description": "Ability to eat a raw cod",
+  "achievetodo.ability.eat_cod.locked_message": "You can't eat a raw cod",
+
+  "achievetodo.ability.eat_cooked_beef.name": "Steak",
+  "achievetodo.ability.eat_cooked_beef.description": "Ability to eat a steak",
+  "achievetodo.ability.eat_cooked_beef.locked_message": "You can't eat a steak",
+
+  "achievetodo.ability.eat_cooked_chicken.name": "Cooked chicken",
+  "achievetodo.ability.eat_cooked_chicken.description": "Ability to eat cooked chicken",
+  "achievetodo.ability.eat_cooked_chicken.locked_message": "You can't eat a cooked chicken",
+
+  "achievetodo.ability.eat_cooked_cod.name": "Cooked cod",
+  "achievetodo.ability.eat_cooked_cod.description": "Ability to eat a cooked cod",
+  "achievetodo.ability.eat_cooked_cod.locked_message": "You can't eat a cooked cod",
+
+  "achievetodo.ability.eat_cooked_mutton.name": "Cooked mutton",
+  "achievetodo.ability.eat_cooked_mutton.description": "Ability to eat a cooked mutton",
+  "achievetodo.ability.eat_cooked_mutton.locked_message": "You can't eat a cooked mutton",
+
+  "achievetodo.ability.eat_cooked_porkchop.name": "Cooked porkchop",
+  "achievetodo.ability.eat_cooked_porkchop.description": "Ability to eat a cooked porkchop",
+  "achievetodo.ability.eat_cooked_porkchop.locked_message": "You can't eat a cooked porkchop",
+
+  "achievetodo.ability.eat_cooked_rabbit.name": "Cooked rabbit",
+  "achievetodo.ability.eat_cooked_rabbit.description": "Ability to eat a cooked rabbit",
+  "achievetodo.ability.eat_cooked_rabbit.locked_message": "You can't eat a cooked rabbit",
+
+  "achievetodo.ability.eat_cooked_salmon.name": "Cooked salmon",
+  "achievetodo.ability.eat_cooked_salmon.description": "Ability to eat a cooked salmon",
+  "achievetodo.ability.eat_cooked_salmon.locked_message": "You can't eat a cooked salmon",
+
+  "achievetodo.ability.eat_cookie.name": "Cookie",
+  "achievetodo.ability.eat_cookie.description": "Ability to eat a cookie",
+  "achievetodo.ability.eat_cookie.locked_message": "You can't eat a cookie",
+
+  "achievetodo.ability.eat_dried_kelp.name": "Dried kelp",
+  "achievetodo.ability.eat_dried_kelp.description": "Ability to eat a dried kelp",
+  "achievetodo.ability.eat_dried_kelp.locked_message": "You can't eat a dried kelp",
+
+  "achievetodo.ability.eat_enchanted_golden_apple.name": "Enchanted golden apple",
+  "achievetodo.ability.eat_enchanted_golden_apple.description": "Ability to eat an enchanted golden apple",
+  "achievetodo.ability.eat_enchanted_golden_apple.locked_message": "You can't eat an enchanted golden apple",
+
+  "achievetodo.ability.eat_glow_berries.name": "Glow berries",
+  "achievetodo.ability.eat_glow_berries.description": "Ability to eat glow berries",
+  "achievetodo.ability.eat_glow_berries.locked_message": "You can't eat glow berries",
+
+  "achievetodo.ability.eat_golden_apple.name": "Golden apple",
+  "achievetodo.ability.eat_golden_apple.description": "Ability to eat a golden apple",
+  "achievetodo.ability.eat_golden_apple.locked_message": "You can't eat a golden apple",
+
+  "achievetodo.ability.eat_golden_carrot.name": "Golden carrot",
+  "achievetodo.ability.eat_golden_carrot.description": "Ability to eat a golden carrot",
+  "achievetodo.ability.eat_golden_carrot.locked_message": "You can't eat a golden carrot",
+
+  "achievetodo.ability.eat_honey.name": "Honey",
+  "achievetodo.ability.eat_honey.description": "Ability to eat honey",
+  "achievetodo.ability.eat_honey.locked_message": "You can't eat honey",
+
+  "achievetodo.ability.eat_melon_slice.name": "Melon slice",
+  "achievetodo.ability.eat_melon_slice.description": "Ability to eat a melon slice",
+  "achievetodo.ability.eat_melon_slice.locked_message": "You can't eat a melon slice",
+
+  "achievetodo.ability.eat_mushroom_stew.name": "Mushroom stew",
+  "achievetodo.ability.eat_mushroom_stew.description": "Ability to eat mushroom stew",
+  "achievetodo.ability.eat_mushroom_stew.locked_message": "You can't eat mushroom stew",
+
+  "achievetodo.ability.eat_mutton.name": "Raw mutton",
+  "achievetodo.ability.eat_mutton.description": "Ability to eat a raw mutton",
+  "achievetodo.ability.eat_mutton.locked_message": "You can't eat a raw mutton",
+
+  "achievetodo.ability.eat_poisonous_potato.name": "Poisonous potato",
+  "achievetodo.ability.eat_poisonous_potato.description": "Ability to eat a poisonous potato",
+  "achievetodo.ability.eat_poisonous_potato.locked_message": "You can't eat a poisonous potato",
+
+  "achievetodo.ability.eat_porkchop.name": "Raw porkchop",
+  "achievetodo.ability.eat_porkchop.description": "Ability to eat a raw porkchop",
+  "achievetodo.ability.eat_porkchop.locked_message": "You can't eat a raw porkchop",
+
+  "achievetodo.ability.eat_potato.name": "Potato",
+  "achievetodo.ability.eat_potato.description": "Ability to eat a potato",
+  "achievetodo.ability.eat_potato.locked_message": "You can't eat a potato",
+
+  "achievetodo.ability.eat_pufferfish.name": "Pufferfish",
+  "achievetodo.ability.eat_pufferfish.description": "Ability to eat a pufferfish",
+  "achievetodo.ability.eat_pufferfish.locked_message": "You can't eat a pufferfish",
+
+  "achievetodo.ability.eat_pumpkin_pie.name": "Pumpkin pie",
+  "achievetodo.ability.eat_pumpkin_pie.description": "Ability to eat a pumpkin pie",
+  "achievetodo.ability.eat_pumpkin_pie.locked_message": "You can't eat a pumpkin pie",
+
+  "achievetodo.ability.eat_rabbit.name": "Raw rabbit",
+  "achievetodo.ability.eat_rabbit.description": "Ability to eat a raw rabbit",
+  "achievetodo.ability.eat_rabbit.locked_message": "You can't eat a raw rabbit",
+
+  "achievetodo.ability.eat_rabbit_stew.name": "Rabbit stew",
+  "achievetodo.ability.eat_rabbit_stew.description": "Ability to eat rabbit stew",
+  "achievetodo.ability.eat_rabbit_stew.locked_message": "You can't eat rabbit stew",
+
+  "achievetodo.ability.eat_rotten_flesh.name": "Rotten flesh",
+  "achievetodo.ability.eat_rotten_flesh.description": "Ability to eat a rotten flesh",
+  "achievetodo.ability.eat_rotten_flesh.locked_message": "You can't eat a rotten flesh",
+
+  "achievetodo.ability.eat_salmon.name": "Raw salmon",
+  "achievetodo.ability.eat_salmon.description": "Ability to eat a raw salmon",
+  "achievetodo.ability.eat_salmon.locked_message": "You can't eat a raw salmon",
+
+  "achievetodo.ability.eat_spider_eye.name": "Spider eye",
+  "achievetodo.ability.eat_spider_eye.description": "Ability to eat a spider eye",
+  "achievetodo.ability.eat_spider_eye.locked_message": "You can't eat a spider eye",
+
+  "achievetodo.ability.eat_suspicious_stew.name": "Suspicious stew",
+  "achievetodo.ability.eat_suspicious_stew.description": "Ability to eat a suspicious stew",
+  "achievetodo.ability.eat_suspicious_stew.locked_message": "You can't eat a suspicious stew",
+
+  "achievetodo.ability.eat_sweet_berries.name": "Sweet berries",
+  "achievetodo.ability.eat_sweet_berries.description": "Ability to eat sweet berries",
+  "achievetodo.ability.eat_sweet_berries.locked_message": "You can't eat sweet berries",
+
+  "achievetodo.ability.eat_tropical_fish.name": "Tropical fish",
+  "achievetodo.ability.eat_tropical_fish.description": "Ability to eat a tropical fish",
+  "achievetodo.ability.eat_tropical_fish.locked_message": "You can't eat a tropical fish",
+
+  "achievetodo.ability.trade_with_armorer.name": "Armorer",
+  "achievetodo.ability.trade_with_armorer.description": "Ability to trade with an armorer",
+  "achievetodo.ability.trade_with_armorer.locked_message": "You can't trade with an armorer",
+
+  "achievetodo.ability.trade_with_butcher.name": "Butcher",
+  "achievetodo.ability.trade_with_butcher.description": "Ability to trade with a butcher",
+  "achievetodo.ability.trade_with_butcher.locked_message": "You can't trade with a butcher",
+
+  "achievetodo.ability.trade_with_cartographer.name": "Cartographer",
+  "achievetodo.ability.trade_with_cartographer.description": "Ability to trade with a cartographer",
+  "achievetodo.ability.trade_with_cartographer.locked_message": "You can't trade with a cartographer",
+
+  "achievetodo.ability.trade_with_cleric.name": "Cleric",
+  "achievetodo.ability.trade_with_cleric.description": "Ability to trade with a cleric",
+  "achievetodo.ability.trade_with_cleric.locked_message": "You can't trade with a cleric",
+
+  "achievetodo.ability.trade_with_farmer.name": "Farmer",
+  "achievetodo.ability.trade_with_farmer.description": "Ability to trade with a farmer",
+  "achievetodo.ability.trade_with_farmer.locked_message": "You can't trade with a farmer",
+
+  "achievetodo.ability.trade_with_fisherman.name": "Fisherman",
+  "achievetodo.ability.trade_with_fisherman.description": "Ability to trade with a fisherman",
+  "achievetodo.ability.trade_with_fisherman.locked_message": "You can't trade with a fisherman",
+
+  "achievetodo.ability.trade_with_fletcher.name": "Fletcher",
+  "achievetodo.ability.trade_with_fletcher.description": "Ability to trade with a fletcher",
+  "achievetodo.ability.trade_with_fletcher.locked_message": "You can't trade with a fletcher",
+
+  "achievetodo.ability.trade_with_leatherworker.name": "Leatherworker",
+  "achievetodo.ability.trade_with_leatherworker.description": "Ability to trade with a leatherworker",
+  "achievetodo.ability.trade_with_leatherworker.locked_message": "You can't trade with a leatherworker",
+
+  "achievetodo.ability.trade_with_librarian.name": "Librarian",
+  "achievetodo.ability.trade_with_librarian.description": "Ability to trade with a librarian",
+  "achievetodo.ability.trade_with_librarian.locked_message": "You can't trade with a librarian",
+
+  "achievetodo.ability.trade_with_mason.name": "Mason",
+  "achievetodo.ability.trade_with_mason.description": "Ability to trade with a mason",
+  "achievetodo.ability.trade_with_mason.locked_message": "You can't trade with a mason",
+
+  "achievetodo.ability.trade_with_shepherd.name": "Shepherd",
+  "achievetodo.ability.trade_with_shepherd.description": "Ability to trade with a shepherd",
+  "achievetodo.ability.trade_with_shepherd.locked_message": "You can't trade with a shepherd",
+
+  "achievetodo.ability.trade_with_toolsmith.name": "Toolsmith",
+  "achievetodo.ability.trade_with_toolsmith.description": "Ability to trade with a toolsmith",
+  "achievetodo.ability.trade_with_toolsmith.locked_message": "You can't trade with a toolsmith",
+
+  "achievetodo.ability.trade_with_weaponsmith.name": "Weaponsmith",
+  "achievetodo.ability.trade_with_weaponsmith.description": "Ability to trade with a weaponsmith",
+  "achievetodo.ability.trade_with_weaponsmith.locked_message": "You can't trade with a weaponsmith",
+
+  "achievetodo.ability.jump.name": "Jumping",
+  "achievetodo.ability.jump.description": "Ability to jump",
+  "achievetodo.ability.jump.locked_message": "You can't jump",
+
+  "achievetodo.ability.break_blocks_in_negative_y.name": "Breaking blocks below zero",
+  "achievetodo.ability.break_blocks_in_negative_y.description": "Ability to break blocks below zero",
+  "achievetodo.ability.break_blocks_in_negative_y.locked_message": "You can't break blocks below zero",
+
+  "achievetodo.ability.break_blocks.name": "Breaking blocks",
+  "achievetodo.ability.break_blocks.description": "Ability to break blocks",
+  "achievetodo.ability.break_blocks.locked_message": "You can't break blocks",
+
+  "achievetodo.ability.open_crafting_table.name": "Crafting table",
+  "achievetodo.ability.open_crafting_table.description": "Ability to use a crafting table",
+  "achievetodo.ability.open_crafting_table.locked_message": "You can't use a crafting table",
+
+  "achievetodo.ability.open_furnace.name": "Furnace",
+  "achievetodo.ability.open_furnace.description": "Ability to open a furnace",
+  "achievetodo.ability.open_furnace.locked_message": "You can't open a furnace",
+
+  "achievetodo.ability.use_stone_tools.name": "Stone tools",
+  "achievetodo.ability.use_stone_tools.description": "Ability to use stone tools",
+  "achievetodo.ability.use_stone_tools.locked_message": "You can't use stone tools",
+
+  "achievetodo.ability.get_into_boat.name": "Get into a boat",
+  "achievetodo.ability.get_into_boat.description": "Ability to get into a boat",
+  "achievetodo.ability.get_into_boat.locked_message": "You can't get into a boat",
+
+  "achievetodo.ability.use_shield.name": "Shield",
+  "achievetodo.ability.use_shield.description": "Ability to use a shield",
+  "achievetodo.ability.use_shield.locked_message": "You can't use a shield",
+
+  "achievetodo.ability.enter_end.name": "The End",
+  "achievetodo.ability.enter_end.description": "Ability to enter The End",
+  "achievetodo.ability.enter_end.locked_message": "You can't enter The End",
+
+  "achievetodo.ability.teleport_outer_islands.name": "Teleport to Outer Islands",
+  "achievetodo.ability.teleport_outer_islands.description": "Ability to teleport to the Outer Islands",
+  "achievetodo.ability.teleport_outer_islands.locked_message": "You can't teleport to the Outer Islands",
+
+  "achievetodo.ability.equip_diamond_armor.name": "Diamond armor",
+  "achievetodo.ability.equip_diamond_armor.description": "Ability to equip diamond armor",
+  "achievetodo.ability.equip_diamond_armor.locked_message": "You can't equip diamond armor",
+
+  "achievetodo.ability.equip_elytra.name": "Elytra",
+  "achievetodo.ability.equip_elytra.description": "Ability to equip an elytra",
+  "achievetodo.ability.equip_elytra.locked_message": "You can't equip an elytra",
+
+  "achievetodo.ability.equip_iron_armor.name": "Iron armor",
+  "achievetodo.ability.equip_iron_armor.description": "Ability to equip iron armor",
+  "achievetodo.ability.equip_iron_armor.locked_message": "You can't equip iron armor",
+
+  "achievetodo.ability.equip_netherite_armor.name": "Netherite armor",
+  "achievetodo.ability.equip_netherite_armor.description": "Ability to equip netherite armor",
+  "achievetodo.ability.equip_netherite_armor.locked_message": "You can't equip netherite armor",
+
+  "achievetodo.ability.enter_nether.name": "The Nether",
+  "achievetodo.ability.enter_nether.description": "Ability to enter The Nether",
+  "achievetodo.ability.enter_nether.locked_message": "You can't enter The Nether",
+
+  "achievetodo.ability.open_anvil.name": "Anvil",
+  "achievetodo.ability.open_anvil.description": "Ability to use an anvil",
+  "achievetodo.ability.open_anvil.locked_message": "You can't use an anvil",
+
+  "achievetodo.ability.open_beacon.name": "Beacon",
+  "achievetodo.ability.open_beacon.description": "Ability to use a beacon",
+  "achievetodo.ability.open_beacon.locked_message": "You can't use a beacon",
+
+  "achievetodo.ability.open_blast_furnace.name": "Blast furnace",
+  "achievetodo.ability.open_blast_furnace.description": "Ability to open a blast furnace",
+  "achievetodo.ability.open_blast_furnace.locked_message": "You can't open a blast furnace",
+
+  "achievetodo.ability.shoot_bow.name": "Bow",
+  "achievetodo.ability.shoot_bow.description": "Ability to shoot a bow",
+  "achievetodo.ability.shoot_bow.locked_message": "You can't use a bow",
+
+  "achievetodo.ability.open_brewing_stand.name": "Brewing stand",
+  "achievetodo.ability.open_brewing_stand.description": "Ability to open a brewing stand",
+  "achievetodo.ability.open_brewing_stand.locked_message": "You can't open a brewing stand",
+
+  "achievetodo.ability.use_diamond_tools.name": "Diamond tools",
+  "achievetodo.ability.use_diamond_tools.description": "Ability to use diamond tools",
+  "achievetodo.ability.use_diamond_tools.locked_message": "You can't use diamond tools",
+
+  "achievetodo.ability.open_enchanting_table.name": "Enchanting table",
+  "achievetodo.ability.open_enchanting_table.description": "Ability to use an enchanting table",
+  "achievetodo.ability.open_enchanting_table.locked_message": "You can't use an enchanting table",
+
+  "achievetodo.ability.open_ender_chest.name": "Ender chest",
+  "achievetodo.ability.open_ender_chest.description": "Ability to use an ender chest",
+  "achievetodo.ability.open_ender_chest.locked_message": "You can't use an ender chest",
+
+  "achievetodo.ability.glide_with_fireworks.name": "Fireworks for flying",
+  "achievetodo.ability.glide_with_fireworks.description": "Ability to use fireworks for flying",
+  "achievetodo.ability.glide_with_fireworks.locked_message": "You can't use fireworks for flying",
+
+  "achievetodo.ability.use_iron_tools.name": "Iron tools",
+  "achievetodo.ability.use_iron_tools.description": "Ability to use iron tools",
+  "achievetodo.ability.use_iron_tools.locked_message": "You can't use iron tools",
+
+  "achievetodo.ability.use_netherite_tools.name": "Netherite tools",
+  "achievetodo.ability.use_netherite_tools.description": "Ability to use netherite tools",
+  "achievetodo.ability.use_netherite_tools.locked_message": "You can't use netherite tools",
+
+  "achievetodo.ability.open_shulker_box.name": "Shulker box",
+  "achievetodo.ability.open_shulker_box.description": "Ability to open a shulker box",
+  "achievetodo.ability.open_shulker_box.locked_message": "You can't open a shulker box",
+
+  "achievetodo.ability.open_smoker.name": "Smoker",
+  "achievetodo.ability.open_smoker.description": "Ability to open a smoker",
+  "achievetodo.ability.open_smoker.locked_message": "You can't open a smoker",
+
+  "achievetodo.ability.use_water_bucket.name": "Water bucket",
+  "achievetodo.ability.use_water_bucket.description": "Ability to use a water bucket",
+  "achievetodo.ability.use_water_bucket.locked_message": "You can't use a water bucket",
+
+  "achievetodo.ability.open_door.name": "Open a door",
+  "achievetodo.ability.open_door.description": "Ability to open a door",
+  "achievetodo.ability.open_door.locked_message": "You can't open a door",
+
+  "achievetodo.ability.sleep.name": "Go to sleep",
+  "achievetodo.ability.sleep.description": "Ability to sleep",
+  "achievetodo.ability.sleep.locked_message": "You can't sleep",
+
+  "achievetodo.ability.open_inventory.name": "Open inventory",
+  "achievetodo.ability.open_inventory.description": "Ability to open the inventory",
+  "achievetodo.ability.open_inventory.locked_message": "You can't open your inventory",
+
+  "achievetodo.ability.use_shears.name": "Shears",
+  "achievetodo.ability.use_shears.description": "Ability to use shears",
+  "achievetodo.ability.use_shears.locked_message": "You can't use shears",
+
+  "achievetodo.ability.shoot_crossbow.name": "Crossbow",
+  "achievetodo.ability.shoot_crossbow.description": "Ability to shoot a crossbow",
+  "achievetodo.ability.shoot_crossbow.locked_message": "You can't use a crossbow",
+
+  "achievetodo.ability.use_fishing_rod.name": "Fishing rod",
+  "achievetodo.ability.use_fishing_rod.description": "Ability to use a fishing rod",
+  "achievetodo.ability.use_fishing_rod.locked_message": "You can't use a fishing rod",
+
+  "achievetodo.ability.use_brush.name": "Brush",
+  "achievetodo.ability.use_brush.description": "Ability to use a brush",
+  "achievetodo.ability.use_brush.locked_message": "You can't use a brush",
+
+  "achievetodo.ability.use_spyglass.name": "Spyglass",
+  "achievetodo.ability.use_spyglass.description": "Ability to use a spyglass",
+  "achievetodo.ability.use_spyglass.locked_message": "You can't use a spyglass",
+
+  "achievetodo.ability.attack_with_trident.name": "Trident",
+  "achievetodo.ability.attack_with_trident.description": "Ability to throw a trident",
+  "achievetodo.ability.attack_with_trident.locked_message": "You can't throw a trident",
+
+  "achievetodo.ability.throw_ender_pearl.name": "Ender pearl",
+  "achievetodo.ability.throw_ender_pearl.description": "Ability to throw an ender pearl",
+  "achievetodo.ability.throw_ender_pearl.locked_message": "You can't throw an ender pearl",
+
+  "achievetodo.ability.use_golden_tools.name": "Golden tools",
+  "achievetodo.ability.use_golden_tools.description": "Ability to use golden tools",
+  "achievetodo.ability.use_golden_tools.locked_message": "You can't use golden tools",
+
+  "achievetodo.ability.equip_golden_armor.name": "Golden armor",
+  "achievetodo.ability.equip_golden_armor.description": "Ability to equip golden armor",
+  "achievetodo.ability.equip_golden_armor.locked_message": "You can't equip golden armor",
+
+  "achievetodo.ability.equip_leather_armor.name": "Leather armor",
+  "achievetodo.ability.equip_leather_armor.description": "Ability to equip leather armor",
+  "achievetodo.ability.equip_leather_armor.locked_message": "You can't equip leather armor",
+
+  "achievetodo.ability.use_wooden_tools.name": "Wooden tools",
+  "achievetodo.ability.use_wooden_tools.description": "Ability to use wooden tools",
+  "achievetodo.ability.use_wooden_tools.locked_message": "You can't use wooden tools",
+
+  "achievetodo.ability.equip_chainmail_armor.name": "Chainmail armor",
+  "achievetodo.ability.equip_chainmail_armor.description": "Ability to equip chainmail armor",
+  "achievetodo.ability.equip_chainmail_armor.locked_message": "You can't equip chainmail armor",
+
+  "achievetodo.ability.open_chest.name": "Chest",
+  "achievetodo.ability.open_chest.description": "Ability to open a chest",
+  "achievetodo.ability.open_chest.locked_message": "You can't open a chest",
+
+  "achievetodo.ability.open_stonecutter.name": "Stonecutter",
+  "achievetodo.ability.open_stonecutter.description": "Ability to use a stonecutter",
+  "achievetodo.ability.open_stonecutter.locked_message": "You can't use a stonecutter",
+
+  "achievetodo.ability.open_grindstone.name": "Grindstone",
+  "achievetodo.ability.open_grindstone.description": "Ability to use a grindstone",
+  "achievetodo.ability.open_grindstone.locked_message": "You can't use a grindstone",
+
+  "achievetodo.ability.open_loom.name": "Loom",
+  "achievetodo.ability.open_loom.description": "Ability to use a loom",
+  "achievetodo.ability.open_loom.locked_message": "You can't use a loom",
+
+  "achievetodo.ability.open_cartography_table.name": "Cartography table",
+  "achievetodo.ability.open_cartography_table.description": "Ability to use a cartography table",
+  "achievetodo.ability.open_cartography_table.locked_message": "You can't use a cartography table",
+
+  "achievetodo.ability.open_smithing_table.name": "Smithing table",
+  "achievetodo.ability.open_smithing_table.description": "Ability to use a smithing table",
+  "achievetodo.ability.open_smithing_table.locked_message": "You can't use a smithing table",
+
+  "achievetodo.ability.vision.name": "Vision",
+  "achievetodo.ability.vision.description": "Ability to see the world",
+  "achievetodo.ability.vision.locked_message": "You can't see the world",
+
+  "achievetodo.ability.swim.name": "Swimming",
+  "achievetodo.ability.swim.description": "Ability to swim",
+  "achievetodo.ability.swim.locked_message": "You can't swim",
+
+  "achievetodo.ability.sneak.name": "Sneaking",
+  "achievetodo.ability.sneak.description": "Ability to sneak",
+  "achievetodo.ability.sneak.locked_message": "You can't sneak",
+
+  "achievetodo.ability.sprint.name": "Sprint",
+  "achievetodo.ability.sprint.description": "Ability to sprint",
+  "achievetodo.ability.sprint.locked_message": "You can't sprint",
+
+  "achievetodo.ability.unlock_vault.name": "Vault",
+  "achievetodo.ability.unlock_vault.description": "Ability to unlock a vault",
+  "achievetodo.ability.unlock_vault.locked_message": "You can't unlock a vault",
+
+  "achievetodo.ability.use_campfire.name": "Campfire",
+  "achievetodo.ability.use_campfire.description": "Ability to use a campfire",
+  "achievetodo.ability.use_campfire.locked_message": "You can't use a campfire",
+
+  "achievetodo.ability.use_cauldron.name": "Cauldron",
+  "achievetodo.ability.use_cauldron.description": "Ability to use a cauldron",
+  "achievetodo.ability.use_cauldron.locked_message": "You can't use a cauldron",
+
+  "achievetodo.ability.use_jukebox.name": "Jukebox",
+  "achievetodo.ability.use_jukebox.description": "Ability to use a jukebox",
+  "achievetodo.ability.use_jukebox.locked_message": "You can't use a jukebox",
+
+  "achievetodo.ability.use_composter.name": "Composter",
+  "achievetodo.ability.use_composter.description": "Ability to use a composter",
+  "achievetodo.ability.use_composter.locked_message": "You can't use a composter",
+
+  "achievetodo.ability.place_end_crystal.name": "End crystal",
+  "achievetodo.ability.place_end_crystal.description": "Ability to place an End crystal",
+  "achievetodo.ability.place_end_crystal.locked_message": "You can't place an End crystal",
+
+  "achievetodo.ability.use_ender_eye.name": "Ender eye",
+  "achievetodo.ability.use_ender_eye.description": "Ability to throw an Ender eye",
+  "achievetodo.ability.use_ender_eye.locked_message": "You can't throw an Ender eye",
+
+  "achievetodo.ability.charge_respawn_anchor.name": "Respawn anchor",
+  "achievetodo.ability.charge_respawn_anchor.description": "Ability to charge a respawn anchor",
+  "achievetodo.ability.charge_respawn_anchor.locked_message": "You can't charge a respawn anchor",
+
+  "achievetodo.ability.open_barrel.name": "Barrel",
+  "achievetodo.ability.open_barrel.description": "Ability to open a barrel",
+  "achievetodo.ability.open_barrel.locked_message": "You can't open a barrel",
+
+  "achievetodo.ability.ignite_tnt.name": "TNT",
+  "achievetodo.ability.ignite_tnt.description": "Ability to ignite a TNT",
+  "achievetodo.ability.ignite_tnt.locked_message": "You can't ignite a TNT",
+
+  "achievetodo.ability.open_trapdoor.name": "Open a trapdoor",
+  "achievetodo.ability.open_trapdoor.description": "Ability to open a trapdoor",
+  "achievetodo.ability.open_trapdoor.locked_message": "You can't open a trapdoor",
+
+  "achievetodo.ability.open_fence_gate.name": "Open a fence gate",
+  "achievetodo.ability.open_fence_gate.description": "Ability to open a fence gate",
+  "achievetodo.ability.open_fence_gate.locked_message": "You can't open a fence gate",
+
+  "achievetodo.ability.get_into_minecart.name": "Get into a minecart",
+  "achievetodo.ability.get_into_minecart.description": "Ability to get into a minecart",
+  "achievetodo.ability.get_into_minecart.locked_message": "You can't get into a minecart",
+
+  "achievetodo.ability.use_flint_and_steel.name": "Flint and steel",
+  "achievetodo.ability.use_flint_and_steel.description": "Ability to use flint and steel",
+  "achievetodo.ability.use_flint_and_steel.locked_message": "You can't use flint and steel",
+
+  "achievetodo.ability.put_in_bundle.name": "Bundle",
+  "achievetodo.ability.put_in_bundle.description": "Ability to put items in a bundle",
+  "achievetodo.ability.put_in_bundle.locked_message": "You can't put items in a bundle",
+
+  "achievetodo.ability.throw_egg.name": "Egg",
+  "achievetodo.ability.throw_egg.description": "Ability to throw an egg",
+  "achievetodo.ability.throw_egg.locked_message": "You can't throw an egg",
+
+  "achievetodo.ability.throw_snowball.name": "Snowball",
+  "achievetodo.ability.throw_snowball.description": "Ability to throw a snowball",
+  "achievetodo.ability.throw_snowball.locked_message": "You can't throw a snowball",
+
+  "achievetodo.ability.throw_wind_charge.name": "Wind charge",
+  "achievetodo.ability.throw_wind_charge.description": "Ability to throw a wind charge",
+  "achievetodo.ability.throw_wind_charge.locked_message": "You can't throw a wind charge",
+
+  "achievetodo.ability.use_ominous_bottle.name": "Ominous bottle",
+  "achievetodo.ability.use_ominous_bottle.description": "Ability to drink an ominous bottle",
+  "achievetodo.ability.use_ominous_bottle.locked_message": "You can't drink an ominous bottle",
+
+  "achievetodo.ability.equip_turtle_helmet.name": "Turtle helmet",
+  "achievetodo.ability.equip_turtle_helmet.description": "Ability to equip a turtle helmet",
+  "achievetodo.ability.equip_turtle_helmet.locked_message": "You can't equip a turtle helmet",
+
+  "achievetodo.ability.attack_with_mace.name": "Mace",
+  "achievetodo.ability.attack_with_mace.description": "Ability to attack with a mace",
+  "achievetodo.ability.attack_with_mace.locked_message": "You can't attack with a mace",
+
+  "achievetodo.ability.trade_with_wandering_trader.name": "Wandering trader",
+  "achievetodo.ability.trade_with_wandering_trader.description": "Ability to trade with a wandering trader",
+  "achievetodo.ability.trade_with_wandering_trader.locked_message": "You can't trade with a wandering trader",
+
+  "achievetodo.ability.interact_inside_desert_pyramid.name": "Desert Pyramid",
+  "achievetodo.ability.interact_inside_desert_pyramid.description": "Ability to interact with objects within a Desert Pyramid",
+  "achievetodo.ability.interact_inside_desert_pyramid.locked_message": "You can't interact with objects within a Desert Pyramid",
+
+  "achievetodo.ability.interact_inside_desert_well.name": "Desert Well",
+  "achievetodo.ability.interact_inside_desert_well.description": "Ability to interact with objects within a Desert Well",
+  "achievetodo.ability.interact_inside_desert_well.locked_message": "You can't interact with objects within a Desert Well",
+
+  "achievetodo.ability.interact_inside_jungle_pyramid.name": "Jungle Pyramid",
+  "achievetodo.ability.interact_inside_jungle_pyramid.description": "Ability to interact with objects within a Jungle Pyramid",
+  "achievetodo.ability.interact_inside_jungle_pyramid.locked_message": "You can't interact with objects within a Jungle Pyramid",
+
+  "achievetodo.ability.interact_inside_pillager_outpost.name": "Pillager Outpost",
+  "achievetodo.ability.interact_inside_pillager_outpost.description": "Ability to interact with objects within a Pillager Outpost",
+  "achievetodo.ability.interact_inside_pillager_outpost.locked_message": "You can't interact with objects within a Pillager Outpost",
+
+  "achievetodo.ability.interact_inside_igloo.name": "Igloo",
+  "achievetodo.ability.interact_inside_igloo.description": "Ability to interact with objects within an Igloo",
+  "achievetodo.ability.interact_inside_igloo.locked_message": "You can't interact with objects within an Igloo",
+
+  "achievetodo.ability.interact_inside_swamp_hut.name": "Swamp Hut",
+  "achievetodo.ability.interact_inside_swamp_hut.description": "Ability to interact with objects within a Swamp Hut",
+  "achievetodo.ability.interact_inside_swamp_hut.locked_message": "You can't interact with objects within a Swamp Hut",
+
+  "achievetodo.ability.interact_inside_mansion.name": "Woodland Mansion",
+  "achievetodo.ability.interact_inside_mansion.description": "Ability to interact with objects within a Woodland Mansion",
+  "achievetodo.ability.interact_inside_mansion.locked_message": "You can't interact with objects within a Woodland Mansion",
+
+  "achievetodo.ability.interact_inside_village.name": "Village",
+  "achievetodo.ability.interact_inside_village.description": "Ability to interact with objects within a Village",
+  "achievetodo.ability.interact_inside_village.locked_message": "You can't interact with objects within a Village",
+
+  "achievetodo.ability.interact_inside_ruined_portal.name": "Ruined Portal",
+  "achievetodo.ability.interact_inside_ruined_portal.description": "Ability to interact with objects within a Ruined Portal",
+  "achievetodo.ability.interact_inside_ruined_portal.locked_message": "You can't interact with objects within a Ruined Portal",
+
+  "achievetodo.ability.interact_inside_buried_treasure.name": "Buried Treasure",
+  "achievetodo.ability.interact_inside_buried_treasure.description": "Ability to interact with objects within a Buried Treasure",
+  "achievetodo.ability.interact_inside_buried_treasure.locked_message": "You can't interact with objects within a Buried Treasure",
+
+  "achievetodo.ability.interact_inside_shipwreck.name": "Shipwreck",
+  "achievetodo.ability.interact_inside_shipwreck.description": "Ability to interact with objects within a Shipwreck",
+  "achievetodo.ability.interact_inside_shipwreck.locked_message": "You can't interact with objects within a Shipwreck",
+
+  "achievetodo.ability.interact_inside_ocean_ruin.name": "Ocean Ruins",
+  "achievetodo.ability.interact_inside_ocean_ruin.description": "Ability to interact with objects within Ocean Ruins",
+  "achievetodo.ability.interact_inside_ocean_ruin.locked_message": "You can't interact with objects within Ocean Ruins",
+
+  "achievetodo.ability.interact_inside_monument.name": "Ocean Monument",
+  "achievetodo.ability.interact_inside_monument.description": "Ability to interact with objects within an Ocean Monument",
+  "achievetodo.ability.interact_inside_monument.locked_message": "You can't interact with objects within an Ocean Monument",
+
+  "achievetodo.ability.interact_inside_monster_room.name": "Monster Room",
+  "achievetodo.ability.interact_inside_monster_room.description": "Ability to interact with objects within a Monster Room",
+  "achievetodo.ability.interact_inside_monster_room.locked_message": "You can't interact with objects within a Monster Room",
+
+  "achievetodo.ability.interact_inside_mineshaft.name": "Mineshaft",
+  "achievetodo.ability.interact_inside_mineshaft.description": "Ability to interact with objects within a Mineshaft",
+  "achievetodo.ability.interact_inside_mineshaft.locked_message": "You can't interact with objects within a Mineshaft",
+
+  "achievetodo.ability.interact_inside_trail_ruins.name": "Trail Ruins",
+  "achievetodo.ability.interact_inside_trail_ruins.description": "Ability to interact with objects within Trail Ruins",
+  "achievetodo.ability.interact_inside_trail_ruins.locked_message": "You can't interact with objects within Trail Ruins",
+
+  "achievetodo.ability.interact_inside_ancient_city.name": "Ancient City",
+  "achievetodo.ability.interact_inside_ancient_city.description": "Ability to interact with objects within an Ancient City",
+  "achievetodo.ability.interact_inside_ancient_city.locked_message": "You can't interact with objects within an Ancient City",
+
+  "achievetodo.ability.interact_inside_trial_chambers.name": "Trial Chambers",
+  "achievetodo.ability.interact_inside_trial_chambers.description": "Ability to interact with objects within Trial Chambers",
+  "achievetodo.ability.interact_inside_trial_chambers.locked_message": "You can't interact with objects within Trial Chambers",
+
+  "achievetodo.ability.interact_inside_stronghold.name": "Stronghold",
+  "achievetodo.ability.interact_inside_stronghold.description": "Ability to interact with objects within a Stronghold",
+  "achievetodo.ability.interact_inside_stronghold.locked_message": "You can't interact with objects within a Stronghold",
+
+  "achievetodo.ability.interact_inside_fortress.name": "Nether Fortress",
+  "achievetodo.ability.interact_inside_fortress.description": "Ability to interact with objects within a Nether Fortress",
+  "achievetodo.ability.interact_inside_fortress.locked_message": "You can't interact with objects within a Nether Fortress",
+
+  "achievetodo.ability.interact_inside_bastion_remnant.name": "Bastion Remnant",
+  "achievetodo.ability.interact_inside_bastion_remnant.description": "Ability to interact with objects within a Bastion Remnant",
+  "achievetodo.ability.interact_inside_bastion_remnant.locked_message": "You can't interact with objects within a Bastion Remnant",
+
+  "achievetodo.ability.interact_inside_end_city.name": "End City",
+  "achievetodo.ability.interact_inside_end_city.description": "Ability to interact with objects within an End City",
+  "achievetodo.ability.interact_inside_end_city.locked_message": "You can't interact with objects within an End City",
+
+  "achievetodo.ability.left_to_unlock": "Advancements left to unlock: %d",
+  "achievetodo.ability.permanently_locked": "This ability is locked permanently",
+  "achievetodo.ability.initially_unlocked": "This ability is unlocked by default",
+
+  "achievetodo.ability_unlocked_toast.action": "Action available",
+  "achievetodo.ability_unlocked_toast.item": "Item available",
+  "achievetodo.ability_unlocked_toast.food": "Food available",
+  "achievetodo.ability_unlocked_toast.tool": "Tool available",
+  "achievetodo.ability_unlocked_toast.weapon": "Weapon available",
+  "achievetodo.ability_unlocked_toast.equipment": "Equipment available",
+  "achievetodo.ability_unlocked_toast.block": "Block available",
+  "achievetodo.ability_unlocked_toast.trading": "Trading available",
+  "achievetodo.ability_unlocked_toast.portal": "Portal available",
+  "achievetodo.ability_unlocked_toast.landmark": "Structure available",
+
+  "achievetodo.tab_unlocked_chat_message": "Tab %s%s%s is unlocked",
+  "achievetodo.ability_unlocked_chat_message": "%s has unlocked %s%s%s"
+}

@@ -1,3 +1,7 @@
-.idea/
-/pack/*.mrpack
-/pack/mods/*.jar
+.idea/*
+!.idea/dictionaries/
+.gradle/
+.kotlin/
+build/
+run/
+src/main/generated/

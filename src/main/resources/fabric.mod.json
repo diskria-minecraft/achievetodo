@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "achievetodo",
+  "version": "2.0.0",
+  "name": "AchieveToDo",
+  "description": "Minecraft, but the world has stolen your abilities. Reclaim them one by one by completing BlazeandCave's advancements!",
+  "authors": [
+    "diskria"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/achievetodo",
+    "sources": "https://github.com/diskria-minecraft/achievetodo",
+    "issues": "https://github.com/diskria-minecraft/achievetodo/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/achievetodo/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "io.github.diskria.achievetodo.ability.generation.AbilitiesGenerator"
+    ],
+    "main": [
+      {
+        "value": "io.github.diskria.achievetodo.AchieveToDoMod",
+        "adapter": "kotlin"
+      }
+    ],
+    "client": [
+      {
+        "value": "io.github.diskria.achievetodo.client.AchieveToDoClient",
+        "adapter": "kotlin"
+      }
+    ]
+  },
+  "mixins": [
+    "achievetodo.mixins.json"
+  ],
+  "accessWidener": "achievetodo.classtweaker",
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": ">=1.21.4",
+    "java": ">=21",
+    "fabric-api": ">=0.119.4+1.21.4",
+    "fabric-language-kotlin": ">=1.13.12+kotlin.2.4.0"
+  }
+}
