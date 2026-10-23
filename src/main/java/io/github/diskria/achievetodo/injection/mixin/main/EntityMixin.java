@@ -53,21 +53,6 @@ public abstract class EntityMixin {
         method = "interact",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/Leashable;canLeashAttachTo()Z"
-        ),
-        cancellable = true
-    )
-    public void lockLeashAttach(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        Entity entity = (Entity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, entity)) {
-            cir.setReturnValue(ActionResult.FAIL);
-        }
-    }
-
-    @Inject(
-        method = "interact",
-        at = @At(
-            value = "INVOKE",
             target = "Lnet/minecraft/entity/Leashable;detachLeash()V",
             shift = At.Shift.BEFORE
         ),
@@ -86,15 +71,14 @@ public abstract class EntityMixin {
     )
     public boolean lockMinecart(
         boolean original,
-        @Local(argsOnly = true, ordinal = 1) Entity passenger
+        @Local(argsOnly = true, index = 1) Entity passenger
     ) {
         if (!original) {
             return false;
         }
         Entity entity = (Entity) (Object) this;
         if (passenger instanceof PlayerEntity player && entity instanceof MinecartEntity) {
-            return !AchieveToDoMod.isTargetInLockedLandmark(player, entity) &&
-                !AchieveToDoMod.isAbilityLocked(player, AbilityType.GET_INTO_MINECART);
+            return !AchieveToDoMod.isAbilityLocked(player, AbilityType.GET_INTO_MINECART);
         }
         return true;
     }
@@ -128,11 +112,8 @@ public abstract class EntityMixin {
                 return;
             }
         }
-
-        if (teleportEntity instanceof PlayerEntity playerEntity) {
-            if (AchieveToDoMod.isTargetInLockedLandmark(playerEntity, currentWorld, pos) ||
-                AchieveToDoMod.isAbilityLocked(playerEntity, abilityType)
-            ) {
+        if (teleportEntity instanceof PlayerEntity player) {
+            if (AchieveToDoMod.isAbilityLocked(player, abilityType)) {
                 if (enderPearl != null) {
                     enderPearl.remove(Entity.RemovalReason.DISCARDED);
                 }

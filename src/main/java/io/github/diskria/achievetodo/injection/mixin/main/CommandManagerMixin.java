@@ -1,9 +1,7 @@
 package io.github.diskria.achievetodo.injection.mixin.main;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.context.ContextChain;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import io.github.diskria.achievetodo.client.AchieveToDoClient;
 import io.github.diskria.achievetodo.client.Utils;
 import net.minecraft.server.command.CommandManager;
@@ -37,8 +35,7 @@ public class CommandManagerMixin {
         ParseResults<ServerCommandSource> parseResults,
         @NotNull String command,
         @NotNull ServerCommandSource source,
-        @NotNull CallbackInfoReturnable<ContextChain<ServerCommandSource>> cir,
-        @Local @NotNull CommandSyntaxException commandSyntaxException
+        @NotNull CallbackInfoReturnable<ContextChain<ServerCommandSource>> cir
     ) {
         String advancementsSearchModName = "AdvancementsSearch";
         if (command.startsWith(advancementsSearchModName.toLowerCase(Locale.ROOT) + " ")) {

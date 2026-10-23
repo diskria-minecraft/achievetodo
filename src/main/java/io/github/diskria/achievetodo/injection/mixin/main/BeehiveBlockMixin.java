@@ -29,7 +29,7 @@ public class BeehiveBlockMixin {
         ),
         cancellable = true
     )
-    public void lockShears(
+    public void lockExtractHoneycomb(
         ItemStack stack,
         BlockState state,
         World world,
@@ -42,6 +42,31 @@ public class BeehiveBlockMixin {
         if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)
         ) {
+            cir.setReturnValue(ActionResult.PASS);
+        }
+    }
+
+    @Inject(
+        method = "onUseWithItem",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/item/ItemStack;decrement(I)V",
+            shift = At.Shift.BEFORE,
+            ordinal = 0
+        ),
+        cancellable = true
+    )
+    public void lockExtractHoneyBottle(
+        ItemStack stack,
+        BlockState state,
+        World world,
+        BlockPos pos,
+        PlayerEntity player,
+        Hand hand,
+        BlockHitResult hit,
+        CallbackInfoReturnable<ActionResult> cir
+    ) {
+        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos)) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

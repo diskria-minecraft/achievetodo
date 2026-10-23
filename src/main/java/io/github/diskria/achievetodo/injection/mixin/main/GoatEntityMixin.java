@@ -22,7 +22,7 @@ public class GoatEntityMixin {
         ),
         cancellable = true
     )
-    public void lockInteract1(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockExtractMilkBucket(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         GoatEntity goatEntity = (GoatEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, goatEntity)) {
             cir.setReturnValue(ActionResult.FAIL);

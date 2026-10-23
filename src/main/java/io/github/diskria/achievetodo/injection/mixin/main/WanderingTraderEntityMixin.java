@@ -23,7 +23,7 @@ public abstract class WanderingTraderEntityMixin {
         ),
         cancellable = true
     )
-    public void lockWanderingTrader(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockTrading(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         WanderingTraderEntity wanderingTraderEntity = (WanderingTraderEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, wanderingTraderEntity) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.TRADE_WITH_WANDERING_TRADER)

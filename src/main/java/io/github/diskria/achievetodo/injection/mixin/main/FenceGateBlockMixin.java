@@ -38,9 +38,7 @@ public class FenceGateBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            !state.get(OPEN) && AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_FENCE_GATE)
-        ) {
+        if (!state.get(OPEN) && AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_FENCE_GATE)) {
             cir.setReturnValue(ActionResult.SUCCESS);
         }
     }

@@ -25,21 +25,23 @@ public class ShulkerBoxBlockMixin {
             target = "Lnet/minecraft/block/ShulkerBoxBlock;canOpen(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/ShulkerBoxBlockEntity;)Z"
         )
     )
-    private boolean lockShulkerBox(
+    private boolean lockOpening(
         BlockState state,
         World world,
         BlockPos pos,
-        @NotNull ShulkerBoxBlockEntity entity,
+        @NotNull ShulkerBoxBlockEntity blockEntity,
         @NotNull Operation<Boolean> original,
         @Local(argsOnly = true) PlayerEntity player
     ) {
-        if (!original.call(state, world, pos, entity)) {
+        if (!original.call(state, world, pos, blockEntity)) {
             return false;
         }
-        if (entity.getAnimationStage() != ShulkerBoxBlockEntity.AnimationStage.CLOSED) {
+        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos)) {
+            return false;
+        }
+        if (blockEntity.getAnimationStage() != ShulkerBoxBlockEntity.AnimationStage.CLOSED) {
             return true;
         }
-        return !AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) &&
-            !AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_SHULKER_BOX);
+        return !AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_SHULKER_BOX);
     }
 }

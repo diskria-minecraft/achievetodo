@@ -23,7 +23,7 @@ public class TridentItemMixin {
         ),
         cancellable = true
     )
-    public void lockTrident(
+    public void lockThrow(
         World world,
         PlayerEntity player,
         Hand hand,

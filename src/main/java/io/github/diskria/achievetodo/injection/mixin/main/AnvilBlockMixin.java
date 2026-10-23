@@ -34,9 +34,7 @@ public class AnvilBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_ANVIL)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_ANVIL)) {
             cir.setReturnValue(ActionResult.SUCCESS);
         }
     }

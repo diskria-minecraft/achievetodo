@@ -25,7 +25,7 @@ public class ChorusFlowerBlockMixin {
         ),
         cancellable = true
     )
-    private void lockBreak(
+    private void lockBreakByProjectile(
         World world,
         BlockState state,
         BlockHitResult hit,

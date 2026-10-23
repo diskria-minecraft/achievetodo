@@ -5,8 +5,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,38 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemFrameEntity.class)
 public class ItemFrameEntityMixin {
-
-    @Inject(
-        method = "interact",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/entity/decoration/ItemFrameEntity;setHeldItemStack(Lnet/minecraft/item/ItemStack;)V",
-            shift = At.Shift.BEFORE
-        ),
-        cancellable = true
-    )
-    public void lockPlace(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        ItemFrameEntity itemFrameEntity = (ItemFrameEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, itemFrameEntity)) {
-            cir.setReturnValue(ActionResult.SUCCESS);
-        }
-    }
-
-    @Inject(
-        method = "interact",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/entity/decoration/ItemFrameEntity;playSound(Lnet/minecraft/sound/SoundEvent;FF)V",
-            shift = At.Shift.BEFORE
-        ),
-        cancellable = true
-    )
-    public void lockRotation(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        ItemFrameEntity itemFrameEntity = (ItemFrameEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, itemFrameEntity)) {
-            cir.setReturnValue(ActionResult.SUCCESS);
-        }
-    }
 
     @Inject(
         method = "damage",

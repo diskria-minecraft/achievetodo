@@ -22,7 +22,7 @@ public class ShearsItemMixin {
         ),
         cancellable = true
     )
-    public void lockShears(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockShearing(ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         if (AchieveToDoMod.isTargetInLockedLandmark(context) ||
             AchieveToDoMod.isAbilityLocked(context.getPlayer(), AbilityType.USE_SHEARS)
         ) {

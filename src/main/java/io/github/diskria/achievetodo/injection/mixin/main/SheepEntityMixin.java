@@ -23,7 +23,7 @@ public class SheepEntityMixin {
         ),
         cancellable = true
     )
-    public void lockInteract1(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockShearing(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         SheepEntity sheepEntity = (SheepEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, sheepEntity) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)

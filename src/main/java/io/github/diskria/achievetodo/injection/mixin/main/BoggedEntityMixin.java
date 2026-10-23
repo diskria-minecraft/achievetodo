@@ -23,7 +23,7 @@ public class BoggedEntityMixin {
         ),
         cancellable = true
     )
-    public void lockShears(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockShearing(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         BoggedEntity boggedEntity = (BoggedEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, boggedEntity) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)

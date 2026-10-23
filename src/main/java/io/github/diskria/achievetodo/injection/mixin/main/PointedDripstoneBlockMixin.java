@@ -25,7 +25,7 @@ public class PointedDripstoneBlockMixin {
         ),
         cancellable = true
     )
-    private void lockBreak(
+    private void lockBreakByProjectile(
         World world,
         BlockState state,
         BlockHitResult hit,

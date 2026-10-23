@@ -17,44 +17,12 @@ public class AllayEntityMixin {
         method = "interactMob",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/passive/AllayEntity;duplicate()V",
-            shift = At.Shift.BEFORE
-        ),
-        cancellable = true
-    )
-    public void lockInteract1(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        AllayEntity allayEntity = (AllayEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, allayEntity)) {
-            cir.setReturnValue(ActionResult.FAIL);
-        }
-    }
-
-    @Inject(
-        method = "interactMob",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;copyWithCount(I)Lnet/minecraft/item/ItemStack;",
-            shift = At.Shift.BEFORE
-        ),
-        cancellable = true
-    )
-    public void lockInteract2(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        AllayEntity allayEntity = (AllayEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, allayEntity)) {
-            cir.setReturnValue(ActionResult.FAIL);
-        }
-    }
-
-    @Inject(
-        method = "interactMob",
-        at = @At(
-            value = "INVOKE",
             target = "Lnet/minecraft/entity/passive/AllayEntity;equipStack(Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/item/ItemStack;)V",
             shift = At.Shift.BEFORE
         ),
         cancellable = true
     )
-    public void lockInteract3(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockExtractItem(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         AllayEntity allayEntity = (AllayEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, allayEntity)) {
             cir.setReturnValue(ActionResult.FAIL);

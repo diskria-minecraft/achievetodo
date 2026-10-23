@@ -5,6 +5,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import io.github.diskria.achievetodo.AchieveToDoMod;
 import io.github.diskria.achievetodo.ability.AbilityType;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.passive.AbstractHorseEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -29,6 +31,18 @@ public class ServerPlayerEntityMixin {
     public void lockJump(CallbackInfo ci) {
         ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
         if (!player.isTouchingWater() && AchieveToDoMod.isAbilityLocked(player, AbilityType.JUMP)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(
+        method = "openHorseInventory",
+        at = @At("HEAD"),
+        cancellable = true
+    )
+    public void lockHorseInventory(AbstractHorseEntity horse, Inventory inventory, CallbackInfo ci) {
+        ServerPlayerEntity player = (ServerPlayerEntity) (Object) this;
+        if (AchieveToDoMod.isTargetInLockedLandmark(player, horse)) {
             ci.cancel();
         }
     }

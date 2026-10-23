@@ -25,9 +25,7 @@ public class AbstractBoatEntityMixin {
             return false;
         }
         if (passenger instanceof PlayerEntity player) {
-            AbstractBoatEntity boatEntity = (AbstractBoatEntity) (Object) this;
-            return !AchieveToDoMod.isTargetInLockedLandmark(player, boatEntity) &&
-                !AchieveToDoMod.isAbilityLocked(player, AbilityType.GET_INTO_BOAT);
+            return !AchieveToDoMod.isAbilityLocked(player, AbilityType.GET_INTO_BOAT);
         }
         return true;
     }

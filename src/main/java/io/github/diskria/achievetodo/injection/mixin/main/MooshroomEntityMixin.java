@@ -6,6 +6,7 @@ import net.minecraft.entity.passive.MooshroomEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,11 +21,12 @@ public class MooshroomEntityMixin {
             value = "FIELD",
             target = "Lnet/minecraft/entity/passive/MooshroomEntity;stewEffects:Lnet/minecraft/component/type/SuspiciousStewEffectsComponent;",
             shift = At.Shift.BEFORE,
-            ordinal = 0
+            ordinal = 0,
+            opcode = Opcodes.GETFIELD
         ),
         cancellable = true
     )
-    public void lockInteract1(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockExtractStew(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         MooshroomEntity mooshroomEntity = (MooshroomEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, mooshroomEntity)) {
             cir.setReturnValue(ActionResult.FAIL);
@@ -41,27 +43,11 @@ public class MooshroomEntityMixin {
         ),
         cancellable = true
     )
-    public void lockInteract2(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockShearing(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         MooshroomEntity mooshroomEntity = (MooshroomEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, mooshroomEntity) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)
         ) {
-            cir.setReturnValue(ActionResult.PASS);
-        }
-    }
-
-    @Inject(
-        method = "interactMob",
-        at = @At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;decrementUnlessCreative(ILnet/minecraft/entity/LivingEntity;)V",
-            shift = At.Shift.BEFORE
-        ),
-        cancellable = true
-    )
-    public void lockInteract3(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
-        MooshroomEntity mooshroomEntity = (MooshroomEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, mooshroomEntity)) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

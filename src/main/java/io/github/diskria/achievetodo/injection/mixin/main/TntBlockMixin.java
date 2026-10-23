@@ -32,7 +32,7 @@ public class TntBlockMixin {
         ),
         cancellable = true
     )
-    public void lockFlintAndSteel(
+    public void lockDirectIgnite(
         @NotNull ItemStack stack,
         BlockState state,
         World world,
@@ -47,7 +47,8 @@ public class TntBlockMixin {
             return;
         }
         if (stack.isOf(Items.FLINT_AND_STEEL) &&
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_FLINT_AND_STEEL)) {
+            AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_FLINT_AND_STEEL)
+        ) {
             cir.setReturnValue(ActionResult.SUCCESS);
             return;
         }
@@ -65,7 +66,7 @@ public class TntBlockMixin {
         ),
         cancellable = true
     )
-    public void lockIgnite(
+    public void lockIgniteByProjectile(
         World world,
         BlockState state,
         BlockHitResult hit,

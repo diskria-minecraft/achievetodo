@@ -23,7 +23,7 @@ public class SnowGolemEntityMixin {
         ),
         cancellable = true
     )
-    public void lockInteract1(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockShearing(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         SnowGolemEntity snowGolemEntity = (SnowGolemEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, snowGolemEntity) ||
             AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)

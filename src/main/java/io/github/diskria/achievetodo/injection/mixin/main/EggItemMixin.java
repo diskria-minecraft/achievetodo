@@ -23,7 +23,7 @@ public class EggItemMixin {
         ),
         cancellable = true
     )
-    public void lockEgg(
+    public void lockThrow(
         World world,
         PlayerEntity player,
         Hand hand,

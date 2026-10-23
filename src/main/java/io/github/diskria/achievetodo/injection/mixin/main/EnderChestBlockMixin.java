@@ -34,9 +34,7 @@ public class EnderChestBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_ENDER_CHEST)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_ENDER_CHEST)) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

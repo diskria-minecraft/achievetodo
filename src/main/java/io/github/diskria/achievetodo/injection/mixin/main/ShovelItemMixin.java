@@ -44,7 +44,7 @@ public class ShovelItemMixin {
         ),
         cancellable = true
     )
-    public void lockFlattenUsage(@NotNull ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockFlat(@NotNull ItemUsageContext context, CallbackInfoReturnable<ActionResult> cir) {
         if (AchieveToDoMod.isTargetInLockedLandmark(context) ||
             AchieveToDoMod.isAbilityLocked(context.getPlayer(), AbilityType.findToolMaterialUsageAbility(material))
         ) {
@@ -61,7 +61,7 @@ public class ShovelItemMixin {
         ),
         cancellable = true
     )
-    public void lockCampfireExtinguishUsage(
+    public void lockCampfireExtinguish(
         @NotNull ItemUsageContext context,
         CallbackInfoReturnable<ActionResult> cir
     ) {

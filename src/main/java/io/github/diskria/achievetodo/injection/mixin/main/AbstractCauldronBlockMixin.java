@@ -44,9 +44,7 @@ public class AbstractCauldronBlockMixin {
         Operation<ActionResult> original
     ) {
         if (behavior != ((Object2ObjectOpenHashMap<?, ?>) behaviorMap.map()).defaultReturnValue()) {
-            if (AchieveToDoMod.isTargetInLockedLandmark(player, world, blockPos) ||
-                AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_CAULDRON)
-            ) {
+            if (AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_CAULDRON)) {
                 return ActionResult.SUCCESS;
             }
         }

@@ -34,9 +34,7 @@ public class LoomBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_LOOM)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_LOOM)) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

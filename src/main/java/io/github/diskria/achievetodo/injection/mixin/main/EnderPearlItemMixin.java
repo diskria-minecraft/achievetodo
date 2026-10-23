@@ -23,7 +23,7 @@ public class EnderPearlItemMixin {
         ),
         cancellable = true
     )
-    public void lockEnderPearl(
+    public void lockThrow(
         World world,
         PlayerEntity player,
         Hand hand,

@@ -9,10 +9,11 @@ import io.github.diskria.achievetodo.injection.extension.main.MiningToolItemExte
 import io.github.diskria.achievetodo.injection.extension.main.SwordItemExtension;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
+import net.minecraft.item.ShearsItem;
 import net.minecraft.util.Unit;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,9 +32,7 @@ public class PlayerEntityMixin {
     )
     public void lockSleep(BlockPos pos, CallbackInfoReturnable<Either<PlayerEntity.SleepFailureReason, Unit>> cir) {
         PlayerEntity player = (PlayerEntity) (Object) this;
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, player.getWorld(), pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.SLEEP)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.SLEEP)) {
             cir.setReturnValue(Either.left(PlayerEntity.SleepFailureReason.OTHER_PROBLEM));
         }
     }
@@ -119,25 +118,5 @@ public class PlayerEntityMixin {
         ) {
             info.cancel();
         }
-    }
-
-    @ModifyReturnValue(
-        method = "canPlaceOn",
-        at = @At(value = "RETURN", ordinal = 0)
-    )
-    public boolean lockDecorationItemPlace(
-        boolean original,
-        @Local(argsOnly = true) BlockPos blockPos,
-        @Local(argsOnly = true) Direction facing,
-        @Local(argsOnly = true) ItemStack stack
-    ) {
-        if (!original) {
-            return false;
-        }
-        if (stack.getItem() instanceof DecorationItem) {
-            PlayerEntity player = (PlayerEntity) (Object) this;
-            return !AchieveToDoMod.isTargetInLockedLandmark(player, player.getWorld(), blockPos);
-        }
-        return true;
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,7 +29,7 @@ public class RespawnAnchorBlockMixin {
         ),
         cancellable = true
     )
-    public void lockRespawnAnchor(
+    public void lockCharge(
         ItemStack stack,
         BlockState state,
         World world,
@@ -38,9 +39,31 @@ public class RespawnAnchorBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.CHARGE_RESPAWN_ANCHOR)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.CHARGE_RESPAWN_ANCHOR)) {
+            cir.setReturnValue(ActionResult.CONSUME);
+        }
+    }
+
+    @Inject(
+        method = "onUse",
+        at = @At(
+            value = "FIELD",
+            target = "Lnet/minecraft/world/World;isClient:Z",
+            ordinal = 1,
+            opcode = Opcodes.GETFIELD,
+            shift = At.Shift.BEFORE
+        ),
+        cancellable = true
+    )
+    public void lockExplode(
+        BlockState state,
+        World world,
+        BlockPos pos,
+        PlayerEntity player,
+        BlockHitResult hit,
+        CallbackInfoReturnable<ActionResult> cir
+    ) {
+        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos)) {
             cir.setReturnValue(ActionResult.CONSUME);
         }
     }

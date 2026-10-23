@@ -24,16 +24,14 @@ public class TripwireBlockMixin {
         ),
         cancellable = true
     )
-    public void lockShears(
+    public void lockShearing(
         World world,
         BlockPos blockPos,
         BlockState blockState,
         PlayerEntity player,
         CallbackInfoReturnable<BlockState> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, blockPos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_SHEARS)) {
             cir.setReturnValue(blockState);
         }
     }

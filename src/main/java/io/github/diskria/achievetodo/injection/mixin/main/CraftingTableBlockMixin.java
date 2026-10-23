@@ -34,9 +34,7 @@ public class CraftingTableBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_CRAFTING_TABLE)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_CRAFTING_TABLE)) {
             cir.setReturnValue(ActionResult.PASS);
         }
     }

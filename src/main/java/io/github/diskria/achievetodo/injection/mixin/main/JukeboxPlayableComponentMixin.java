@@ -32,9 +32,7 @@ public class JukeboxPlayableComponentMixin {
         PlayerEntity player,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_JUKEBOX)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.USE_JUKEBOX)) {
             cir.setReturnValue(ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION);
         }
     }

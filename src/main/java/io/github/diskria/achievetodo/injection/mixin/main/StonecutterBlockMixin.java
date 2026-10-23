@@ -34,9 +34,7 @@ public class StonecutterBlockMixin {
         BlockHitResult hit,
         CallbackInfoReturnable<ActionResult> cir
     ) {
-        if (AchieveToDoMod.isTargetInLockedLandmark(player, world, pos) ||
-            AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_STONECUTTER)
-        ) {
+        if (AchieveToDoMod.isAbilityLocked(player, AbilityType.OPEN_STONECUTTER)) {
             cir.setReturnValue(ActionResult.SUCCESS);
         }
     }

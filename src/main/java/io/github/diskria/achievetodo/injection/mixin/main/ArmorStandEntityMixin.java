@@ -18,11 +18,12 @@ public class ArmorStandEntityMixin {
         method = "equip",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;equipStack(Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/item/ItemStack;)V"
+            target = "Lnet/minecraft/entity/decoration/ArmorStandEntity;equipStack(Lnet/minecraft/entity/EquipmentSlot;Lnet/minecraft/item/ItemStack;)V",
+            ordinal = 2
         ),
         cancellable = true
     )
-    public void lockArmorStandEquip(
+    public void lockExtractArmor(
         PlayerEntity player,
         EquipmentSlot slot,
         ItemStack stack,

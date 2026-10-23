@@ -34,14 +34,15 @@ public class LivingEntityMixin {
         at = @At("HEAD"),
         cancellable = true
     )
-    public void lockSprint(boolean sprinting, CallbackInfo ci) {
-        if (sprinting) {
-            LivingEntity livingEntity = (LivingEntity) (Object) this;
-            if (livingEntity instanceof PlayerEntity player) {
-                AbilityType abilityType = player.isSubmergedInWater() ? AbilityType.SWIM : AbilityType.SPRINT;
-                if (AchieveToDoMod.isAbilityLocked(player, abilityType)) {
-                    ci.cancel();
-                }
+    public void lockSprintOrSwim(boolean sprinting, CallbackInfo ci) {
+        if (!sprinting) {
+            return;
+        }
+        LivingEntity livingEntity = (LivingEntity) (Object) this;
+        if (livingEntity instanceof PlayerEntity player) {
+            AbilityType abilityType = player.isSubmergedInWater() ? AbilityType.SWIM : AbilityType.SPRINT;
+            if (AchieveToDoMod.isAbilityLocked(player, abilityType)) {
+                ci.cancel();
             }
         }
     }

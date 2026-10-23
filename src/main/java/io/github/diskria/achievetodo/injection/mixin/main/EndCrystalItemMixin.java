@@ -24,7 +24,7 @@ public class EndCrystalItemMixin {
             target = "Ljava/util/List;isEmpty()Z"
         )
     )
-    public boolean lockEndCrystal(
+    public boolean lockPlace(
         List<Entity> entities,
         @NotNull Operation<Boolean> original,
         @Local(argsOnly = true) ItemUsageContext context
@@ -32,7 +32,6 @@ public class EndCrystalItemMixin {
         if (!original.call(entities)) {
             return false;
         }
-        return !AchieveToDoMod.isTargetInLockedLandmark(context) &&
-            !AchieveToDoMod.isAbilityLocked(context.getPlayer(), AbilityType.PLACE_END_CRYSTAL);
+        return !AchieveToDoMod.isAbilityLocked(context.getPlayer(), AbilityType.PLACE_END_CRYSTAL);
     }
 }

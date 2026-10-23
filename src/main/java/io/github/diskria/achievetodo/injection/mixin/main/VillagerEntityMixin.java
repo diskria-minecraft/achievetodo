@@ -27,7 +27,7 @@ public abstract class VillagerEntityMixin {
             target = "Lnet/minecraft/village/TradeOfferList;isEmpty()Z"
         )
     )
-    public boolean lockVillager(
+    public boolean lockTrading(
         TradeOfferList tradeOffers,
         @NotNull Operation<Boolean> original,
         @Local(argsOnly = true) PlayerEntity player

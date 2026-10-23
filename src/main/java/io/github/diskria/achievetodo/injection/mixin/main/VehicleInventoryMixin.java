@@ -26,7 +26,7 @@ public interface VehicleInventoryMixin {
         at = @At(value = "HEAD"),
         cancellable = true
     )
-    default void lockVehicleInventory(PlayerEntity player, CallbackInfoReturnable<ActionResult> cir) {
+    private void lockOpenInventory(PlayerEntity player, CallbackInfoReturnable<ActionResult> cir) {
         if (AchieveToDoMod.isTargetInLockedLandmark(player, getWorld(), getBoundingBox())) {
             cir.setReturnValue(ActionResult.FAIL);
         }

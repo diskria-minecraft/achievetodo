@@ -22,7 +22,7 @@ public class PiglinEntityMixin {
         ),
         cancellable = true
     )
-    public void lockInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+    public void lockTrading(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         PiglinEntity piglinEntity = (PiglinEntity) (Object) this;
         if (AchieveToDoMod.isTargetInLockedLandmark(player, piglinEntity)) {
             cir.setReturnValue(ActionResult.FAIL);

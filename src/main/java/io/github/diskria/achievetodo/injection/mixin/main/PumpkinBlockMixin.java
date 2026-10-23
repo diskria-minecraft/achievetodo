@@ -28,7 +28,7 @@ public class PumpkinBlockMixin {
         ),
         cancellable = true
     )
-    public void lockShears(
+    public void lockShearing(
         ItemStack stack,
         BlockState state,
         World world,

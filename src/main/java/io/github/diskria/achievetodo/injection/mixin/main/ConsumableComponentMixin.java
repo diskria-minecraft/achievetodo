@@ -26,7 +26,7 @@ public class ConsumableComponentMixin {
         ),
         cancellable = true
     )
-    public void lockFood(
+    public void lockEatFood(
         LivingEntity user,
         ItemStack stack,
         Hand hand,
