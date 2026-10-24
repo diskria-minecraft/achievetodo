@@ -1,6 +1,10 @@
 package io.github.diskria.achievetodo.ability;
 
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.world.gen.feature.Feature;
 import net.minecraft.world.gen.structure.Structure;
 import net.minecraft.world.gen.structure.StructureKeys;
@@ -11,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 public enum LandmarkType {
@@ -94,12 +99,17 @@ public enum LandmarkType {
         StructureKeys.END_CITY
     );
 
-    public static final HashMap<Feature<?>, LandmarkType> FEATURES = new HashMap<>();
+    public static final HashMap<Feature<?>, LandmarkType> BY_FEATURE = new HashMap<>();
+    private static final IntFunction<LandmarkType> BY_ORDINAL =
+        ByIdMap.continuous(LandmarkType::ordinal, LandmarkType.values(), ByIdMap.OutOfBoundsStrategy.ZERO);
+
+    public static final StreamCodec<ByteBuf, LandmarkType> STREAM_CODEC =
+        ByteBufCodecs.idMapper(BY_ORDINAL, LandmarkType::ordinal);
 
     static {
         for (LandmarkType landmarkType : values()) {
             if (landmarkType.isFeature()) {
-                FEATURES.put(landmarkType.getFeature(), landmarkType);
+                BY_FEATURE.put(landmarkType.getFeature(), landmarkType);
             }
         }
     }

@@ -7,7 +7,9 @@ import io.github.diskria.achievetodo.client.gui.AbilityUnlockedToastType;
 import io.github.diskria.achievetodo.client.gui.DesignCodePalette;
 import io.github.diskria.achievetodo.injection.extension.main.ArmorItemExtension;
 import io.github.diskria.achievetodo.injection.extension.main.MiningToolItemExtension;
+import io.netty.buffer.ByteBuf;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancement.AdvancementEntry;
 import net.minecraft.advancement.PlacedAdvancement;
 import net.minecraft.block.*;
@@ -18,10 +20,13 @@ import net.minecraft.item.*;
 import net.minecraft.item.equipment.ArmorMaterial;
 import net.minecraft.item.equipment.ArmorMaterials;
 import net.minecraft.item.equipment.EquipmentType;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.registry.Registries;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Identifier;
 import net.minecraft.village.VillagerProfession;
 import net.minecraft.world.poi.PointOfInterestType;
@@ -31,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.IntFunction;
 
 public enum AbilityType {
 
@@ -185,6 +191,12 @@ public enum AbilityType {
     TRADE_WITH_TOOLSMITH(AbilityUnlockedToastType.TRADING, AbilitiesHierarchyLayerType.TRADING, VillagerProfession.TOOLSMITH),
     TRADE_WITH_LIBRARIAN(AbilityUnlockedToastType.TRADING, AbilitiesHierarchyLayerType.TRADING, VillagerProfession.LIBRARIAN),
     OPEN_ENCHANTING_TABLE(AbilityUnlockedToastType.BLOCK, AbilitiesHierarchyLayerType.BLOCKS, Blocks.ENCHANTING_TABLE);
+
+    private static final IntFunction<AbilityType> BY_ORDINAL =
+        ByIdMap.continuous(AbilityType::ordinal, AbilityType.values(), ByIdMap.OutOfBoundsStrategy.ZERO);
+
+    public static final StreamCodec<ByteBuf, AbilityType> STREAM_CODEC =
+        ByteBufCodecs.idMapper(BY_ORDINAL, AbilityType::ordinal);
 
     private final AbilitiesHierarchyLayerType hierarchyLayerType;
     private final AbilityUnlockedToastType unlockToastType;
@@ -380,19 +392,19 @@ public enum AbilityType {
         return landmarkType;
     }
 
-    public Text buildUnlockProgressMessage(int leftCount) {
+    public Component buildUnlockProgressMessage(int leftCount) {
         return buildLockedMessagePrefix()
             .append(AchieveToDoClient.translate("ability.left_to_unlock", leftCount))
-            .formatted(DesignCodePalette.TEXT_COLOR);
+            .withStyle(DesignCodePalette.TEXT_COLOR);
     }
 
-    public Text buildPermanentlyLockedMessage() {
+    public Component buildPermanentlyLockedMessage() {
         return buildLockedMessagePrefix()
             .append(AchieveToDoClient.translate("ability.permanently_locked"))
-            .formatted(Formatting.RED);
+            .withStyle(ChatFormatting.RED);
     }
 
-    private MutableText buildLockedMessagePrefix() {
+    private MutableComponent buildLockedMessagePrefix() {
         return AchieveToDoClient.translate("ability." + getName() + ".locked_message")
             .append("." + (FabricLoader.getInstance().isModLoaded("multilineactionbar") ? "\n" : " "));
     }

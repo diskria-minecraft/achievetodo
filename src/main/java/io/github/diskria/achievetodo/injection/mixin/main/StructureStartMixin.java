@@ -148,7 +148,7 @@ public class StructureStartMixin implements StructureStartExtension {
     ) {
         if (landmarkType != null) {
             ServerWorld serverWorld = world.toServerWorld();
-            DimensionType dimensionType = DimensionType.findByWorld(serverWorld.getRegistryKey());
+            DimensionType dimensionType = DimensionType.findByLevel(serverWorld.getRegistryKey());
             if (dimensionType != null && world instanceof LandmarkGenerationTracker landmarkGenerationTracker) {
                 landmarkGenerationTracker.achievetodo$setLandmarkGenerationTrackingEnabled(true);
                 if (landmarkBlockBox != null) {
@@ -188,7 +188,7 @@ public class StructureStartMixin implements StructureStartExtension {
             BlockBox newLandmarkBlockBox = landmarkGenerationTracker.achievetodo$getLandmarkBlockBox();
             if (newLandmarkBlockBox != null) {
                 ServerWorld serverWorld = world.toServerWorld();
-                DimensionType dimensionType = DimensionType.findByWorld(serverWorld.getRegistryKey());
+                DimensionType dimensionType = DimensionType.findByLevel(serverWorld.getRegistryKey());
                 DimensionalBlockBox newDimensionalBlockBox = new DimensionalBlockBox(
                     dimensionType,
                     newLandmarkBlockBox

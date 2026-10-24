@@ -56,7 +56,7 @@ public class SerializedChunkMixin implements SerializedChunkExtension {
                     Set<DimensionalBlockBox> dimensionalBlockBoxes = entry.getValue();
                     NbtList blockBoxesNbt = new NbtList();
                     for (DimensionalBlockBox dimensionalBlockBox : dimensionalBlockBoxes) {
-                        BlockBox blockBox = dimensionalBlockBox.blockBox();
+                        BlockBox blockBox = dimensionalBlockBox.blockBox;
                         NbtCompound blockBoxNbt = new NbtCompound();
                         blockBoxNbt.putInt(Constants.NbtKey.BLOCK_BOX_MIN_X, blockBox.getMinX());
                         blockBoxNbt.putInt(Constants.NbtKey.BLOCK_BOX_MIN_Y, blockBox.getMinY());
@@ -125,7 +125,7 @@ public class SerializedChunkMixin implements SerializedChunkExtension {
         @Local Chunk chunk
     ) {
         if (featureLandmarksNbt != null && chunk instanceof ChunkExtension chunkExtension) {
-            DimensionType dimensionType = DimensionType.findByWorld(world.getRegistryKey());
+            DimensionType dimensionType = DimensionType.findByLevel(world.getRegistryKey());
             if (dimensionType == null) {
                 return;
             }

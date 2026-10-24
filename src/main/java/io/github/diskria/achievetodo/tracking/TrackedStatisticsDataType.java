@@ -1,11 +1,15 @@
 package io.github.diskria.achievetodo.tracking;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Items;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.stat.Stat;
 import net.minecraft.stat.StatType;
 import net.minecraft.stat.Stats;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.IntFunction;
 
 public enum TrackedStatisticsDataType {
 
@@ -383,6 +388,11 @@ public enum TrackedStatisticsDataType {
     );
 
     public static final Map<Stat<?>, Set<TrackedStatisticsDataType>> STATISTICS_DATA = new HashMap<>();
+    private static final IntFunction<TrackedStatisticsDataType> BY_ORDINAL =
+        ByIdMap.continuous(TrackedStatisticsDataType::ordinal, TrackedStatisticsDataType.values(), ByIdMap.OutOfBoundsStrategy.ZERO);
+
+    public static final StreamCodec<ByteBuf, TrackedStatisticsDataType> STREAM_CODEC =
+        ByteBufCodecs.idMapper(BY_ORDINAL, TrackedStatisticsDataType::ordinal);
 
     static {
         for (TrackedStatisticsDataType type : values()) {

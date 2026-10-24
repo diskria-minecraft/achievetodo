@@ -1,13 +1,18 @@
 package io.github.diskria.achievetodo.tracking;
 
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.scoreboard.ReadableScoreboardScore;
 import net.minecraft.scoreboard.ScoreHolder;
 import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.util.ByIdMap;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 
 public enum TrackedScoreType {
@@ -201,6 +206,11 @@ public enum TrackedScoreType {
     );
 
     public static final Map<String, Set<TrackedScoreType>> SCORES = new HashMap<>();
+    private static final IntFunction<TrackedScoreType> BY_ORDINAL =
+        ByIdMap.continuous(TrackedScoreType::ordinal, TrackedScoreType.values(), ByIdMap.OutOfBoundsStrategy.ZERO);
+
+    public static final StreamCodec<ByteBuf, TrackedScoreType> STREAM_CODEC =
+        ByteBufCodecs.idMapper(BY_ORDINAL, TrackedScoreType::ordinal);
 
     static {
         for (TrackedScoreType type : values()) {

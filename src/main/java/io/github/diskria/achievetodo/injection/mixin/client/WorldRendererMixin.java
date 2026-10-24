@@ -156,7 +156,7 @@ public abstract class WorldRendererMixin {
         if (world == null) {
             return;
         }
-        DimensionType dimensionType = DimensionType.findByWorld(world.getRegistryKey());
+        DimensionType dimensionType = DimensionType.findByLevel(world.getRegistryKey());
         if (dimensionType == null) {
             return;
         }

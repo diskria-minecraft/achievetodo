@@ -36,13 +36,13 @@ public class FeatureMixin {
         @Local(argsOnly = true) @NotNull StructureWorldAccess world,
         @Local(argsOnly = true) BlockPos pos
     ) {
-        LandmarkType landmarkType = LandmarkType.FEATURES.get(feature);
+        LandmarkType landmarkType = LandmarkType.BY_FEATURE.get(feature);
         DimensionType dimensionType = null;
         ServerWorld serverWorld = null;
         LandmarkGenerationTracker tracker = null;
         if (landmarkType != null) {
             serverWorld = world.toServerWorld();
-            dimensionType = DimensionType.findByWorld(serverWorld.getRegistryKey());
+            dimensionType = DimensionType.findByLevel(serverWorld.getRegistryKey());
             if (dimensionType == null) {
                 serverWorld = null;
             } else if (world instanceof LandmarkGenerationTracker landmarkGenerationTracker) {

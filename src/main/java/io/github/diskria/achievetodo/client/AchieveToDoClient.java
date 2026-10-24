@@ -3,26 +3,26 @@ package io.github.diskria.achievetodo.client;
 import io.github.diskria.achievetodo.AchieveToDoMod;
 import io.github.diskria.achievetodo.ability.*;
 import io.github.diskria.achievetodo.client.gui.LockedLandmarkBox;
-import io.github.diskria.achievetodo.networking.c2s.DemystifyAbilityPayload;
-import io.github.diskria.achievetodo.networking.s2c.*;
+import io.github.diskria.achievetodo.payloads.clientbound.*;
+import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload;
 import io.github.diskria.achievetodo.server.Constants;
 import io.github.diskria.achievetodo.tracking.TrackedNearbyEntitiesType;
 import io.github.diskria.achievetodo.tracking.TrackedScoreType;
 import io.github.diskria.achievetodo.tracking.TrackedStatisticsDataType;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import kotlin.Unit;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.TypeFilter;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.core.BlockBox;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,13 +64,13 @@ public class AchieveToDoClient implements ClientModInitializer {
     }
 
     public static int getTrackedNearbyEntitiesCount(TrackedNearbyEntitiesType type) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || player.isSpectator()) {
             return 0;
         }
         int radius = type.getRadius();
-        Vec3d playerPos = player.getPos();
-        Box area = new Box(playerPos, playerPos).expand(radius);
+        Vec3 playerPos = player.position();
+        AABB area = new AABB(playerPos, playerPos).inflate(radius);
         Set<EntityType<?>> trackedEntities = type.getEntities();
         boolean isBabySeparated = type.isBabySeparated();
         Map<EntityType<?>, Map<Boolean, Boolean>> trackedMap = new HashMap<>();
@@ -83,14 +83,14 @@ public class AchieveToDoClient implements ClientModInitializer {
             trackedMap.put(entityType, babyAndAdultMap);
         }
         int entitiesCount = 0;
-        List<Entity> entities = player.getWorld().getEntitiesByType(
-            TypeFilter.instanceOf(Entity.class),
+        List<Entity> entities = player.level().getEntitiesOfClass(
+            Entity.class,
             area,
             entity -> trackedEntities.contains(entity.getType())
         );
         for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingEntity) {
-                if (playerPos.distanceTo(entity.getPos()) > radius) {
+                if (playerPos.distanceTo(entity.position()) > radius) {
                     continue;
                 }
                 Map<Boolean, Boolean> stateMap = trackedMap.get(entity.getType());
@@ -106,8 +106,8 @@ public class AchieveToDoClient implements ClientModInitializer {
         return entitiesCount;
     }
 
-    public static @NotNull MutableText translate(String keySuffix, Object... args) {
-        return Text.translatable(AchieveToDoMod.ID + "." + keySuffix, args);
+    public static @NotNull MutableComponent translate(String keySuffix, Object... args) {
+        return Component.translatable(AchieveToDoMod.ID + "." + keySuffix, args);
     }
 
     public static boolean isAbilityLocked(@NotNull AbilityType ability) {
@@ -115,7 +115,7 @@ public class AchieveToDoClient implements ClientModInitializer {
     }
 
     public static boolean isAbilityLocked(@NotNull AbilityType abilityType, boolean checkOnly) {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        LocalPlayer player = Minecraft.getInstance().player;
         if (player == null || player.isCreative() || player.isSpectator()) {
             return false;
         }
@@ -132,20 +132,20 @@ public class AchieveToDoClient implements ClientModInitializer {
             return false;
         }
         if (!checkOnly) {
-            Text lockedMessageText;
+            Component lockedMessageText;
             if (requiredCount == Constants.Progression.PERMANENTLY_LOCKED_FLAG) {
                 lockedMessageText = abilityType.buildPermanentlyLockedMessage();
             } else {
                 int leftCount = requiredCount - obtainedAdvancementsCount;
                 lockedMessageText = abilityType.buildUnlockProgressMessage(leftCount);
             }
-            player.sendMessage(lockedMessageText, true);
-            ClientPlayNetworking.send(new DemystifyAbilityPayload(abilityType));
+            player.sendOverlayMessage(lockedMessageText);
+            DemystifyAbilityPayload.ClientBound.send(abilityType);
         }
         return true;
     }
 
-    public static boolean isTargetInLockedLandmark(@NotNull DimensionType targetDimensionType, @NotNull Box targetBox) {
+    public static boolean isTargetInLockedLandmark(@NotNull DimensionType targetDimensionType, @NotNull BlockBox targetBox) {
         for (LockedLandmarkBox lockedLandmarksBox : lockedLandmarkBoxes) {
             if (lockedLandmarksBox.dimensionType() == targetDimensionType &&
                 lockedLandmarksBox.box().intersects(targetBox)
@@ -224,78 +224,74 @@ public class AchieveToDoClient implements ClientModInitializer {
     }
 
     private void registerPayloads() {
-        ClientPlayNetworking.registerGlobalReceiver(SyncAbilitiesConfigurationPayload.ID, (payload, context) ->
-            context.client().execute(() -> {
-                abilitiesConfiguration = payload.abilitiesConfiguration();
-                abilityRows.clear();
-                calculateLockedLandmarkBoxes();
-            })
-        );
-        ClientPlayNetworking.registerGlobalReceiver(SyncObtainedAdvancementsCountPayload.ID, (payload, context) ->
-            context.client().execute(() -> obtainedAdvancementsCount = payload.obtainedAdvancementsCount())
-        );
-        ClientPlayNetworking.registerGlobalReceiver(LandmarksLockedStatusChangedPayload.ID, (payload, context) ->
-            context.client().execute(() -> {
-                boolean isChanged = false;
-                for (var entry : payload.landmarks().entrySet()) {
-                    LandmarkType landmarkType = entry.getKey();
-                    if (payload.isLocked()) {
-                        if (lockedLandmarkBlockBoxes
-                            .computeIfAbsent(landmarkType, k -> new HashSet<>())
-                            .addAll(entry.getValue())
-                        ) {
-                            isChanged = true;
-                        }
-                    } else {
-                        Set<DimensionalBlockBox> dimensionalBoxes = lockedLandmarkBlockBoxes.get(landmarkType);
-                        if (dimensionalBoxes != null && dimensionalBoxes.removeAll(entry.getValue())) {
-                            isChanged = true;
-                            if (dimensionalBoxes.isEmpty()) {
-                                lockedLandmarkBlockBoxes.remove(landmarkType);
-                            }
-                        }
-                    }
-                }
-                if (isChanged) {
-                    calculateLockedLandmarkBoxes();
-                }
-            })
-        );
-        ClientPlayNetworking.registerGlobalReceiver(LandmarkTypesUnlockedPayload.ID, (payload, context) ->
-            context.client().execute(() -> {
-                boolean isChanged = false;
-                for (LandmarkType landmarkType : payload.unlockedLandmarkTypes()) {
-                    if (lockedLandmarkBlockBoxes.remove(landmarkType) != null) {
+        SyncAbilitiesConfigurationPayload.ClientBound.listen((context, config) -> {
+            abilitiesConfiguration = config;
+            abilityRows.clear();
+            calculateLockedLandmarkBoxes();
+            return Unit.INSTANCE;
+        });
+        SyncObtainedAdvancementsCountPayload.ClientBound.listen((context, count) -> {
+            obtainedAdvancementsCount = count;
+            return Unit.INSTANCE;
+        });
+        LandmarksLockedStatusChangedPayload.ClientBound.listen((context, landmarks, isLocked) -> {
+            boolean isChanged = false;
+            for (var entry : landmarks.entrySet()) {
+                LandmarkType landmarkType = entry.getKey();
+                if (isLocked) {
+                    if (lockedLandmarkBlockBoxes
+                        .computeIfAbsent(landmarkType, k -> new HashSet<>())
+                        .addAll(entry.getValue())
+                    ) {
                         isChanged = true;
                     }
+                } else {
+                    Set<DimensionalBlockBox> dimensionalBoxes = lockedLandmarkBlockBoxes.get(landmarkType);
+                    if (dimensionalBoxes != null && dimensionalBoxes.removeAll(entry.getValue())) {
+                        isChanged = true;
+                        if (dimensionalBoxes.isEmpty()) {
+                            lockedLandmarkBlockBoxes.remove(landmarkType);
+                        }
+                    }
                 }
-                if (isChanged) {
-                    calculateLockedLandmarkBoxes();
+            }
+            if (isChanged) {
+                calculateLockedLandmarkBoxes();
+            }
+            return Unit.INSTANCE;
+        });
+        LandmarkTypesUnlockedPayload.ClientBound.listen((context, landmarks) -> {
+            boolean isChanged = false;
+            for (LandmarkType landmarkType : landmarks) {
+                if (lockedLandmarkBlockBoxes.remove(landmarkType) != null) {
+                    isChanged = true;
                 }
-            })
-        );
-        ClientPlayNetworking.registerGlobalReceiver(LockedLandmarkResizedPayload.ID, (payload, context) ->
-            context.client().execute(() -> {
-                Set<DimensionalBlockBox> dimensionalBlockBoxes = lockedLandmarkBlockBoxes.get(payload.landmarkType());
-                DimensionType dimensionType = payload.dimensionType();
-                if (dimensionalBlockBoxes.remove(new DimensionalBlockBox(dimensionType, payload.oldBlockBox()))) {
-                    dimensionalBlockBoxes.add(new DimensionalBlockBox(dimensionType, payload.newBlockBox()));
-                    calculateLockedLandmarkBoxes();
-                }
-            })
-        );
-        ClientPlayNetworking.registerGlobalReceiver(ScoreProgressChangedPayload.ID, (payload, context) ->
-            context.client().execute(() -> trackedScores.put(payload.progressType(), payload.progress()))
-        );
-        ClientPlayNetworking.registerGlobalReceiver(StatisticsDataProgressChangedPayload.ID, (payload, context) ->
-            context.client().execute(() -> trackedStatisticsData.put(
-                payload.trackedStatisticsDataType(),
-                payload.newProgress()
-            ))
-        );
-        ClientPlayNetworking.registerGlobalReceiver(CheckTargetInLockedLandmarkPayload.ID, (payload, context) ->
-            context.client().execute(() -> isTargetInLockedLandmark(payload.targetDimensionType(), payload.targetBox()))
-        );
+            }
+            if (isChanged) {
+                calculateLockedLandmarkBoxes();
+            }
+            return Unit.INSTANCE;
+        });
+        LockedLandmarkResizedPayload.ClientBound.listen((context, landmark, dimension, oldBox, newBox) -> {
+            Set<DimensionalBlockBox> dimensionalBlockBoxes = lockedLandmarkBlockBoxes.get(landmark);
+            if (dimensionalBlockBoxes.remove(new DimensionalBlockBox(dimension, oldBox))) {
+                dimensionalBlockBoxes.add(new DimensionalBlockBox(dimension, newBox));
+                calculateLockedLandmarkBoxes();
+            }
+            return Unit.INSTANCE;
+        });
+        ScoreProgressChangedPayload.ClientBound.listen((context, score, progress) -> {
+            trackedScores.put(score, progress);
+            return Unit.INSTANCE;
+        });
+        StatisticsDataProgressChangedPayload.ClientBound.listen((context, statisticsData, progress) -> {
+            trackedStatisticsData.put(statisticsData, progress);
+            return Unit.INSTANCE;
+        });
+        CheckTargetInLockedLandmarkPayload.ClientBound.listen((context, dimensionType, box) -> {
+            isTargetInLockedLandmark(dimensionType, box);
+            return Unit.INSTANCE;
+        });
     }
 
     private void calculateLockedLandmarkBoxes() {
@@ -306,11 +302,10 @@ public class AchieveToDoClient implements ClientModInitializer {
         for (var entry : lockedLandmarkBlockBoxes.entrySet()) {
             LandmarkType landmarkType = entry.getKey();
             for (DimensionalBlockBox dimensionalBlockBox : entry.getValue()) {
-
                 result.add(new LockedLandmarkBox(
                     landmarkType,
                     dimensionalBlockBox.dimensionType(),
-                    Box.from(dimensionalBlockBox.blockBox())
+                    Box.from(dimensionalBlockBox.blockBox)
                 ));
             }
         }
