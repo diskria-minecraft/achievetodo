@@ -15,19 +15,10 @@ version = "2.0.0"
 
 loom {
     accessWidenerPath = file("src/main/resources/$modId.classtweaker")
-    runs {
-        register("datagen") {
-            name = "Data Generation"
+}
 
-            inherit(getByName("server"))
-
-            vmArg("-Dfabric-api.datagen")
-            vmArg("-Dfabric-api.datagen.output-dir=${layout.projectDirectory.dir("src/main/generated").asFile.absolutePath}")
-            vmArg("-Dfabric-api.datagen.modid=$modId")
-
-            runDir = "build/datagen"
-        }
-    }
+fabricApi {
+    configureDataGeneration()
 }
 
 lapis {
@@ -37,30 +28,20 @@ lapis {
 
 dependencies {
     minecraft(libs.minecraft)
-    mappings(variantOf(libs.fabric.yarn) { classifier("v2") })
 
-    modImplementation(libs.fabric.loader)
-    modImplementation(libs.fabric.kotlin)
-    modImplementation(libs.fabric.api)
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.kotlin)
+    implementation(libs.fabric.api)
 
-    modImplementation(libs.toml)
+    implementation(libs.toml)
 }
 
 tasks.withType<Jar> {
     exclude("**/*.kotlin_module")
-
-    exclude(".cache/**")
-
 }
 
 tasks.withType<JavaCompile>().configureEach {
     options.release = 21
-}
-
-tasks.processResources {
-    doFirst {
-        file("build/datagen").mkdirs()
-    }
 }
 
 sourceSets {

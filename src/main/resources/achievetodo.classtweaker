@@ -1,21 +1,21 @@
-accessWidener v2 named
+classTweaker v1 official
 
-accessible class net/minecraft/screen/slot/ArmorSlot
-accessible class net/minecraft/client/gui/screen/world/WorldScreenOptionGrid
-accessible class net/minecraft/client/gui/screen/advancement/AdvancementTabType
-accessible class net/minecraft/advancement/AdvancementDisplays$Status
-extendable class net/minecraft/world/level/LevelInfo
-extendable class net/minecraft/world/chunk/SerializedChunk
-extendable class net/minecraft/structure/StructureStart
-
-accessible method net/minecraft/client/gui/screen/world/CreateWorldScreen createLevel ()V
-accessible method net/minecraft/server/dedicated/AbstractPropertiesHandler getString (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
-accessible method net/minecraft/client/render/Frustum intersectAab (DDDDDD)I
-
-accessible field net/minecraft/scoreboard/ServerScoreboard server Lnet/minecraft/server/MinecraftServer;
-accessible field net/minecraft/client/gui/screen/Screen client Lnet/minecraft/client/MinecraftClient;
-accessible field net/minecraft/client/gui/widget/TabNavigationWidget tabManager Lnet/minecraft/client/gui/tab/TabManager;
-accessible field net/minecraft/client/tutorial/TutorialManager currentHandler Lnet/minecraft/client/tutorial/TutorialStepHandler;
-accessible field net/minecraft/advancement/PlacedAdvancement children Ljava/util/Set;
-accessible field net/minecraft/client/gui/screen/advancement/AdvancementWidget parent Lnet/minecraft/client/gui/screen/advancement/AdvancementWidget;
-accessible field net/minecraft/client/gui/screen/advancement/AdvancementWidget advancement Lnet/minecraft/advancement/PlacedAdvancement;
+#accessible class net/minecraft/screen/slot/ArmorSlot
+#accessible class net/minecraft/client/gui/screen/world/WorldScreenOptionGrid
+#accessible class net/minecraft/client/gui/screen/advancement/AdvancementTabType
+#accessible class net/minecraft/advancement/AdvancementDisplays$Status
+#extendable class net/minecraft/world/level/LevelInfo
+#extendable class net/minecraft/world/chunk/SerializedChunk
+#extendable class net/minecraft/structure/StructureStart
+#
+#accessible method net/minecraft/client/gui/screen/world/CreateWorldScreen createLevel ()V
+#accessible method net/minecraft/server/dedicated/AbstractPropertiesHandler getString (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+#accessible method net/minecraft/client/render/Frustum intersectAab (DDDDDD)I
+#
+#accessible field net/minecraft/scoreboard/ServerScoreboard server Lnet/minecraft/server/MinecraftServer;
+#accessible field net/minecraft/client/gui/screen/Screen client Lnet/minecraft/client/MinecraftClient;
+#accessible field net/minecraft/client/gui/widget/TabNavigationWidget tabManager Lnet/minecraft/client/gui/tab/TabManager;
+#accessible field net/minecraft/client/tutorial/TutorialManager currentHandler Lnet/minecraft/client/tutorial/TutorialStepHandler;
+#accessible field net/minecraft/advancement/PlacedAdvancement children Ljava/util/Set;
+#accessible field net/minecraft/client/gui/screen/advancement/AdvancementWidget parent Lnet/minecraft/client/gui/screen/advancement/AdvancementWidget;
+#accessible field net/minecraft/client/gui/screen/advancement/AdvancementWidget advancement Lnet/minecraft/advancement/PlacedAdvancement;
