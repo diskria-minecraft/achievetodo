@@ -6,7 +6,6 @@ import com.moandjiezana.toml.Toml;
 import com.mojang.serialization.Dynamic;
 import io.github.diskria.achievetodo.AchieveToDoMod;
 import io.github.diskria.achievetodo.ability.AbilityType;
-import io.github.diskria.achievetodo.ability.ChaosProgressionGenerator;
 import io.github.diskria.achievetodo.ability.ProgressionModeType;
 import io.github.diskria.achievetodo.ability.Progressions;
 import io.github.diskria.achievetodo.injection.extension.main.LevelInfoExtension;
@@ -79,7 +78,7 @@ public abstract class LevelInfoMixin implements LevelInfoExtension {
             if (Files.exists(configFile)) {
                 try {
                     Toml configToml = new Toml().read(configFile.toFile());
-                    if (configToml.getLong(Constants.ConfigKey.VERSION) >= progressionModeType.getVersion()) {
+                    if (configToml.getLong(Constants.ConfigKey.VERSION) >= progressionModeType.version) {
                         Toml abilitiesTable = configToml.getTable(Constants.ConfigKey.ABILITIES_TABLE);
                         if (abilitiesTable != null) {
                             abilitiesMap = abilitiesTable.toMap();
@@ -91,15 +90,15 @@ public abstract class LevelInfoMixin implements LevelInfoExtension {
             if (abilitiesMap == null) {
                 StringBuilder configTomlContents = new StringBuilder()
                     .append(Constants.ConfigKey.VERSION + " = ")
-                    .append(progressionModeType.getVersion())
+                    .append(progressionModeType.version)
                     .append("\n\n")
                     .append("[" + Constants.ConfigKey.ABILITIES_TABLE + "]")
                     .append("\n");
                 Map<AbilityType, Integer> progression = switch (progressionModeType) {
-                    case EASY -> Progressions.getEasyProgression();
-                    case NORMAL -> Progressions.getNormalProgression();
-                    case HARD -> Progressions.getHardProgression();
-                    case CHAOS -> ChaosProgressionGenerator.generateChaosProgression(seed);
+                    case EASY -> Progressions.INSTANCE.getEasy();
+                    case NORMAL -> Progressions.INSTANCE.getNormal();
+                    case HARD -> Progressions.INSTANCE.getHard();
+                    case CHAOS -> Progressions.INSTANCE.chaos(seed);
                 };
                 for (AbilityType abilityType : AbilityType.values()) {
                     Integer requiredCount = progression.get(abilityType);

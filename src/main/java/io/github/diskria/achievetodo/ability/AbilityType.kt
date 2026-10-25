@@ -278,21 +278,21 @@ enum class AbilityType(
     val title: MutableComponent get() = AchieveToDoClient.translate("ability.$id.name")
     val description: MutableComponent get() = AchieveToDoClient.translate("ability.$id.description")
 
-    val chaosPriority: Int
+    val chaosTemperature: Int
         get() = when (this) {
-            OPEN_CRAFTING_TABLE -> 100
+            OPEN_CRAFTING_TABLE -> 0
 
             INTERACT_INSIDE_FORTRESS,
             INTERACT_INSIDE_STRONGHOLD,
             USE_ENDER_EYE,
             ENTER_NETHER,
-            ENTER_END -> 90
+            ENTER_END -> 10
 
             OPEN_BEACON,
             OPEN_ENDER_CHEST,
             OPEN_SMITHING_TABLE,
             OPEN_ANVIL,
-            OPEN_STONECUTTER -> 80
+            OPEN_STONECUTTER -> 20
 
             USE_GOLDEN_TOOLS,
             USE_WOODEN_TOOLS,
@@ -300,12 +300,12 @@ enum class AbilityType(
             USE_IRON_TOOLS,
             USE_SHIELD,
             USE_WATER_BUCKET,
-            USE_FLINT_AND_STEEL -> 70
+            USE_FLINT_AND_STEEL -> 30
 
             EQUIP_LEATHER_ARMOR,
             EQUIP_CHAINMAIL_ARMOR,
             EQUIP_IRON_ARMOR,
-            EQUIP_ELYTRA -> 60
+            EQUIP_ELYTRA -> 40
 
             THROW_ENDER_PEARL,
             USE_OMINOUS_BOTTLE,
@@ -315,12 +315,12 @@ enum class AbilityType(
             EAT_ROTTEN_FLESH,
             EAT_SPIDER_EYE,
             EAT_SUSPICIOUS_STEW,
-            EAT_POISONOUS_POTATO -> 40
+            EAT_POISONOUS_POTATO -> 60
 
             else -> when (hierarchyLayerType) {
-                UPGRADE, BLOCKS, ACTIONS -> 30
-                TRADING, LANDMARK, FOOD -> 0
-                else -> 100
+                UPGRADE, BLOCKS, ACTIONS -> 70
+                TRADING, LANDMARK, FOOD -> 100
+                else -> 0
             }
         }
 
