@@ -62,7 +62,7 @@ public class AdvancementToastMixin {
         index = 1
     )
     private Text setCustomTitleForAbilityUnlockedNotification(Text original) {
-        return abilityType != null ? abilityType.getUnlockToastType().getToastTitle() : original;
+        return abilityType != null ? abilityType.unlockToastType.getToastTitle() : original;
     }
 
     @ModifyVariable(

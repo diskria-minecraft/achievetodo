@@ -5,7 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.diskria.achievetodo.AchieveToDoMod;
 import io.github.diskria.achievetodo.ability.AbilityType;
-import io.github.diskria.achievetodo.ability.generation.AbilityAdvancementsGenerator;
+import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator;
 import io.github.diskria.achievetodo.client.AchieveToDoClient;
 import io.github.diskria.achievetodo.server.Constants;
 import io.github.diskria.achievetodo.tracking.TrackedNearbyEntitiesType;
@@ -74,7 +74,7 @@ public class AdvancementWidgetMixin {
             return false;
         }
         CriterionProgress demystifiedCriterionProgress = progress.getCriterionProgress(
-            AbilityAdvancementsGenerator.DEMYSTIFIED_CRITERION
+            AbilityAdvancementsTabGenerator.DEMYSTIFIED_CRITERION
         );
         return demystifiedCriterionProgress != null && !demystifiedCriterionProgress.isObtained();
     }

@@ -1,10 +1,8 @@
 package io.github.diskria.achievetodo.injection.mixin.main;
 
 import io.github.diskria.achievetodo.injection.extension.main.ArmorItemExtension;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.equipment.ArmorMaterial;
-import net.minecraft.item.equipment.EquipmentType;
+import net.minecraft.world.inventory.ArmorSlot;
+import net.minecraft.world.item.equipment.ArmorMaterial;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +16,7 @@ public class ArmorItemMixin implements ArmorItemExtension {
     private ArmorMaterial material;
 
     @Unique
-    private EquipmentType equipmentType;
+    private ArmorSlot equipmentType;
 
     @Override
     public ArmorMaterial achievetodo$getMaterial() {
@@ -26,7 +24,7 @@ public class ArmorItemMixin implements ArmorItemExtension {
     }
 
     @Override
-    public EquipmentType achievetodo$getEquipmentType() {
+    public ArmorSlot achievetodo$getSlot() {
         return equipmentType;
     }
 

@@ -17,7 +17,10 @@
   "environment": "*",
   "entrypoints": {
     "fabric-datagen": [
-      "io.github.diskria.achievetodo.ability.generation.AbilitiesGenerator"
+      {
+        "value": "io.github.diskria.achievetodo.datagen.AchieveToDoDatagen",
+        "adapter": "kotlin"
+      }
     ],
     "main": [
       {

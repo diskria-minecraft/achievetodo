@@ -5,7 +5,7 @@ import io.github.diskria.achievetodo.ability.AbilityType;
 import io.github.diskria.achievetodo.ability.DimensionType;
 import io.github.diskria.achievetodo.ability.DimensionalBlockBox;
 import io.github.diskria.achievetodo.ability.LandmarkType;
-import io.github.diskria.achievetodo.ability.generation.AbilityAdvancementsGenerator;
+import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator;
 import io.github.diskria.achievetodo.client.InternalPack;
 import io.github.diskria.achievetodo.client.Utils;
 import io.github.diskria.achievetodo.injection.extension.main.ChunkExtension;
@@ -143,7 +143,7 @@ public class AchieveToDoServer implements ServerModInitializer {
                 continue;
             }
             setAbilityLocked(player, abilityType, isLock);
-            LandmarkType landmarkType = abilityType.getLandmarkType();
+            LandmarkType landmarkType = abilityType.landmark;
             if (landmarkType != null) {
                 if (isLock) {
                     playersByLockedLandmarkTypes
@@ -542,19 +542,19 @@ public class AchieveToDoServer implements ServerModInitializer {
 
     private void demystifyAbility(@NotNull ServerPlayer player, @NotNull AbilityType ability) {
         AdvancementEntry advancement = player.server.getAdvancementLoader()
-            .get(AbilityAdvancementsGenerator.buildAdvancementId(ability));
+            .get(AbilityAdvancementsTabGenerator.buildAdvancementId(ability));
         player.getAdvancementTracker().grantCriterion(
             advancement,
-            AbilityAdvancementsGenerator.DEMYSTIFIED_CRITERION
+            AbilityAdvancementsTabGenerator.DEMYSTIFIED_CRITERION
         );
     }
 
     private void setAbilityLocked(@NotNull ServerPlayerEntity player, @NotNull AbilityType ability, boolean isLocked) {
         AdvancementEntry advancement = player.server.getAdvancementLoader()
-            .get(AbilityAdvancementsGenerator.buildAdvancementId(ability));
+            .get(AbilityAdvancementsTabGenerator.buildAdvancementId(ability));
         PlayerAdvancementTracker advancementTracker = player.getAdvancementTracker();
         if (isLocked) {
-            advancementTracker.revokeCriterion(advancement, AbilityAdvancementsGenerator.UNLOCKED_CRITERION);
+            advancementTracker.revokeCriterion(advancement, AbilityAdvancementsTabGenerator.UNLOCKED_CRITERION);
         } else {
             for (String criterion : advancementTracker.getProgress(advancement).getUnobtainedCriteria()) {
                 advancementTracker.grantCriterion(advancement, criterion);

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 
-public enum AbilityUnlockedToastType {
+public enum UnlockedToastType {
 
     ACTION,
     ITEM,
