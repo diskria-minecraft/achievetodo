@@ -6,9 +6,9 @@ import io.github.diskria.achievetodo.ability.AbilityType;
 import io.github.diskria.achievetodo.client.AchieveToDoClient;
 import io.github.diskria.achievetodo.injection.extension.main.AdvancementProgressExtension;
 import io.github.diskria.achievetodo.server.Constants;
-import io.github.diskria.achievetodo.tracking.TrackedNearbyEntitiesType;
-import io.github.diskria.achievetodo.tracking.TrackedScoreType;
-import io.github.diskria.achievetodo.tracking.TrackedStatisticsDataType;
+import io.github.diskria.achievetodo.qol.EntitiesNearbyTrackedAdvancement;
+import io.github.diskria.achievetodo.qol.TrackedScore;
+import io.github.diskria.achievetodo.qol.TrackedStat;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.AdvancementRequirements;
 import net.minecraft.text.Text;
@@ -24,25 +24,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class AdvancementProgressMixin implements AdvancementProgressExtension {
 
     @Unique
-    private TrackedScoreType trackedScoreType;
+    private TrackedScore trackedScore;
 
     @Unique
-    private TrackedNearbyEntitiesType trackedNearbyEntitiesType;
+    private EntitiesNearbyTrackedAdvancement trackedNearbyEntitiesType;
 
     @Unique
-    private TrackedStatisticsDataType trackedStatisticsDataType;
+    private TrackedStat trackedStat;
 
     @Unique
     private AbilityType abilityType;
 
     @Override
     public void achievetodo$setAdvancementId(Identifier advancementId) {
-        trackedScoreType = TrackedScoreType.findByAdvancement(advancementId);
-        if (trackedScoreType == null) {
-            trackedNearbyEntitiesType = TrackedNearbyEntitiesType.findByAdvancement(advancementId);
+        trackedScore = TrackedScore.findByAdvancement(advancementId);
+        if (trackedScore == null) {
+            trackedNearbyEntitiesType = EntitiesNearbyTrackedAdvancement.findByAdvancement(advancementId);
             if (trackedNearbyEntitiesType == null) {
-                trackedStatisticsDataType = TrackedStatisticsDataType.findByAdvancement(advancementId);
-                if (trackedStatisticsDataType == null) {
+                trackedStat = TrackedStat.findByAdvancement(advancementId);
+                if (trackedStat == null) {
                     abilityType = AbilityType.findByAdvancement(advancementId);
                 }
             }
@@ -58,23 +58,23 @@ public abstract class AdvancementProgressMixin implements AdvancementProgressExt
         cancellable = true
     )
     public void overrideObtainedRequirementsCount(CallbackInfoReturnable<Integer> cir) {
-        if (trackedScoreType != null) {
+        if (trackedScore != null) {
             if (isDone()) {
-                cir.setReturnValue(trackedScoreType.getFinalValue());
+                cir.setReturnValue(trackedScore.finalValue);
             } else {
-                cir.setReturnValue(AchieveToDoClient.getTrackedScore(trackedScoreType));
+                cir.setReturnValue(AchieveToDoClient.getTrackedAdvancementProgress(trackedScore));
             }
         } else if (trackedNearbyEntitiesType != null) {
             if (isDone()) {
-                cir.setReturnValue(trackedNearbyEntitiesType.getEntitiesCount());
+                cir.setReturnValue(trackedNearbyEntitiesType.getFinalValue());
             } else {
                 cir.setReturnValue(AchieveToDoClient.getTrackedNearbyEntitiesCount(trackedNearbyEntitiesType));
             }
-        } else if (trackedStatisticsDataType != null) {
+        } else if (trackedStat != null) {
             if (isDone()) {
-                cir.setReturnValue(trackedStatisticsDataType.getFinalValue());
+                cir.setReturnValue(trackedStat.finalValue);
             } else {
-                cir.setReturnValue(AchieveToDoClient.getTrackedStatisticsData(trackedStatisticsDataType));
+                cir.setReturnValue(AchieveToDoClient.getTrackedStatisticsData(trackedStat));
             }
         } else if (abilityType != null) {
             cir.setReturnValue(
@@ -100,14 +100,14 @@ public abstract class AdvancementProgressMixin implements AdvancementProgressExt
         AdvancementRequirements requirements,
         Operation<Integer> original
     ) {
-        if (trackedScoreType != null) {
-            return trackedScoreType.getFinalValue();
+        if (trackedScore != null) {
+            return trackedScore.finalValue;
         }
         if (trackedNearbyEntitiesType != null) {
-            return trackedNearbyEntitiesType.getEntitiesCount();
+            return trackedNearbyEntitiesType.getFinalValue();
         }
-        if (trackedStatisticsDataType != null) {
-            return trackedStatisticsDataType.getFinalValue();
+        if (trackedStat != null) {
+            return trackedStat.finalValue;
         }
         if (abilityType != null) {
             return AchieveToDoClient.getRequiredAdvancementsCount(abilityType);
@@ -130,10 +130,10 @@ public abstract class AdvancementProgressMixin implements AdvancementProgressExt
             }
         } else if (!isDone()) {
             int completionPercent = 0;
-            if (trackedScoreType != null && trackedScoreType.isPercentage()) {
-                completionPercent = AchieveToDoClient.getTrackedScore(trackedScoreType);
-            } else if (trackedStatisticsDataType != null && trackedStatisticsDataType.isPercentage()) {
-                completionPercent = AchieveToDoClient.getTrackedStatisticsData(trackedStatisticsDataType);
+            if (trackedScore != null && trackedScore.percentsMode) {
+                completionPercent = AchieveToDoClient.getTrackedAdvancementProgress(trackedScore);
+            } else if (trackedStat != null && trackedStat.percentsMode) {
+                completionPercent = AchieveToDoClient.getTrackedStatisticsData(trackedStat);
             }
             if (completionPercent > 0) {
                 cir.setReturnValue(completionPercent / 100.0f);
@@ -156,8 +156,8 @@ public abstract class AdvancementProgressMixin implements AdvancementProgressExt
                 return;
             }
         }
-        boolean isScore = trackedScoreType != null && trackedScoreType.isPercentage();
-        boolean isStatisticsData = trackedStatisticsDataType != null && trackedStatisticsDataType.isPercentage();
+        boolean isScore = trackedScore != null && trackedScore.percentsMode;
+        boolean isStatisticsData = trackedStat != null && trackedStat.percentsMode;
         if (!isScore && !isStatisticsData) {
             return;
         }
@@ -165,9 +165,9 @@ public abstract class AdvancementProgressMixin implements AdvancementProgressExt
         if (isDone()) {
             completionPercent = 100;
         } else if (isScore) {
-            completionPercent = AchieveToDoClient.getTrackedScore(trackedScoreType);
+            completionPercent = AchieveToDoClient.getTrackedAdvancementProgress(trackedScore);
         } else {
-            completionPercent = AchieveToDoClient.getTrackedStatisticsData(trackedStatisticsDataType);
+            completionPercent = AchieveToDoClient.getTrackedStatisticsData(trackedStat);
         }
         cir.setReturnValue(Text.translatable("mco.upload.percent", completionPercent));
     }

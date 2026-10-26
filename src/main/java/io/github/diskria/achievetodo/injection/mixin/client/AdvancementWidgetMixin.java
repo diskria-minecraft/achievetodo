@@ -8,9 +8,9 @@ import io.github.diskria.achievetodo.ability.AbilityType;
 import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator;
 import io.github.diskria.achievetodo.client.AchieveToDoClient;
 import io.github.diskria.achievetodo.server.Constants;
-import io.github.diskria.achievetodo.tracking.TrackedNearbyEntitiesType;
-import io.github.diskria.achievetodo.tracking.TrackedScoreType;
-import io.github.diskria.achievetodo.tracking.TrackedStatisticsDataType;
+import io.github.diskria.achievetodo.qol.EntitiesNearbyTrackedAdvancement;
+import io.github.diskria.achievetodo.qol.TrackedScore;
+import io.github.diskria.achievetodo.qol.TrackedStat;
 import net.minecraft.advancement.AdvancementDisplay;
 import net.minecraft.advancement.AdvancementProgress;
 import net.minecraft.advancement.AdvancementRequirements;
@@ -46,13 +46,13 @@ public class AdvancementWidgetMixin {
         AchieveToDoMod.getIdentifier("ability_mystified_mask");
 
     @Unique
-    private TrackedScoreType trackedScoreType;
+    private TrackedScore trackedScore;
 
     @Unique
-    private TrackedNearbyEntitiesType trackedNearbyEntitiesType;
+    private EntitiesNearbyTrackedAdvancement trackedNearbyEntitiesType;
 
     @Unique
-    private TrackedStatisticsDataType trackedStatisticsDataType;
+    private TrackedStat trackedStat;
 
     @Unique
     private AbilityType abilityType;
@@ -95,12 +95,12 @@ public class AdvancementWidgetMixin {
         CallbackInfo ci
     ) {
         Identifier advancementId = advancement.getAdvancementEntry().id();
-        trackedScoreType = TrackedScoreType.findByAdvancement(advancementId);
-        if (trackedScoreType == null) {
-            trackedNearbyEntitiesType = TrackedNearbyEntitiesType.findByAdvancement(advancementId);
+        trackedScore = TrackedScore.findByAdvancement(advancementId);
+        if (trackedScore == null) {
+            trackedNearbyEntitiesType = EntitiesNearbyTrackedAdvancement.findByAdvancement(advancementId);
             if (trackedNearbyEntitiesType == null) {
-                trackedStatisticsDataType = TrackedStatisticsDataType.findByAdvancement(advancementId);
-                if (trackedStatisticsDataType == null) {
+                trackedStat = TrackedStat.findByAdvancement(advancementId);
+                if (trackedStat == null) {
                     abilityType = AbilityType.findByAdvancement(advancementId);
                 }
             }
@@ -142,14 +142,14 @@ public class AdvancementWidgetMixin {
         )
     )
     public int setRequiredAdvancementsCount(AdvancementRequirements requirements, Operation<Integer> original) {
-        if (trackedScoreType != null) {
-            return trackedScoreType.getFinalValue();
+        if (trackedScore != null) {
+            return trackedScore.finalValue;
         }
         if (trackedNearbyEntitiesType != null) {
-            return trackedNearbyEntitiesType.getEntitiesCount();
+            return trackedNearbyEntitiesType.getFinalValue();
         }
-        if (trackedStatisticsDataType != null) {
-            return trackedStatisticsDataType.getFinalValue();
+        if (trackedStat != null) {
+            return trackedStat.finalValue;
         }
         if (abilityType != null) {
             return AchieveToDoClient.getRequiredAdvancementsCount(abilityType);
@@ -172,8 +172,8 @@ public class AdvancementWidgetMixin {
                 return;
             }
         }
-        if (trackedScoreType != null && trackedScoreType.isPercentage() ||
-            trackedStatisticsDataType != null && trackedStatisticsDataType.isPercentage()
+        if (trackedScore != null && trackedScore.percentsMode ||
+            trackedStat != null && trackedStat.percentsMode
         ) {
             cir.setReturnValue(8 + client.textRenderer.getWidth(Text.translatable("mco.upload.percent", 100)));
         }

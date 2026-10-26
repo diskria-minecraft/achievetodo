@@ -1,7 +1,7 @@
 package io.github.diskria.achievetodo.injection.extension.main;
 
 import io.github.diskria.achievetodo.ability.LandmarkType;
-import net.minecraft.util.math.BlockBox;
+import net.minecraft.core.BlockBox;
 
 public interface StructureStartExtension {
     void achievetodo$setLandmarkType(LandmarkType landmarkType);

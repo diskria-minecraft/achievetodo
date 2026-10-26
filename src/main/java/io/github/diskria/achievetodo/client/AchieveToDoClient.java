@@ -6,9 +6,6 @@ import io.github.diskria.achievetodo.client.gui.LockedLandmarkBox;
 import io.github.diskria.achievetodo.payloads.clientbound.*;
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload;
 import io.github.diskria.achievetodo.server.Constants;
-import io.github.diskria.achievetodo.tracking.TrackedNearbyEntitiesType;
-import io.github.diskria.achievetodo.tracking.TrackedScoreType;
-import io.github.diskria.achievetodo.tracking.TrackedStatisticsDataType;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import kotlin.Unit;
 import net.fabricmc.api.ClientModInitializer;
@@ -18,11 +15,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockBox;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,8 +24,7 @@ import java.util.stream.Collectors;
 public class AchieveToDoClient implements ClientModInitializer {
 
     private static final Map<LandmarkType, Set<DimensionalBlockBox>> lockedLandmarkBlockBoxes = new HashMap<>();
-    private static final Map<TrackedScoreType, Integer> trackedScores = new Object2IntOpenHashMap<>();
-    private static final Map<TrackedStatisticsDataType, Integer> trackedStatisticsData = new Object2IntOpenHashMap<>();
+    private static final Map<String, Integer> trackedAdvancementProgresses = new Object2IntOpenHashMap<>();
     private static final List<List<AbilityType>> abilityRows = new ArrayList<>();
     private static Map<AbilityType, Integer> abilitiesConfiguration;
     private static int obtainedAdvancementsCount = Integer.MIN_VALUE;
@@ -51,59 +42,12 @@ public class AchieveToDoClient implements ClientModInitializer {
         return obtainedAdvancementsCount;
     }
 
-    public static int getTrackedScore(@NotNull TrackedScoreType progressType) {
-        return trackedScores.getOrDefault(progressType, 0);
-    }
-
-    public static int getTrackedStatisticsData(@NotNull TrackedStatisticsDataType statType) {
-        return trackedStatisticsData.getOrDefault(statType, 0);
+    public static int getTrackedAdvancementProgress(@NotNull String advancementId) {
+        return trackedAdvancementProgresses.getOrDefault(advancementId, 0);
     }
 
     public static List<LockedLandmarkBox> getLockedLandmarkBoxes() {
         return lockedLandmarkBoxes;
-    }
-
-    public static int getTrackedNearbyEntitiesCount(TrackedNearbyEntitiesType type) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || player.isSpectator()) {
-            return 0;
-        }
-        int radius = type.getRadius();
-        Vec3 playerPos = player.position();
-        AABB area = new AABB(playerPos, playerPos).inflate(radius);
-        Set<EntityType<?>> trackedEntities = type.getEntities();
-        boolean isBabySeparated = type.isBabySeparated();
-        Map<EntityType<?>, Map<Boolean, Boolean>> trackedMap = new HashMap<>();
-        for (EntityType<?> entityType : trackedEntities) {
-            Map<Boolean, Boolean> babyAndAdultMap = new HashMap<>();
-            babyAndAdultMap.put(false, false);
-            if (isBabySeparated) {
-                babyAndAdultMap.put(true, false);
-            }
-            trackedMap.put(entityType, babyAndAdultMap);
-        }
-        int entitiesCount = 0;
-        List<Entity> entities = player.level().getEntitiesOfClass(
-            Entity.class,
-            area,
-            entity -> trackedEntities.contains(entity.getType())
-        );
-        for (Entity entity : entities) {
-            if (entity instanceof LivingEntity livingEntity) {
-                if (playerPos.distanceTo(entity.position()) > radius) {
-                    continue;
-                }
-                Map<Boolean, Boolean> stateMap = trackedMap.get(entity.getType());
-                if (stateMap != null) {
-                    boolean isBaby = isBabySeparated && livingEntity.isBaby();
-                    if (!stateMap.getOrDefault(isBaby, false)) {
-                        stateMap.put(isBaby, true);
-                        entitiesCount++;
-                    }
-                }
-            }
-        }
-        return entitiesCount;
     }
 
     public static @NotNull MutableComponent translate(String keySuffix, Object... args) {
@@ -148,9 +92,9 @@ public class AchieveToDoClient implements ClientModInitializer {
     public static boolean isTargetInLockedLandmark(@NotNull DimensionType targetDimensionType, @NotNull BlockBox targetBox) {
         for (LockedLandmarkBox lockedLandmarksBox : lockedLandmarkBoxes) {
             if (lockedLandmarksBox.dimensionType() == targetDimensionType &&
-                lockedLandmarksBox.box().intersects(targetBox)
+                lockedLandmarksBox.box().aabb().intersects(targetBox.aabb())
             ) {
-                AbilityType abilityType = AbilityType.findByLandmarkType(lockedLandmarksBox.landmarkType());
+                AbilityType abilityType = AbilityType.Companion.fromLandmark(lockedLandmarksBox.landmarkType());
                 if (abilityType != null) {
                     return isAbilityLocked(abilityType, false);
                 }
@@ -218,8 +162,7 @@ public class AchieveToDoClient implements ClientModInitializer {
             obtainedAdvancementsCount = Integer.MIN_VALUE;
             lockedLandmarkBlockBoxes.clear();
             lockedLandmarkBoxes.clear();
-            trackedScores.clear();
-            trackedStatisticsData.clear();
+            trackedAdvancementProgresses.clear();
         });
     }
 
@@ -280,12 +223,8 @@ public class AchieveToDoClient implements ClientModInitializer {
             }
             return Unit.INSTANCE;
         });
-        ScoreProgressChangedPayload.ClientBound.listen((context, score, progress) -> {
-            trackedScores.put(score, progress);
-            return Unit.INSTANCE;
-        });
-        StatisticsDataProgressChangedPayload.ClientBound.listen((context, statisticsData, progress) -> {
-            trackedStatisticsData.put(statisticsData, progress);
+        TrackedAdvancementProgressChangedPayload.ClientBound.listen((context, advancementId, progress) -> {
+            trackedAdvancementProgresses.put(advancementId, progress);
             return Unit.INSTANCE;
         });
         CheckTargetInLockedLandmarkPayload.ClientBound.listen((context, dimensionType, box) -> {
@@ -305,7 +244,7 @@ public class AchieveToDoClient implements ClientModInitializer {
                 result.add(new LockedLandmarkBox(
                     landmarkType,
                     dimensionalBlockBox.dimensionType(),
-                    Box.from(dimensionalBlockBox.blockBox)
+                    dimensionalBlockBox.blockBox()
                 ));
             }
         }
@@ -319,8 +258,8 @@ public class AchieveToDoClient implements ClientModInitializer {
 
             LandmarkType landmarkType = lockedLandmarkBox.landmarkType();
             LandmarkType otherLandmarkType = otherLockedLandmarkBox.landmarkType();
-            AbilityType abilityType = AbilityType.findByLandmarkType(landmarkType);
-            AbilityType otherAbilityType = AbilityType.findByLandmarkType(otherLandmarkType);
+            AbilityType abilityType = AbilityType.Companion.fromLandmark(landmarkType);
+            AbilityType otherAbilityType = AbilityType.Companion.fromLandmark(otherLandmarkType);
 
             int requiredCount = abilitiesConfiguration.get(abilityType);
             int otherRequiredCount = abilitiesConfiguration.get(otherAbilityType);

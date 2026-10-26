@@ -93,9 +93,8 @@ public class AchieveToDoMod implements ModInitializer {
         SyncObtainedAdvancementsCountPayload.register();
         LandmarkTypesUnlockedPayload.register();
         LockedLandmarkResizedPayload.register();
-        ScoreProgressChangedPayload.register();
+        TrackedAdvancementProgressChangedPayload.register();
         LandmarksLockedStatusChangedPayload.register();
-        StatisticsDataProgressChangedPayload.register();
         CheckTargetInLockedLandmarkPayload.register();
     }
 

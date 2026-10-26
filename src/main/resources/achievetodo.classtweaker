@@ -7,12 +7,12 @@ classTweaker v1 official
 #extendable class net/minecraft/world/level/LevelInfo
 #extendable class net/minecraft/world/chunk/SerializedChunk
 #extendable class net/minecraft/structure/StructureStart
-#
+
 #accessible method net/minecraft/client/gui/screen/world/CreateWorldScreen createLevel ()V
 #accessible method net/minecraft/server/dedicated/AbstractPropertiesHandler getString (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 #accessible method net/minecraft/client/render/Frustum intersectAab (DDDDDD)I
-#
-#accessible field net/minecraft/scoreboard/ServerScoreboard server Lnet/minecraft/server/MinecraftServer;
+
+accessible field net/minecraft/server/ServerScoreboard server Lnet/minecraft/server/MinecraftServer;
 #accessible field net/minecraft/client/gui/screen/Screen client Lnet/minecraft/client/MinecraftClient;
 #accessible field net/minecraft/client/gui/widget/TabNavigationWidget tabManager Lnet/minecraft/client/gui/tab/TabManager;
 #accessible field net/minecraft/client/tutorial/TutorialManager currentHandler Lnet/minecraft/client/tutorial/TutorialStepHandler;

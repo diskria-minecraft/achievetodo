@@ -3,65 +3,55 @@ package io.github.diskria.achievetodo.injection.mixin.main;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import io.github.diskria.achievetodo.AchieveToDoMod;
+import io.github.diskria.achievetodo.qol.TrackedAdvancement;
 import io.github.diskria.achievetodo.server.AdvancementsMode;
-import io.github.diskria.achievetodo.tracking.TrackedScoreType;
-import net.minecraft.scoreboard.*;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.scores.*;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Set;
 
-@Mixin(targets = "net/minecraft/scoreboard/Scoreboard$1")
+@Mixin(targets = "net/minecraft/world/scores/Scoreboard$1")
 public class ScoreboardScoreAccessMixin {
 
     @WrapOperation(
-        method = "update",
+        method = "sendScoreToPlayers",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/scoreboard/Scoreboard;updateScore(Lnet/minecraft/scoreboard/ScoreHolder;Lnet/minecraft/scoreboard/ScoreboardObjective;Lnet/minecraft/scoreboard/ScoreboardScore;)V"
+            target = "Lnet/minecraft/world/scores/Scoreboard;onScoreChanged(Lnet/minecraft/world/scores/ScoreHolder;Lnet/minecraft/world/scores/Objective;Lnet/minecraft/world/scores/Score;)V"
         )
     )
-    private void trackScoreChanges(
-        Scoreboard scoreboard,
-        @NotNull ScoreHolder scoreHolder,
-        @NotNull ScoreboardObjective objective,
-        ScoreboardScore scoreboardScore,
-        @NotNull Operation<Void> original
-    ) {
-        original.call(scoreboard, scoreHolder, objective, scoreboardScore);
-
+    private void trackScoreChanges(Scoreboard scoreboard, ScoreHolder owner, Objective objective, Score score, Operation<Void> original) {
+        original.call(scoreboard, owner, objective, score);
         if (scoreboard instanceof ServerScoreboard serverScoreboard) {
-            int score = scoreboardScore.getScore();
             String objectiveName = objective.getName();
             AdvancementsMode advancementsMode = AchieveToDoMod.getServer().currentAdvancementsMode;
-            if (advancementsMode != null &&
-                advancementsMode == AdvancementsMode.findByObjectiveName(objectiveName)
-            ) {
+            if (advancementsMode != null && advancementsMode == AdvancementsMode.findByObjectiveName(objectiveName)) {
                 if (advancementsMode.isTeamsMode()) {
-                    Team team = scoreboard.getScoreHolderTeam(scoreHolder.getNameForScoreboard());
+                    Team team = scoreboard.getPlayersTeam(owner.getScoreboardName());
                     if (team != null) {
-                        PlayerManager playerManager = serverScoreboard.server.getPlayerManager();
-                        for (String playerName : team.getPlayerList()) {
-                            ServerPlayerEntity serverPlayer = playerManager.getPlayer(playerName);
+                        PlayerList playerManager = serverScoreboard.server.getPlayerList();
+                        for (String playerName : team.getPlayers()) {
+                            ServerPlayer serverPlayer = playerManager.getPlayer(playerName);
                             if (serverPlayer != null) {
-                                AchieveToDoMod.getServer().setObtainedCount(serverPlayer, score);
+                                AchieveToDoMod.getServer().setObtainedCount(serverPlayer, score.value());
                             }
                         }
                     }
-                } else if (scoreHolder instanceof ServerPlayerEntity serverPlayer) {
-                    AchieveToDoMod.getServer().setObtainedCount(serverPlayer, score);
+                } else if (owner instanceof ServerPlayer serverPlayer) {
+                    AchieveToDoMod.getServer().setObtainedCount(serverPlayer, score.value());
                 }
-            } else if (scoreHolder instanceof ServerPlayerEntity serverPlayer) {
-                Set<TrackedScoreType> progressTypes = TrackedScoreType.findByObjectiveName(objectiveName);
+            } else if (owner instanceof ServerPlayer serverPlayer) {
+                Set<TrackedAdvancement.Objective> progressTypes = TrackedAdvancement.Objective.Companion.fromObjective(objectiveName);
                 if (progressTypes != null) {
-                    for (TrackedScoreType progressType : progressTypes) {
-                        AchieveToDoMod.getServer().setScore(
+                    for (TrackedAdvancement.Objective progressType : progressTypes) {
+                        AchieveToDoMod.getServer().notifyTrackedAdvancementProgress(
                             serverPlayer,
                             progressType,
-                            progressType.fixScore(scoreboard, scoreHolder, score)
+                            progressType.getResolve().invoke(scoreboard, owner, score.value())
                         );
                     }
                 }
