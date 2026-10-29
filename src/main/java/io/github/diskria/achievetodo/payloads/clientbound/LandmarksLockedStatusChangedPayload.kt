@@ -1,8 +1,6 @@
 package io.github.diskria.achievetodo.payloads.clientbound
 
-import io.github.diskria.achievetodo.ability.DimensionalBlockBox
-import io.github.diskria.achievetodo.ability.LandmarkType
-import io.github.diskria.achievetodo.payloads.mapCodecOf
+import io.github.diskria.achievetodo.ability.Landmark
 import io.github.diskria.achievetodo.payloads.payloadTypeOf
 import io.github.diskria.achievetodo.payloads.setCodecOf
 import net.fabricmc.api.EnvType
@@ -16,30 +14,24 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload
 import net.minecraft.server.level.ServerPlayer
 
 class LandmarksLockedStatusChangedPayload private constructor(
-    private val landmarks: LandmarksMap,
+    private val landmarks: Set<Landmark>,
     private val isLocked: Boolean,
 ) : CustomPacketPayload {
-
-    private typealias LandmarksMap = Map<LandmarkType, Set<DimensionalBlockBox>>
 
     override fun type() = TYPE
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
-        fun listen(action: context(ClientPlayNetworking.Context) (landmarks: LandmarksMap, isLocked: Boolean) -> Unit) {
+    object Client {
+        fun listen(action: ClientPlayNetworking.Context.(landmarks: Set<Landmark>, isLocked: Boolean) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute {
-                    context(context) { action(payload.landmarks, payload.isLocked) }
-                }
+                context.client().execute { context.action(payload.landmarks, payload.isLocked) }
             }
         }
     }
 
-    object ServerBound {
-        @JvmStatic
+    object Server {
         context(player: ServerPlayer)
-        fun send(landmarks: LandmarksMap, isLocked: Boolean) {
+        fun send(landmarks: Set<Landmark>, isLocked: Boolean) {
             ServerPlayNetworking.send(player, LandmarksLockedStatusChangedPayload(landmarks, isLocked))
         }
     }
@@ -49,12 +41,11 @@ class LandmarksLockedStatusChangedPayload private constructor(
 
         private val TYPE = payloadTypeOf<Payload>()
         private val CODEC = StreamCodec.composite(
-            mapCodecOf(LandmarkType.STREAM_CODEC to setCodecOf(DimensionalBlockBox.STREAM_CODEC)), Payload::landmarks,
+            setCodecOf(Landmark.STREAM_CODEC), Payload::landmarks,
             ByteBufCodecs.BOOL, Payload::isLocked,
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC)
     }
 }

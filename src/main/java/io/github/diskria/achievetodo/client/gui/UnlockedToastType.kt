@@ -1,13 +1,9 @@
-package io.github.diskria.achievetodo.client.gui;
+package io.github.diskria.achievetodo.client.gui
 
-import io.github.diskria.achievetodo.client.AchieveToDoClient;
-import net.minecraft.text.Text;
-import org.jetbrains.annotations.NotNull;
+import io.github.diskria.achievetodo.client.AchieveToDoClient
+import net.minecraft.network.chat.Component
 
-import java.util.Locale;
-
-public enum UnlockedToastType {
-
+enum class UnlockedToastType {
     ACTION,
     ITEM,
     FOOD,
@@ -19,12 +15,8 @@ public enum UnlockedToastType {
     PORTAL,
     LANDMARK;
 
-    public @NotNull Text getToastTitle() {
-        return AchieveToDoClient.translate("ability_unlocked_toast." + getName())
-            .append("!");
-    }
+    val toastTitle: Component
+        get() = AchieveToDoClient.translate("ability_unlocked_toast.$id").append("!")
 
-    private @NotNull String getName() {
-        return name().toLowerCase(Locale.ROOT);
-    }
+    private val id: String get() = name.lowercase()
 }

@@ -19,19 +19,15 @@ class LandmarkTypesUnlockedPayload private constructor(
     override fun type() = TYPE
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
-        fun listen(action: context(ClientPlayNetworking.Context) (landmarks: Set<LandmarkType>) -> Unit) {
+    object Client {
+        fun listen(action: ClientPlayNetworking.Context.(landmarks: Set<LandmarkType>) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute {
-                    context(context) { action(payload.landmarks) }
-                }
+                context.client().execute { context.action(payload.landmarks) }
             }
         }
     }
 
-    object ServerBound {
-        @JvmStatic
+    object Server {
         context(player: ServerPlayer)
         fun send(landmarks: Set<LandmarkType>) {
             ServerPlayNetworking.send(player, LandmarkTypesUnlockedPayload(landmarks))
@@ -47,7 +43,6 @@ class LandmarkTypesUnlockedPayload private constructor(
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC)
     }
 }

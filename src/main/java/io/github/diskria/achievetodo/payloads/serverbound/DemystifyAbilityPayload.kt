@@ -16,20 +16,16 @@ class DemystifyAbilityPayload private constructor(
 
     override fun type() = TYPE
 
-    object ServerBound {
-        @JvmStatic
-        fun listen(action: context(ServerPlayNetworking.Context) (ability: AbilityType) -> Unit) {
+    object Server {
+        fun listen(action: ServerPlayNetworking.Context.(ability: AbilityType) -> Unit) {
             ServerPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.server().execute {
-                    context(context) { action(payload.ability) }
-                }
+                context.server().execute { context.action(payload.ability) }
             }
         }
     }
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
+    object Client {
         fun send(ability: AbilityType) {
             ClientPlayNetworking.send(DemystifyAbilityPayload(ability))
         }
@@ -44,7 +40,6 @@ class DemystifyAbilityPayload private constructor(
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.serverboundPlay().register(TYPE, CODEC)
     }
 }

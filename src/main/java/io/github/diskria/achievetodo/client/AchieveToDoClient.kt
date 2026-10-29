@@ -1,280 +1,170 @@
-package io.github.diskria.achievetodo.client;
+package io.github.diskria.achievetodo.client
 
-import io.github.diskria.achievetodo.AchieveToDoMod;
-import io.github.diskria.achievetodo.ability.*;
-import io.github.diskria.achievetodo.client.gui.LockedLandmarkBox;
-import io.github.diskria.achievetodo.payloads.clientbound.*;
-import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload;
-import io.github.diskria.achievetodo.server.Constants;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import kotlin.Unit;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.BlockBox;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import io.github.diskria.achievetodo.AchieveToDoMod
+import io.github.diskria.achievetodo.ability.AbilitiesHierarchyLayerType
+import io.github.diskria.achievetodo.ability.AbilityType
+import io.github.diskria.achievetodo.ability.DimensionType
+import io.github.diskria.achievetodo.ability.Landmark
+import io.github.diskria.achievetodo.payloads.clientbound.*
+import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload.Client.send
+import io.github.diskria.achievetodo.server.Constants
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import net.fabricmc.api.ClientModInitializer
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
+import net.minecraft.client.Minecraft
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
+import net.minecraft.world.phys.AABB
 
-import java.util.*;
-import java.util.stream.Collectors;
+class AchieveToDoClient : ClientModInitializer {
 
-public class AchieveToDoClient implements ClientModInitializer {
-
-    private static final Map<LandmarkType, Set<DimensionalBlockBox>> lockedLandmarkBlockBoxes = new HashMap<>();
-    private static final Map<String, Integer> trackedAdvancementProgresses = new Object2IntOpenHashMap<>();
-    private static final List<List<AbilityType>> abilityRows = new ArrayList<>();
-    private static Map<AbilityType, Integer> abilitiesConfiguration;
-    private static int obtainedAdvancementsCount = Integer.MIN_VALUE;
-    private static List<LockedLandmarkBox> lockedLandmarkBoxes = new ArrayList<>();
-
-    public static int getRequiredAdvancementsCount(AbilityType ability) {
-        return abilitiesConfiguration.get(ability);
-    }
-
-    public static boolean isNotReady() {
-        return abilitiesConfiguration == null || obtainedAdvancementsCount == Integer.MIN_VALUE;
-    }
-
-    public static int getObtainedAdvancementsCount() {
-        return obtainedAdvancementsCount;
-    }
-
-    public static int getTrackedAdvancementProgress(@NotNull String advancementId) {
-        return trackedAdvancementProgresses.getOrDefault(advancementId, 0);
-    }
-
-    public static List<LockedLandmarkBox> getLockedLandmarkBoxes() {
-        return lockedLandmarkBoxes;
-    }
-
-    public static @NotNull MutableComponent translate(String keySuffix, Object... args) {
-        return Component.translatable(AchieveToDoMod.ID + "." + keySuffix, args);
-    }
-
-    public static boolean isAbilityLocked(@NotNull AbilityType ability) {
-        return isAbilityLocked(ability, false);
-    }
-
-    public static boolean isAbilityLocked(@NotNull AbilityType abilityType, boolean checkOnly) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player == null || player.isCreative() || player.isSpectator()) {
-            return false;
+    override fun onInitializeClient() {
+        startPayloadListeners()
+        ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
+            abilitiesConfiguration.clear()
+            lockedLandmarksSet.clear()
+            lockedLandmarks = emptyList()
+            obtainedAdvancementsCount = Int.MIN_VALUE
+            trackedAdvancementProgresses.clear()
         }
-        if (isNotReady()) {
-            return true;
+    }
+
+    private fun startPayloadListeners() {
+        SyncAbilitiesConfigurationPayload.Client.listen { config ->
+            abilitiesConfiguration.clear()
+            abilitiesConfiguration.putAll(config)
+            abilityRows.clear()
+            sortLockedLandmarks()
         }
-        int requiredCount = abilitiesConfiguration.get(abilityType);
-        if (requiredCount == Constants.Progression.INITIALLY_UNLOCKED_FLAG) {
-            return false;
+        SyncObtainedAdvancementsCountPayload.Client.listen { count ->
+            obtainedAdvancementsCount = count
         }
-        if (requiredCount != Constants.Progression.PERMANENTLY_LOCKED_FLAG &&
-            obtainedAdvancementsCount >= requiredCount
-        ) {
-            return false;
-        }
-        if (!checkOnly) {
-            Component lockedMessageText;
-            if (requiredCount == Constants.Progression.PERMANENTLY_LOCKED_FLAG) {
-                lockedMessageText = abilityType.buildPermanentlyLockedMessage();
+        LandmarksLockedStatusChangedPayload.Client.listen { landmarks, isLocked ->
+            if (isLocked) {
+                lockedLandmarksSet += landmarks
             } else {
-                int leftCount = requiredCount - obtainedAdvancementsCount;
-                lockedMessageText = abilityType.buildUnlockProgressMessage(leftCount);
+                lockedLandmarksSet -= landmarks
             }
-            player.sendOverlayMessage(lockedMessageText);
-            DemystifyAbilityPayload.ClientBound.send(abilityType);
+            sortLockedLandmarks()
         }
-        return true;
+        LandmarkTypesUnlockedPayload.Client.listen { landmarks ->
+            lockedLandmarksSet.removeAll { it.type in landmarks }
+            sortLockedLandmarks()
+        }
+        LockedLandmarkResizedPayload.Client.listen { type, oldArea, newArea ->
+            val oldLandmark = lockedLandmarksSet.find { it.type == type && it.area == oldArea } ?: return@listen
+            lockedLandmarksSet -= oldLandmark
+            lockedLandmarksSet += oldLandmark.copy(area = newArea)
+            sortLockedLandmarks()
+        }
+        TrackedAdvancementProgressChangedPayload.Client.listen { advancementId, progress ->
+            trackedAdvancementProgresses[advancementId] = progress
+        }
+        CheckTargetInLockedLandmarkPayload.Client.listen { dimensionType, aabb ->
+            isTargetInLockedLandmark(dimensionType, aabb)
+        }
     }
 
-    public static boolean isTargetInLockedLandmark(@NotNull DimensionType targetDimensionType, @NotNull BlockBox targetBox) {
-        for (LockedLandmarkBox lockedLandmarksBox : lockedLandmarkBoxes) {
-            if (lockedLandmarksBox.dimensionType() == targetDimensionType &&
-                lockedLandmarksBox.box().aabb().intersects(targetBox.aabb())
+    private fun sortLockedLandmarks() {
+        lockedLandmarks = lockedLandmarksSet.sortedWith(
+            compareBy<Landmark> { it.area.dimension }
+                .thenByDescending {
+                    val count = abilitiesConfiguration[AbilityType.fromLandmark(it.type)] ?: 0
+                    if (count == Constants.Progression.PERMANENTLY_LOCKED_FLAG) Int.MAX_VALUE else count
+                }
+                .thenByDescending { it.type.ordinal }
+        )
+    }
+
+    companion object {
+        private val lockedLandmarksSet = mutableSetOf<Landmark>()
+        var lockedLandmarks = emptyList<Landmark>()
+
+        private val trackedAdvancementProgresses = Object2IntOpenHashMap<String>()
+        private val abilityRows = mutableListOf<List<AbilityType>>()
+        private val abilitiesConfiguration = mutableMapOf<AbilityType, Int>()
+
+        private var obtainedAdvancementsCount = Int.MIN_VALUE
+
+        fun getRequiredAdvancementsCount(ability: AbilityType): Int =
+            abilitiesConfiguration[ability] ?: 0
+
+        val isNotReady: Boolean
+            get() = abilitiesConfiguration.isEmpty() || obtainedAdvancementsCount == Int.MIN_VALUE
+
+        fun getTrackedAdvancementProgress(advancementId: String): Int =
+            trackedAdvancementProgresses.getOrDefault(advancementId, 0)
+
+        fun translate(keySuffix: String, vararg args: Any): MutableComponent =
+            Component.translatable("${AchieveToDoMod.ID}.$keySuffix", *args)
+
+        fun isAbilityLocked(ability: AbilityType): Boolean =
+            isAbilityLocked(ability, false)
+
+        fun isAbilityLocked(abilityType: AbilityType, checkOnly: Boolean = false): Boolean {
+            val player = Minecraft.getInstance().player?.takeIf { !it.isCreative && !it.isSpectator } ?: return false
+            if (isNotReady) return true
+            val requiredCount = abilitiesConfiguration[abilityType] ?: return false
+            if (requiredCount == Constants.Progression.INITIALLY_UNLOCKED_FLAG) return false
+            if (requiredCount != Constants.Progression.PERMANENTLY_LOCKED_FLAG &&
+                obtainedAdvancementsCount >= requiredCount
             ) {
-                AbilityType abilityType = AbilityType.Companion.fromLandmark(lockedLandmarksBox.landmarkType());
-                if (abilityType != null) {
-                    return isAbilityLocked(abilityType, false);
-                }
+                return false
             }
+            if (!checkOnly) {
+                player.sendOverlayMessage(
+                    when (requiredCount) {
+                        Constants.Progression.PERMANENTLY_LOCKED_FLAG -> abilityType.buildPermanentlyLockedMessage()
+                        else -> abilityType.buildUnlockProgressMessage(requiredCount - obtainedAdvancementsCount)
+                    }
+                )
+                send(abilityType)
+            }
+            return true
         }
-        return false;
-    }
 
-    public static @Nullable List<List<AbilityType>> getAbilityRows() {
-        if (isNotReady()) {
-            return null;
-        }
-        if (abilityRows.isEmpty()) {
-            Map<AbilitiesHierarchyLayerType, List<AbilityType>> abilitiesByCategory = Arrays
-                .stream(AbilityType.values())
-                .sorted(Comparator.comparingInt((AbilityType ability) -> {
-                        int requiredCount = abilitiesConfiguration.get(ability);
-                        if (requiredCount == Constants.Progression.INITIALLY_UNLOCKED_FLAG) {
-                            return 0;
+        fun isTargetInLockedLandmark(dimension: DimensionType, aabb: AABB): Boolean =
+            lockedLandmarks.any { (type, area) ->
+                area.intersects(dimension, aabb) && AbilityType.fromLandmark(type)?.let { isAbilityLocked(it) } == true
+            }
+
+        fun getAbilityRows(): List<List<AbilityType>>? {
+            if (isNotReady) return null
+
+            if (abilityRows.isEmpty()) {
+                val abilitiesByCategory = AbilityType.entries
+                    .sortedWith(
+                        compareBy<AbilityType> { ability ->
+                            when (abilitiesConfiguration[ability]) {
+                                Constants.Progression.INITIALLY_UNLOCKED_FLAG -> 0
+                                Constants.Progression.PERMANENTLY_LOCKED_FLAG -> 2
+                                else -> 1
+                            }
                         }
-                        if (requiredCount == Constants.Progression.PERMANENTLY_LOCKED_FLAG) {
-                            return 2;
+                            .thenBy { abilitiesConfiguration[it] ?: 0 }
+                            .thenBy { it.ordinal }
+                    )
+                    .groupBy { it.hierarchyLayerType }
+
+                AbilitiesHierarchyLayerType.entries.forEach { category ->
+                    val categoryAbilities = abilitiesByCategory[category] ?: return@forEach
+                    val categoryRowsCount = category.rowsCount
+                    if (categoryRowsCount == 1) {
+                        abilityRows.add(categoryAbilities)
+                    } else {
+                        check(categoryAbilities.size % categoryRowsCount == 0) {
+                            "Abilities in category $category cannot be evenly distributed across $categoryRowsCount rows."
                         }
-                        return 1;
-                    })
-                    .thenComparingInt(abilitiesConfiguration::get)
-                    .thenComparing(Enum::ordinal))
-                .collect(Collectors.groupingBy(AbilityType::getHierarchyLayerType));
-            for (AbilitiesHierarchyLayerType category : AbilitiesHierarchyLayerType.values()) {
-                List<AbilityType> categoryAbilities = abilitiesByCategory.get(category);
-                int categoryRowsCount = category.getRowsCount();
-                if (categoryRowsCount == 1) {
-                    abilityRows.add(categoryAbilities);
-                } else {
-                    if (categoryAbilities.size() % categoryRowsCount != 0) {
-                        throw new IllegalStateException(
-                            "Abilities in category " + category +
-                                " cannot be evenly distributed across " + categoryRowsCount + " rows."
-                        );
-                    }
-                    int rowLength = categoryAbilities.size() / categoryRowsCount;
-                    List<List<AbilityType>> categoryRows = new ArrayList<>(categoryRowsCount);
-                    for (int i = 0; i < categoryRowsCount; i++) {
-                        categoryRows.add(new ArrayList<>(rowLength));
-                    }
-                    for (int i = 0; i < categoryAbilities.size(); i++) {
-                        int rowIndex = i / rowLength;
-                        categoryRows.get(rowIndex).add(categoryAbilities.get(i));
-                    }
-                    int half = categoryRowsCount / 2;
-                    abilityRows.addAll(0, categoryRows.subList(0, half));
-                    abilityRows.addAll(categoryRows.subList(half, categoryRowsCount));
-                }
-            }
-        }
-        return abilityRows;
-    }
+                        val rowLength = categoryAbilities.size / categoryRowsCount
+                        val categoryRows = categoryAbilities.chunked(rowLength)
 
-    @Override
-    public void onInitializeClient() {
-        registerPayloads();
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            abilitiesConfiguration = null;
-            obtainedAdvancementsCount = Integer.MIN_VALUE;
-            lockedLandmarkBlockBoxes.clear();
-            lockedLandmarkBoxes.clear();
-            trackedAdvancementProgresses.clear();
-        });
-    }
-
-    private void registerPayloads() {
-        SyncAbilitiesConfigurationPayload.ClientBound.listen((context, config) -> {
-            abilitiesConfiguration = config;
-            abilityRows.clear();
-            calculateLockedLandmarkBoxes();
-            return Unit.INSTANCE;
-        });
-        SyncObtainedAdvancementsCountPayload.ClientBound.listen((context, count) -> {
-            obtainedAdvancementsCount = count;
-            return Unit.INSTANCE;
-        });
-        LandmarksLockedStatusChangedPayload.ClientBound.listen((context, landmarks, isLocked) -> {
-            boolean isChanged = false;
-            for (var entry : landmarks.entrySet()) {
-                LandmarkType landmarkType = entry.getKey();
-                if (isLocked) {
-                    if (lockedLandmarkBlockBoxes
-                        .computeIfAbsent(landmarkType, k -> new HashSet<>())
-                        .addAll(entry.getValue())
-                    ) {
-                        isChanged = true;
-                    }
-                } else {
-                    Set<DimensionalBlockBox> dimensionalBoxes = lockedLandmarkBlockBoxes.get(landmarkType);
-                    if (dimensionalBoxes != null && dimensionalBoxes.removeAll(entry.getValue())) {
-                        isChanged = true;
-                        if (dimensionalBoxes.isEmpty()) {
-                            lockedLandmarkBlockBoxes.remove(landmarkType);
-                        }
+                        val half = categoryRowsCount / 2
+                        abilityRows.addAll(0, categoryRows.subList(0, half))
+                        abilityRows.addAll(categoryRows.subList(half, categoryRowsCount))
                     }
                 }
             }
-            if (isChanged) {
-                calculateLockedLandmarkBoxes();
-            }
-            return Unit.INSTANCE;
-        });
-        LandmarkTypesUnlockedPayload.ClientBound.listen((context, landmarks) -> {
-            boolean isChanged = false;
-            for (LandmarkType landmarkType : landmarks) {
-                if (lockedLandmarkBlockBoxes.remove(landmarkType) != null) {
-                    isChanged = true;
-                }
-            }
-            if (isChanged) {
-                calculateLockedLandmarkBoxes();
-            }
-            return Unit.INSTANCE;
-        });
-        LockedLandmarkResizedPayload.ClientBound.listen((context, landmark, dimension, oldBox, newBox) -> {
-            Set<DimensionalBlockBox> dimensionalBlockBoxes = lockedLandmarkBlockBoxes.get(landmark);
-            if (dimensionalBlockBoxes.remove(new DimensionalBlockBox(dimension, oldBox))) {
-                dimensionalBlockBoxes.add(new DimensionalBlockBox(dimension, newBox));
-                calculateLockedLandmarkBoxes();
-            }
-            return Unit.INSTANCE;
-        });
-        TrackedAdvancementProgressChangedPayload.ClientBound.listen((context, advancementId, progress) -> {
-            trackedAdvancementProgresses.put(advancementId, progress);
-            return Unit.INSTANCE;
-        });
-        CheckTargetInLockedLandmarkPayload.ClientBound.listen((context, dimensionType, box) -> {
-            isTargetInLockedLandmark(dimensionType, box);
-            return Unit.INSTANCE;
-        });
-    }
-
-    private void calculateLockedLandmarkBoxes() {
-        if (abilitiesConfiguration == null) {
-            return;
+            return abilityRows
         }
-        List<LockedLandmarkBox> result = new ArrayList<>();
-        for (var entry : lockedLandmarkBlockBoxes.entrySet()) {
-            LandmarkType landmarkType = entry.getKey();
-            for (DimensionalBlockBox dimensionalBlockBox : entry.getValue()) {
-                result.add(new LockedLandmarkBox(
-                    landmarkType,
-                    dimensionalBlockBox.dimensionType(),
-                    dimensionalBlockBox.blockBox()
-                ));
-            }
-        }
-        result.sort((lockedLandmarkBox, otherLockedLandmarkBox) -> {
-            DimensionType dimensionType = lockedLandmarkBox.dimensionType();
-            DimensionType otherDimensionType = otherLockedLandmarkBox.dimensionType();
-            int dimensionTypeComparison = dimensionType.compareTo(otherDimensionType);
-            if (dimensionTypeComparison != 0) {
-                return dimensionTypeComparison;
-            }
-
-            LandmarkType landmarkType = lockedLandmarkBox.landmarkType();
-            LandmarkType otherLandmarkType = otherLockedLandmarkBox.landmarkType();
-            AbilityType abilityType = AbilityType.Companion.fromLandmark(landmarkType);
-            AbilityType otherAbilityType = AbilityType.Companion.fromLandmark(otherLandmarkType);
-
-            int requiredCount = abilitiesConfiguration.get(abilityType);
-            int otherRequiredCount = abilitiesConfiguration.get(otherAbilityType);
-            if (requiredCount == Constants.Progression.PERMANENTLY_LOCKED_FLAG) {
-                requiredCount = Integer.MAX_VALUE;
-            }
-            if (otherRequiredCount == Constants.Progression.PERMANENTLY_LOCKED_FLAG) {
-                otherRequiredCount = Integer.MAX_VALUE;
-            }
-            int requiredCountComparison = Integer.compare(otherRequiredCount, requiredCount);
-            if (requiredCountComparison != 0) {
-                return requiredCountComparison;
-            }
-            return Integer.compare(otherLandmarkType.ordinal(), landmarkType.ordinal());
-        });
-        lockedLandmarkBoxes = result;
     }
 }

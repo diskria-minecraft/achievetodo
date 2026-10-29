@@ -1,21 +1,16 @@
-package io.github.diskria.achievetodo.client.gui;
+package io.github.diskria.achievetodo.client.gui
 
-import io.github.diskria.achievetodo.AchieveToDoMod;
-import io.github.diskria.achievetodo.client.AchieveToDoClient;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.advancement.PlacedAdvancement;
-import net.minecraft.client.gui.screen.advancement.AdvancementTabType;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import io.github.diskria.achievetodo.AchieveToDoMod
+import io.github.diskria.achievetodo.client.AchieveToDoClient
+import net.fabricmc.api.EnvType
+import net.fabricmc.api.Environment
+import net.minecraft.ChatFormatting
+import net.minecraft.advancements.AdvancementNode
+import net.minecraft.client.gui.screens.advancements.AdvancementTabType
+import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 
-import java.util.Locale;
-
-public enum AdvancementsTabType {
-
+enum class AdvancementsTabType {
     ABILITIES,
     BACAP,
     STATISTICS,
@@ -36,66 +31,40 @@ public enum AdvancementsTabType {
     END,
     CHALLENGES;
 
-    public static @Nullable AdvancementsTabType findByAdvancement(@NotNull PlacedAdvancement advancement) {
-        return findByAdvancement(advancement.getAdvancementEntry().id());
-    }
+    val mystifiedTabId: Identifier
+        get() = AchieveToDoMod.getIdentifier("locked_tab_" + this.name + "/root")
 
-    public static @Nullable AdvancementsTabType findByAdvancement(@NotNull Identifier advancementId) {
-        String[] pathSlices = advancementId.getPath().split("/");
-        if (pathSlices.length == 2) {
-            for (AdvancementsTabType tabType : values()) {
-                if (tabType.name().equalsIgnoreCase(pathSlices[0])) {
-                    return tabType;
-                }
-            }
-        }
-        return null;
-    }
+    val mystifiedTabTooltipText: Component
+        get() = AchieveToDoClient.translate("advancements_tab_mystified_tooltip." + this.name)
+            .withStyle(ChatFormatting.ITALIC)
+            .withStyle(ChatFormatting.GRAY)
 
-    public @NotNull Identifier getMystifiedTabId() {
-        return AchieveToDoMod.getIdentifier("locked_tab_" + getName() + "/root");
-    }
+    val id: String get() = name.lowercase()
 
-    public @NotNull Text getMystifiedTabTooltipText() {
-        return AchieveToDoClient.translate("advancements_tab_mystified_tooltip." + getName())
-            .formatted(Formatting.ITALIC)
-            .formatted(Formatting.GRAY);
-    }
-
-    public @NotNull String getName() {
-        return name().toLowerCase(Locale.ROOT);
+    @Environment(EnvType.CLIENT)
+    fun getPosition(): AdvancementTabType = when (this) {
+        ABILITIES, BACAP, STATISTICS -> AdvancementTabType.LEFT
+        BUILDING, FARMING, HUSBANDRY, BIOMES, ADVENTURE, MONSTERS, WEAPONRY -> AdvancementTabType.ABOVE
+        else -> AdvancementTabType.BELOW
     }
 
     @Environment(EnvType.CLIENT)
-    public AdvancementTabType getPosition() {
-        if (this == ABILITIES || this == BACAP || this == STATISTICS) {
-            return AdvancementTabType.LEFT;
-        }
-        if (this == BUILDING ||
-            this == FARMING ||
-            this == HUSBANDRY ||
-            this == BIOMES ||
-            this == ADVENTURE ||
-            this == MONSTERS ||
-            this == WEAPONRY
-        ) {
-            return AdvancementTabType.ABOVE;
-        }
-        return AdvancementTabType.BELOW;
-    }
-
-    @Environment(EnvType.CLIENT)
-    public int getOrder() {
-        int order = 0;
-        AdvancementTabType position = getPosition();
-        for (AdvancementsTabType tab : AdvancementsTabType.values()) {
+    fun getOrder(): Int {
+        var order = 0
+        val position = getPosition()
+        for (tab in entries) {
             if (tab.getPosition() == position) {
                 if (tab == this) {
-                    break;
+                    break
                 }
-                order++;
+                order++
             }
         }
-        return order;
+        return order
+    }
+
+    companion object {
+        fun fromAdvancement(id: Identifier) = entries.find { it.name == id.namespace.lowercase() }
+        fun fromAdvancement(advancement: AdvancementNode) = fromAdvancement(advancement.holder().id)
     }
 }

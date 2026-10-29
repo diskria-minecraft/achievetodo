@@ -20,19 +20,15 @@ class SyncAbilitiesConfigurationPayload private constructor(
     override fun type() = TYPE
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
-        fun listen(action: context(ClientPlayNetworking.Context) (configuration: Map<AbilityType, Int>) -> Unit) {
+    object Client {
+        fun listen(action: ClientPlayNetworking.Context.(configuration: Map<AbilityType, Int>) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute {
-                    context(context) { action(payload.configuration) }
-                }
+                context.client().execute { context.action(payload.configuration) }
             }
         }
     }
 
-    object ServerBound {
-        @JvmStatic
+    object Server {
         context(player: ServerPlayer)
         fun send(configuration: Map<AbilityType, Int>) {
             ServerPlayNetworking.send(player, SyncAbilitiesConfigurationPayload(configuration))
@@ -48,7 +44,6 @@ class SyncAbilitiesConfigurationPayload private constructor(
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC)
     }
 }

@@ -12,6 +12,9 @@ inline fun <reified P : CustomPacketPayload> payloadTypeOf(): CustomPacketPayloa
 fun <E : Any> setCodecOf(elementCodec: StreamCodec<ByteBuf, E>): StreamCodec<ByteBuf, Set<E>> =
     ByteBufCodecs.collection(::HashSet, elementCodec)
 
+fun <E : Any> listCodecOf(elementCodec: StreamCodec<ByteBuf, E>): StreamCodec<ByteBuf, List<E>> =
+    ByteBufCodecs.collection(::ArrayList, elementCodec)
+
 fun <K : Any, V : Any> mapCodecOf(
     keyValueCodecs: Pair<StreamCodec<ByteBuf, K>, StreamCodec<ByteBuf, V>>
 ): StreamCodec<ByteBuf, Map<K, V>> = ByteBufCodecs.map(::HashMap, keyValueCodecs.first, keyValueCodecs.second)

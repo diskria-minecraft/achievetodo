@@ -18,19 +18,15 @@ class SyncObtainedAdvancementsCountPayload private constructor(
     override fun type() = TYPE
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
-        fun listen(action: context(ClientPlayNetworking.Context) (count: Int) -> Unit) {
+    object Client {
+        fun listen(action: ClientPlayNetworking.Context.(count: Int) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute {
-                    context(context) { action(payload.count) }
-                }
+                context.client().execute { context.action(payload.count) }
             }
         }
     }
 
-    object ServerBound {
-        @JvmStatic
+    object Server {
         context(player: ServerPlayer)
         fun send(count: Int) {
             ServerPlayNetworking.send(player, SyncObtainedAdvancementsCountPayload(count))
@@ -46,7 +42,6 @@ class SyncObtainedAdvancementsCountPayload private constructor(
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC)
     }
 }

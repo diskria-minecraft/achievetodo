@@ -159,10 +159,10 @@ class AbilityAdvancementsTabGenerator(
 
         val TAB_BACKGROUND: Block = Blocks.PALE_MOSS_BLOCK
 
-        private fun buildAdvancementId(suffix: String): Identifier =
+        fun buildAdvancementId(suffix: String): Identifier =
             AchieveToDoMod.getIdentifier(ABILITY_PATH_PREFIX + suffix)
 
-        private fun buildAdvancementId(ability: AbilityType): Identifier =
+        fun buildAdvancementId(ability: AbilityType): Identifier =
             buildAdvancementId(ability.id)
     }
 }

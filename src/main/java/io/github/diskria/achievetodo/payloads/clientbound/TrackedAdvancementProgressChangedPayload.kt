@@ -19,19 +19,17 @@ class TrackedAdvancementProgressChangedPayload private constructor(
     override fun type() = TYPE
 
     @Environment(EnvType.CLIENT)
-    object ClientBound {
-        @JvmStatic
-        fun listen(action: context(ClientPlayNetworking.Context) (advancementId: String, progress: Int) -> Unit) {
+    object Client {
+        fun listen(action: ClientPlayNetworking.Context.(advancementId: String, progress: Int) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
                 context.client().execute {
-                    context(context) { action(payload.advancementId, payload.progress) }
+                    context.action(payload.advancementId, payload.progress)
                 }
             }
         }
     }
 
-    object ServerBound {
-        @JvmStatic
+    object Server {
         context(player: ServerPlayer)
         fun send(advancementId: String, progress: Int) {
             ServerPlayNetworking.send(player, TrackedAdvancementProgressChangedPayload(advancementId, progress))
@@ -48,7 +46,6 @@ class TrackedAdvancementProgressChangedPayload private constructor(
             ::Payload
         )
 
-        @JvmStatic
         fun register() = PayloadTypeRegistry.clientboundPlay().register(TYPE, CODEC)
     }
 }

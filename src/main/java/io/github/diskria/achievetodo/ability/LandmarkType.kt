@@ -5,6 +5,7 @@ import net.minecraft.data.worldgen.features.MiscOverworldFeatures
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.resources.ResourceKey
 import net.minecraft.util.ByIdMap
+import net.minecraft.util.StringRepresentable
 import net.minecraft.world.level.levelgen.feature.Feature
 import net.minecraft.world.level.levelgen.structure.BuiltinStructures
 import net.minecraft.world.level.levelgen.structure.Structure
@@ -12,7 +13,8 @@ import net.minecraft.world.level.levelgen.structure.Structure
 enum class LandmarkType(
     vararg val structureKeys: ResourceKey<Structure>,
     val featureKey: ResourceKey<Feature>? = null,
-) {
+) : StringRepresentable {
+
     DESERT_PYRAMID(BuiltinStructures.DESERT_PYRAMID),
     DESERT_WELL(featureKey = MiscOverworldFeatures.DESERT_WELL),
     JUNGLE_PYRAMID(BuiltinStructures.JUNGLE_TEMPLE),
@@ -62,6 +64,8 @@ enum class LandmarkType(
     val isFeature = featureKey != null
     val isStructure = !isFeature
 
+    override fun getSerializedName(): String = id
+
     companion object {
         private val BY_STRUCTURE_KEY = entries.flatMap { it.structureKeys.map { key -> key to it } }.toMap()
         private val BY_FEATURE_KEY = entries.filter { it.isFeature }.associateBy { it.featureKey }
@@ -77,5 +81,6 @@ enum class LandmarkType(
         )
 
         val STREAM_CODEC = ByteBufCodecs.idMapper(BY_ORDINAL, LandmarkType::ordinal)
+        val CODEC = StringRepresentable.fromEnum { LandmarkType.entries.toTypedArray() }
     }
 }
