@@ -19,7 +19,7 @@ import net.minecraft.world.phys.AABB
 class AchieveToDoClient : ClientModInitializer {
 
     override fun onInitializeClient() {
-        startPayloadListeners()
+        registerPayloadListeners()
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             abilitiesConfiguration.clear()
             lockedLandmarksSet.clear()
@@ -29,7 +29,7 @@ class AchieveToDoClient : ClientModInitializer {
         }
     }
 
-    private fun startPayloadListeners() {
+    private fun registerPayloadListeners() {
         SyncAbilitiesConfigurationPayload.Client.listen { config ->
             abilitiesConfiguration.clear()
             abilitiesConfiguration.putAll(config)
@@ -51,10 +51,10 @@ class AchieveToDoClient : ClientModInitializer {
             lockedLandmarksSet.removeAll { it.type in landmarks }
             sortLockedLandmarks()
         }
-        LockedLandmarkResizedPayload.Client.listen { type, oldArea, newArea ->
-            val oldLandmark = lockedLandmarksSet.find { it.type == type && it.area == oldArea } ?: return@listen
+        LockedLandmarkResizedPayload.Client.listen { type, oldBB, newBB ->
+            val oldLandmark = lockedLandmarksSet.find { it.type == type && it.bb == oldBB } ?: return@listen
             lockedLandmarksSet -= oldLandmark
-            lockedLandmarksSet += oldLandmark.copy(area = newArea)
+            lockedLandmarksSet += oldLandmark.copy(bb = newBB)
             sortLockedLandmarks()
         }
         TrackedAdvancementProgressChangedPayload.Client.listen { advancementId, progress ->
@@ -67,12 +67,10 @@ class AchieveToDoClient : ClientModInitializer {
 
     private fun sortLockedLandmarks() {
         lockedLandmarks = lockedLandmarksSet.sortedWith(
-            compareBy<Landmark> { it.area.dimension }
-                .thenByDescending {
-                    val count = abilitiesConfiguration[AbilityType.fromLandmark(it.type)] ?: 0
-                    if (count == Constants.Progression.PERMANENTLY_LOCKED_FLAG) Int.MAX_VALUE else count
-                }
-                .thenByDescending { it.type.ordinal }
+            compareByDescending<Landmark> {
+                val count = abilitiesConfiguration[AbilityType.fromLandmark(it.type)] ?: 0
+                if (count == Constants.Progression.PERMANENTLY_LOCKED_FLAG) Int.MAX_VALUE else count
+            }.thenByDescending { it.type.ordinal }
         )
     }
 
@@ -124,8 +122,9 @@ class AchieveToDoClient : ClientModInitializer {
         }
 
         fun isTargetInLockedLandmark(dimension: DimensionType, aabb: AABB): Boolean =
-            lockedLandmarks.any { (type, area) ->
-                area.intersects(dimension, aabb) && AbilityType.fromLandmark(type)?.let { isAbilityLocked(it) } == true
+            lockedLandmarks.any { landmark ->
+                landmark.intersects(aabb) &&
+                    AbilityType.fromLandmark(landmark.type)?.let { isAbilityLocked(it) } == true
             }
 
         fun getAbilityRows(): List<List<AbilityType>>? {
