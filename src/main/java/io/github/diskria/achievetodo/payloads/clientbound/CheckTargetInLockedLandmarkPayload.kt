@@ -1,7 +1,7 @@
 package io.github.diskria.achievetodo.payloads.clientbound
 
-import io.github.diskria.achievetodo.ability.DimensionType
-import io.github.diskria.achievetodo.payloads.payloadTypeOf
+import io.github.diskria.achievetodo.abilities.DimensionType
+import io.github.diskria.achievetodo.extensions.payloadTypeOf
 import io.netty.buffer.ByteBuf
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment

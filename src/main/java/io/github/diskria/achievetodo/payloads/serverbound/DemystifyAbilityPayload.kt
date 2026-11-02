@@ -1,7 +1,7 @@
 package io.github.diskria.achievetodo.payloads.serverbound
 
-import io.github.diskria.achievetodo.ability.AbilityType
-import io.github.diskria.achievetodo.payloads.payloadTypeOf
+import io.github.diskria.achievetodo.abilities.AbilityType
+import io.github.diskria.achievetodo.extensions.payloadTypeOf
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking

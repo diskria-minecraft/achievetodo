@@ -5,15 +5,13 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
-import io.github.diskria.achievetodo.ability.Landmark
-import io.github.diskria.achievetodo.ability.LandmarkType
-import io.github.diskria.achievetodo.etxensions.decodeOrNull
-import io.github.diskria.achievetodo.etxensions.toNbtOrNull
+import io.github.diskria.achievetodo.extensions.decodeOrNull
+import io.github.diskria.achievetodo.extensions.toNbtOrNull
 import io.github.diskria.achievetodo.server.awaitPlayers
-import io.github.diskria.achievetodo.server.logToChat
 import io.github.diskria.lapis.annotations.*
 import kotlinx.coroutines.*
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
@@ -49,20 +47,20 @@ import kotlin.time.Duration.Companion.milliseconds
 
 object ServerLandmarksManager {
 
-    val loadedLandmarks = mutableMapOf<ResourceKey<Level>, MutableMap<ChunkPos, MutableSet<Landmark>>>()
+    val loadedLandmarks = ConcurrentHashMap<ResourceKey<Level>, ConcurrentHashMap<ChunkPos, MutableSet<Landmark>>>()
 
-    fun registerLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
-        loadedLandmarks
-            .getOrPut(level.dimension()) { mutableMapOf() }
-            .getOrPut(chunkPos) { mutableSetOf() }
-            .add(landmark)
-        level.server.sendDebugMessage(landmark, chunkPos, resize = false)
+    fun addLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
+        val inChunk = loadedLandmarks
+            .getOrPut(level.dimension()) { ConcurrentHashMap() }
+            .getOrPut(chunkPos) { ConcurrentHashMap.newKeySet() }
+        if (inChunk.add(landmark)) {
+            level.server.sendDebugMessage(landmark, chunkPos, resize = false)
+        }
     }
 
     fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
-        val chunkLandmarks = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
-        if (chunkLandmarks.remove(current)) {
-            chunkLandmarks.add(resized)
+        val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
+        if (inChunk.remove(current) && inChunk.add(resized)) {
             level.server.sendDebugMessage(resized, chunkPos, resize = true)
         }
     }
@@ -72,13 +70,24 @@ object ServerLandmarksManager {
             val chunkPos = chunk.pos
             level.structureManager().startsForStructure(chunkPos.x, chunkPos.z) { true }.forEach { start ->
                 val structureLandmark = start.landmark ?: return@forEach
-                registerLandmark(level, start.chunkPos, structureLandmark)
+                addLandmark(level, start.chunkPos, structureLandmark)
             }
-            chunk.landmarks?.forEach { featureLandmark -> registerLandmark(level, chunkPos, featureLandmark) }
+            chunk.landmarks?.forEach { featureLandmark -> addLandmark(level, chunkPos, featureLandmark) }
         }
         ServerChunkEvents.CHUNK_UNLOAD.register { level, chunk ->
-            val unloaded = loadedLandmarks[level.dimension()]?.remove(chunk.pos).orEmpty().ifEmpty { return@register }
-            level.server.logToChat("Unloaded landmarks: $unloaded")
+            val inDimension = loadedLandmarks[level.dimension()] ?: return@register
+            if (chunk.allStarts.any { it.value.landmark != null }) {
+                chunk.landmarks?.let {
+                    inDimension[chunk.pos]?.removeAll(it)
+//                    level.server.logToChat("Unloaded landmarks: $it")
+                }
+            } else {
+                val unloaded = inDimension.remove(chunk.pos).orEmpty().ifEmpty { return@register }
+//                level.server.logToChat("Unloaded landmarks: $unloaded")
+            }
+        }
+        ServerLifecycleEvents.SERVER_STOPPED.register {
+            loadedLandmarks.clear()
         }
     }
 
@@ -149,7 +158,7 @@ object ServerLandmarksManager {
             if (resizeJobId != null) delay(RESIZE_NOTIFICATIONS_DELAY.milliseconds)
             awaitPlayers()
             execute(wrapRunnable {
-                logToChat(baseMessage.append(tpButton).append(" ").append(drawButton))
+//                logToChat(baseMessage.append(tpButton).append(" ").append(drawButton))
                 resizeJobId?.let { resizeJobs.remove(it) }
             })
         }
@@ -171,7 +180,7 @@ abstract class ChunkLandmarksData {
 }
 
 @KMixin<LevelChunk>(Side.Common)
-class LevelChunkLandmarksBridge {
+class LandmarksBridgeToLevelChunk {
     @WrapOperation(
         method = [$$"<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V"],
         at = [At(
@@ -182,7 +191,7 @@ class LevelChunkLandmarksBridge {
     fun copyLandmarks(
         to: LevelChunk,
         structureReferences: Map<*, *>,
-        original: Operation<Unit>,
+        original: Operation<*>,
         @Local(argsOnly = true, name = ["protoChunk"]) from: ProtoChunk,
     ) {
         original.call(to, structureReferences)
@@ -208,7 +217,7 @@ class ChunkLandmarksNbt {
             target = "Lnet/minecraft/world/level/chunk/ChunkAccess;setAllReferences(Ljava/util/Map;)V"
         )]
     )
-    fun unpackLandmarksNbt(chunk: ChunkAccess, structureReferences: Map<*, *>, original: Operation<Unit>) {
+    fun saveToChunk(chunk: ChunkAccess, structureReferences: Map<*, *>, original: Operation<*>) {
         original.call(chunk, structureReferences)
         chunk.landmarks = landmarksNbt?.decodeOrNull(Landmark.SET_CODEC)
     }
@@ -223,7 +232,7 @@ class ChunkLandmarksNbt {
         ) = result.apply { landmarksNbt = compound.get(LANDMARKS_TAG_NAME) }
 
         @ModifyReturnValue(method = ["copyOf"], at = [At(value = "TAIL")])
-        fun packLandmarksNbt(
+        fun readFromChunk(
             result: SerializableChunkData,
             @Local(argsOnly = true, name = ["chunk"]) chunk: ChunkAccess,
         ) = result.apply { landmarksNbt = chunk.landmarks?.toNbtOrNull(Landmark.SET_CODEC) }
@@ -283,7 +292,7 @@ class StructureLandmarkGeneratorTracker {
         random: RandomSource,
         chunkBB: BoundingBox,
         targetChunkPos: ChunkPos,
-        original: Operation<Unit>,
+        original: Operation<*>,
     ) {
         fun generate() {
             original.call(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
@@ -299,7 +308,7 @@ class StructureLandmarkGeneratorTracker {
             val current = landmark
             if (current == null) {
                 landmark = Landmark(type, bb).also { initialized ->
-                    ServerLandmarksManager.registerLandmark(level, chunkPos, initialized)
+                    ServerLandmarksManager.addLandmark(level, chunkPos, initialized)
                 }
             } else {
                 val combinedBB = BoundingBox.encapsulating(current.bb, bb)
@@ -472,7 +481,7 @@ private inline fun <R> WorldGenLevel.resolveFeatureGeneration(
     holder: Holder<Feature>,
     targetChunk: ChunkAccess,
     byPlaceCommand: Boolean,
-    generate: () -> R
+    generate: () -> R,
 ): R {
     val featureKey = holder.unwrapKey().getOrNull() ?: return generate()
     val landmarkType = LandmarkType.fromFeature(featureKey) ?: return generate()
@@ -483,7 +492,7 @@ private inline fun <R> WorldGenLevel.resolveFeatureGeneration(
         if (updated.add(landmark)) {
             targetChunk.landmarks = updated
             if (byPlaceCommand) {
-                ServerLandmarksManager.registerLandmark(level, targetChunk.pos, landmark)
+                ServerLandmarksManager.addLandmark(level, targetChunk.pos, landmark)
             }
         }
     }

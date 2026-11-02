@@ -1,36 +1,25 @@
 package io.github.diskria.achievetodo.server
 
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.ability.AbilityType
-import io.github.diskria.achievetodo.ability.DimensionType
-import io.github.diskria.achievetodo.ability.Landmark
+import io.github.diskria.achievetodo.ServerPacksManager
+import io.github.diskria.achievetodo.SuitePack
+import io.github.diskria.achievetodo.abilities.AbilityType
+import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.client.InternalPack
 import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
 import io.github.diskria.achievetodo.landmarks.ServerLandmarksManager
-import io.github.diskria.achievetodo.landmarks.landmark
-import io.github.diskria.achievetodo.landmarks.landmarks
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
 import io.github.diskria.achievetodo.qol.TrackedAdvancement
-import kotlinx.coroutines.*
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents
+import kotlinx.coroutines.delay
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper
 import net.fabricmc.fabric.api.resource.ResourcePackActivationType
 import net.fabricmc.loader.api.FabricLoader
 import net.fabricmc.loader.api.ModContainer
-import net.minecraft.ChatFormatting
 import net.minecraft.advancements.AdvancementHolder
-import net.minecraft.network.chat.ClickEvent
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceKey
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.TickTask
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
-import net.minecraft.world.level.ChunkPos
-import net.minecraft.world.level.Level
-import net.minecraft.world.level.levelgen.structure.StructureStart
 import net.minecraft.world.phys.AABB
-import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Consumer
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -323,6 +312,8 @@ class AchieveToDoServer {
     fun init() {
         registerPayloadListeners()
         ServerLandmarksManager.registerHooks()
+        ServerPacksManager.registerHooks()
+        SuitePack.register()
         /*
         registerInternalDataPacks()
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
@@ -480,4 +471,34 @@ suspend fun MinecraftServer.awaitPlayers() {
         delay(50.milliseconds)
     }
     delay(100.milliseconds)
+}
+
+class AchieveToDoServerException(message: String) : IllegalStateException(formatBoxMessage(message)) {
+    companion object {
+        private fun formatBoxMessage(rawMessage: String): String {
+            val lines = rawMessage.trimIndent().lines()
+            val coreHeader = " [ ${AchieveToDoMod.NAME} ] "
+
+            val paddedLines = lines.map { "  $it" }
+            val maxLineLength = paddedLines.maxOfOrNull { it.length } ?: 0
+            val minHeaderWidth = coreHeader.length + 10
+            val maxLength = maxOf(minHeaderWidth, maxLineLength)
+
+            val totalEquals = maxLength - coreHeader.length
+            val leftEquals = totalEquals / 2
+            val rightEquals = totalEquals - leftEquals
+
+            val topHeader = "=".repeat(leftEquals) + coreHeader + "=".repeat(rightEquals)
+            val bottomBorder = "=".repeat(topHeader.length)
+
+            return buildString {
+                appendLine()
+                appendLine(topHeader)
+                paddedLines.forEach { line ->
+                    appendLine(line)
+                }
+                append(bottomBorder)
+            }
+        }
+    }
 }

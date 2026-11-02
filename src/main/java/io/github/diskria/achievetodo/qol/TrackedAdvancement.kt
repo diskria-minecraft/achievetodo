@@ -1,6 +1,6 @@
 package io.github.diskria.achievetodo.qol
 
-import io.github.diskria.achievetodo.etxensions.getScore
+import io.github.diskria.achievetodo.extensions.getScore
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.minecraft.client.Minecraft

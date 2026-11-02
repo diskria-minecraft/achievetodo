@@ -1,20 +1,24 @@
 package io.github.diskria.achievetodo.client
 
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.ability.AbilitiesHierarchyLayerType
-import io.github.diskria.achievetodo.ability.AbilityType
-import io.github.diskria.achievetodo.ability.DimensionType
-import io.github.diskria.achievetodo.ability.Landmark
+import io.github.diskria.achievetodo.AchieveToDoMod.Companion.ID
+import io.github.diskria.achievetodo.abilities.AbilitiesHierarchyLayerType
+import io.github.diskria.achievetodo.abilities.AbilityType
+import io.github.diskria.achievetodo.abilities.DimensionType
+import io.github.diskria.achievetodo.landmarks.Landmark
 import io.github.diskria.achievetodo.payloads.clientbound.*
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload.Client.send
 import io.github.diskria.achievetodo.server.Constants
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.world.phys.AABB
+import java.nio.file.Path
+import kotlin.io.path.div
 
 class AchieveToDoClient : ClientModInitializer {
 
@@ -75,6 +79,8 @@ class AchieveToDoClient : ClientModInitializer {
     }
 
     companion object {
+        val configDir: Path = FabricLoader.getInstance().configDir / ID
+
         private val lockedLandmarksSet = mutableSetOf<Landmark>()
         var lockedLandmarks = emptyList<Landmark>()
 
@@ -94,7 +100,7 @@ class AchieveToDoClient : ClientModInitializer {
             trackedAdvancementProgresses.getOrDefault(advancementId, 0)
 
         fun translate(keySuffix: String, vararg args: Any): MutableComponent =
-            Component.translatable("${AchieveToDoMod.ID}.$keySuffix", *args)
+            Component.translatable("${ID}.$keySuffix", *args)
 
         fun isAbilityLocked(ability: AbilityType): Boolean =
             isAbilityLocked(ability, false)

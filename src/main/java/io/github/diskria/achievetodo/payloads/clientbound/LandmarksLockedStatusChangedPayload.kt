@@ -1,8 +1,8 @@
 package io.github.diskria.achievetodo.payloads.clientbound
 
-import io.github.diskria.achievetodo.ability.Landmark
-import io.github.diskria.achievetodo.payloads.payloadTypeOf
-import io.github.diskria.achievetodo.payloads.setCodecOf
+import io.github.diskria.achievetodo.extensions.payloadTypeOf
+import io.github.diskria.achievetodo.extensions.setCodecOf
+import io.github.diskria.achievetodo.landmarks.Landmark
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking

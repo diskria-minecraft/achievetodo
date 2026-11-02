@@ -1,13 +1,15 @@
 package io.github.diskria.achievetodo
 
-import io.github.diskria.achievetodo.ability.AbilityType
-import io.github.diskria.achievetodo.ability.DimensionType
+import io.github.diskria.achievetodo.abilities.AbilityType
+import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.client.AchieveToDoClient
+import io.github.diskria.achievetodo.extensions.interpolateColor
 import io.github.diskria.achievetodo.payloads.clientbound.*
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
 import io.github.diskria.achievetodo.server.AchieveToDoServer
 import net.fabricmc.api.ModInitializer
 import net.minecraft.core.BlockPos
+import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
@@ -16,6 +18,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.math.abs
 
 class AchieveToDoMod : ModInitializer {
 
@@ -39,9 +42,22 @@ class AchieveToDoMod : ModInitializer {
         const val NAME: String = "AchieveToDo"
         const val ID: String = "achievetodo"
 
+        val COLORED_NAME: Component by lazy {
+            val colorFrom = 0x07C5FA
+            val colorTo = 0xFFFF00
+            val mid = NAME.lastIndex / 2.0
+            Component.empty().apply {
+                NAME.forEachIndexed { i, char ->
+                    val factor = 1.0 - abs(i - mid) / mid
+                    val color = interpolateColor(colorFrom, colorTo, factor)
+                    append(Component.literal(char.toString()).withStyle { it.withColor(color) })
+                }
+            }
+        }
+
         val server = AchieveToDoServer()
 
-        var logger: Logger = LoggerFactory.getLogger(NAME)
+        var LOGGER: Logger = LoggerFactory.getLogger(NAME)
 
         fun getIdentifier(path: String): Identifier = Identifier.fromNamespaceAndPath(ID, path)
 

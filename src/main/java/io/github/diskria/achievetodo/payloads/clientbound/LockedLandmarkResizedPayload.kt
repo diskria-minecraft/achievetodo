@@ -1,7 +1,7 @@
 package io.github.diskria.achievetodo.payloads.clientbound
 
-import io.github.diskria.achievetodo.ability.LandmarkType
-import io.github.diskria.achievetodo.payloads.payloadTypeOf
+import io.github.diskria.achievetodo.extensions.payloadTypeOf
+import io.github.diskria.achievetodo.landmarks.LandmarkType
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
@@ -23,7 +23,7 @@ class LockedLandmarkResizedPayload private constructor(
     @Environment(EnvType.CLIENT)
     object Client {
         fun listen(
-            action: ClientPlayNetworking.Context.(type: LandmarkType, oldBB: BoundingBox, newBB: BoundingBox) -> Unit
+            action: ClientPlayNetworking.Context.(type: LandmarkType, oldBB: BoundingBox, newBB: BoundingBox) -> Unit,
         ) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
                 context.client().execute { context.action(payload.type, payload.oldBB, payload.newBB) }

@@ -1,6 +1,6 @@
 package io.github.diskria.achievetodo.injection.extension.main;
 
-import io.github.diskria.achievetodo.ability.AbilityType;
+import io.github.diskria.achievetodo.abilities.AbilityType;
 
 import java.util.Map;
 

@@ -10,6 +10,8 @@
 //import io.github.diskria.achievetodo.injection.extension.client.CreateWorldScreenExtension;
 //import io.github.diskria.achievetodo.injection.extension.client.WorldCreatorExtension;
 //import io.github.diskria.achievetodo.injection.extension.main.LevelInfoExtension;
+//import net.minecraft.client.gui.screens.Screen;
+//import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 //import org.jetbrains.annotations.NotNull;
 //import org.jetbrains.annotations.Nullable;
 //import org.spongepowered.asm.mixin.Final;
@@ -32,16 +34,17 @@
 //import java.util.List;
 //import java.util.function.Consumer;
 //
-//@Mixin(value = CreateWorldScreen.class, priority = 500)
+//@Mixin(value = CreateWorldScreen.class)
 //public abstract class CreateWorldScreenMixin extends Screen implements CreateWorldScreenExtension {
 //
-//    @Shadow
-//    @Final
-//    WorldCreator worldCreator;
 //    @Unique
 //    private boolean isWaitingDatapack;
 //    @Unique
 //    private WorldCreationTab worldCreationTab;
+//
+//    @Shadow
+//    @Final
+//    WorldCreator worldCreator;
 //    @Shadow
 //    private @Nullable ResourcePackManager packManager;
 //    @Shadow

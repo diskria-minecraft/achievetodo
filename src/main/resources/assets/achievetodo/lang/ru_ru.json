@@ -1,4 +1,5 @@
 {
+  "achievetodo.suite.description": "Управляет набором достижений BlazeandCave и автоматически поддерживает: %s",
   "achievetodo.world_creation_tab.progression.chaos": "Хаос",
 
   "achievetodo.world_creation_tab.progression.chaos.tooltip": "Рекомендуемый режим, где способности перемешиваются случайным образом в зависимости от сида мира. Каждое прохождение превращается в уникальный опыт и испытание, воплощая всю глубину замысла AchieveToDo.",
@@ -626,6 +627,10 @@
   "achievetodo.ability.interact_inside_ruined_portal.name": "Разрушенный портал",
   "achievetodo.ability.interact_inside_ruined_portal.description": "Возможность взаимодействия с объектами в пределах разрушенного портала",
   "achievetodo.ability.interact_inside_ruined_portal.locked_message": "Вы не можете взаимодействовать с объектами в пределах разрушенного портала",
+
+  "achievetodo.ability.interact_inside_abandoned_camp.name": "Заброшенный лагерь",
+  "achievetodo.ability.interact_inside_abandoned_camp.description": "Возможность взаимодействия с объектами в пределах заброшенного лагеря",
+  "achievetodo.ability.interact_inside_abandoned_camp.locked_message": "Вы не можете взаимодействовать с объектами в пределах заброшенного лагеря",
 
   "achievetodo.ability.interact_inside_buried_treasure.name": "Клад",
   "achievetodo.ability.interact_inside_buried_treasure.description": "Возможность взаимодействия с объектами в пределах клада",

@@ -1,16 +1,15 @@
 package io.github.diskria.achievetodo.datagen
 
-import com.google.common.hash.HashCode
+import com.google.common.hash.Hashing
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonPrimitive
 import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.ability.AbilityType
+import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.client.AchieveToDoClient
 import io.github.diskria.achievetodo.client.gui.DesignCodePalette
-import io.github.diskria.achievetodo.etxensions.calcSha1
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
 import net.minecraft.ChatFormatting
 import net.minecraft.advancements.Advancement
@@ -173,11 +172,12 @@ private val impossibleCriterion = CriteriaTriggers.IMPOSSIBLE.createCriterion(Im
 private val gson = Gson()
 
 context(jsonSerializer: RegistryOps<JsonElement>)
-fun <T> T.toCompactJson(codec: Codec<T>): String =
+private fun <T> T.toCompactJson(codec: Codec<T>): String =
     gson.toJson(codec.encodeStart(jsonSerializer, this).orThrow.asJsonObject)
 
-fun CachedOutput.writeText(text: String, path: Path): CompletableFuture<*> =
+private fun CachedOutput.writeText(text: String, path: Path): CompletableFuture<*> =
     CompletableFuture.runAsync({
         val input = text.toByteArray()
-        writeIfNeeded(path, input, HashCode.fromBytes(input.calcSha1()))
+        @Suppress("DEPRECATION") val sha1HashFun = Hashing.sha1()
+        writeIfNeeded(path, input, sha1HashFun.hashBytes(input))
     }, Util.backgroundExecutor().forName("saveRawString"))

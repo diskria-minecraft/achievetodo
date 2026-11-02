@@ -1,4 +1,5 @@
 {
+  "achievetodo.suite.description": "Manages BlazeandCave's Advancements Pack and automatically supports: %s",
   "achievetodo.world_creation_tab.progression.chaos": "Chaos",
 
   "achievetodo.world_creation_tab.progression.chaos.tooltip": "The recommended mode, in which abilities get randomly shuffled according to the world seed. Every run turns into a unique experience and challenge that embodies the true spirit of AchieveToDo.",
@@ -626,6 +627,10 @@
   "achievetodo.ability.interact_inside_ruined_portal.name": "Ruined Portal",
   "achievetodo.ability.interact_inside_ruined_portal.description": "Ability to interact with objects within a Ruined Portal",
   "achievetodo.ability.interact_inside_ruined_portal.locked_message": "You can't interact with objects within a Ruined Portal",
+
+  "achievetodo.ability.interact_inside_abandoned_camp.name": "Abandoned Camp",
+  "achievetodo.ability.interact_inside_abandoned_camp.description": "Ability to interact with objects within a Abandoned Camp",
+  "achievetodo.ability.interact_inside_abandoned_camp.locked_message": "You can't interact with objects within a Abandoned Camp",
 
   "achievetodo.ability.interact_inside_buried_treasure.name": "Buried Treasure",
   "achievetodo.ability.interact_inside_buried_treasure.description": "Ability to interact with objects within a Buried Treasure",
