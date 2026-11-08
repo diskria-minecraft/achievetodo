@@ -79,8 +79,6 @@ class AchieveToDoClient : ClientModInitializer {
     }
 
     companion object {
-        val configDir: Path = FabricLoader.getInstance().configDir / ID
-
         private val lockedLandmarksSet = mutableSetOf<Landmark>()
         var lockedLandmarks = emptyList<Landmark>()
 

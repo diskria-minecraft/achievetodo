@@ -1,8 +1,8 @@
 package io.github.diskria.achievetodo.server
 
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.ServerPacksManager
-import io.github.diskria.achievetodo.SuitePack
+import io.github.diskria.achievetodo.config.ModServerConfigManager
+import io.github.diskria.achievetodo.config.SuitePack
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.client.InternalPack
@@ -312,7 +312,7 @@ class AchieveToDoServer {
     fun init() {
         registerPayloadListeners()
         ServerLandmarksManager.registerHooks()
-        ServerPacksManager.registerHooks()
+        ModServerConfigManager.registerHooks()
         SuitePack.register()
         /*
         registerInternalDataPacks()

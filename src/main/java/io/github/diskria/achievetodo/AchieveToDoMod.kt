@@ -8,6 +8,7 @@ import io.github.diskria.achievetodo.payloads.clientbound.*
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
 import io.github.diskria.achievetodo.server.AchieveToDoServer
 import net.fabricmc.api.ModInitializer
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
@@ -18,6 +19,7 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.phys.AABB
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.io.path.div
 import kotlin.math.abs
 
 class AchieveToDoMod : ModInitializer {
@@ -56,8 +58,9 @@ class AchieveToDoMod : ModInitializer {
         }
 
         val server = AchieveToDoServer()
-
-        var LOGGER: Logger = LoggerFactory.getLogger(NAME)
+        const val DATAPACKS_CACHE_PATH = "config/$ID/datapacks"
+        val datapacksCacheDir = FabricLoader.getInstance().configDir / ID / "datapacks"
+        val logger: Logger = LoggerFactory.getLogger(NAME)
 
         fun getIdentifier(path: String): Identifier = Identifier.fromNamespaceAndPath(ID, path)
 
