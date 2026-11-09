@@ -7,7 +7,6 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.server.AchieveToDoServerException
 import io.github.diskria.lapis.annotations.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -85,12 +84,12 @@ data class ModServerConfig(
 }
 
 @KMixin<CreateWorldScreen>(Side.Client)
-abstract class ModServerConfigTabInjector(@Origin val createWorldScreen: CreateWorldScreen) {
+abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
 
     @Extension
     fun setModServerConfig(config: ModServerConfig) {
-        createWorldScreen.uiState.modServerConfig = config.copy(acknowledged = true)
-        createWorldScreen.updateInitialSuitePackComponents()
+        screen.uiState.modServerConfig = config.copy(acknowledged = true)
+        screen.updateInitialSuitePackComponents()
     }
 
     @WrapOperation(
@@ -221,25 +220,6 @@ class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
             config = runCatching {
                 getConfigPath().inputStream().use { Json.decodeFromStream<ModServerConfig>(it) }
             }.getOrNull()
-        }
-        return config
-    }
-
-    @Extension
-    fun requireAcknowledgedModServerConfig(): ModServerConfig {
-        val config = readModServerConfig()
-        if (config == null || !config.acknowledged) {
-            if (config == null) {
-                saveModServerConfig(ModServerConfig.DEDICATED_DEFAULT)
-            }
-            throw AchieveToDoServerException(
-                """
-                Server config is not acknowledged!
-                Please review the config and change "acknowledged" from false to true.
-                
-                Config file: <world_folder>/$CONFIG_PATH
-                """.trimIndent()
-            )
         }
         return config
     }

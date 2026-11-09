@@ -61,6 +61,7 @@ class AchieveToDoMod : ModInitializer {
         const val DATAPACKS_CACHE_PATH = "config/$ID/datapacks"
         val datapacksCacheDir = FabricLoader.getInstance().configDir / ID / "datapacks"
         val logger: Logger = LoggerFactory.getLogger(NAME)
+        const val USER_AGENT = "diskria-minecraft/achievetodo/3.0.0 (diskria@proton.me)"
 
         fun getIdentifier(path: String): Identifier = Identifier.fromNamespaceAndPath(ID, path)
 

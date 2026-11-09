@@ -12,9 +12,9 @@ import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.client.BacCompatiblePack
 import io.github.diskria.achievetodo.client.BacCorePack
 import io.github.diskria.achievetodo.client.SuitePackComponent
+import io.github.diskria.achievetodo.config.ModServerConfigStorage.Companion.CONFIG_PATH
 import io.github.diskria.achievetodo.extensions.DfuPair
 import io.github.diskria.achievetodo.extensions.calcSha1OrNull
-import io.github.diskria.achievetodo.server.AchieveToDoServerException
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType
@@ -39,6 +39,7 @@ import net.minecraft.server.packs.repository.Pack.ResourcesSupplier
 import net.minecraft.server.packs.repository.PackCompatibility
 import net.minecraft.server.packs.repository.PackRepository
 import net.minecraft.server.packs.repository.PackSource
+import net.minecraft.util.Util
 import net.minecraft.world.flag.FeatureFlagSet
 import net.minecraft.world.level.LevelSettings
 import net.minecraft.world.level.WorldDataConfiguration
@@ -64,21 +65,21 @@ object SuitePack {
 
     fun checkId(id: String): Boolean = id == ID.toString()
 
-    fun getRequiredComponents(config: ModServerConfig, isHardcore: Boolean): List<SuitePackComponent> = when {
+    fun getRequiredComponents(config: ModServerConfig, isHardcore: Boolean) = when {
         !config.modEnabled -> emptyList()
         else -> mutableListOf(BacCorePack.MAIN).apply {
             if (isHardcore) add(BacCorePack.HARDCORE)
             if (config.terralithEnabled) {
                 add(BacCompatiblePack.TERRALITH.main)
-                // add(BacCompatiblePack.TERRALITH.compat)
+                 add(BacCompatiblePack.TERRALITH.compat)
             }
             if (config.amplifiedNetherEnabled) {
                 add(BacCompatiblePack.AMPLIFIED_NETHER.main)
-                // add(BacCompatiblePack.AMPLIFIED_NETHER.compat)
+                 add(BacCompatiblePack.AMPLIFIED_NETHER.compat)
             }
             if (config.nullscapeEnabled) {
                 add(BacCompatiblePack.NULLSCAPE.main)
-                // add(BacCompatiblePack.NULLSCAPE.compat)
+                 add(BacCompatiblePack.NULLSCAPE.compat)
             }
         }
     }
@@ -86,7 +87,7 @@ object SuitePack {
     fun filterMissingComponents(components: List<SuitePackComponent>): List<SuitePackComponent> =
         components.filter {
             val cachePack = AchieveToDoMod.datapacksCacheDir / it.fileName
-            cachePack.calcSha1OrNull() != it.download.sha1
+            cachePack.calcSha1OrNull() != it.dl.sha1
         }
 
     fun unfoldComponents(resources: List<PackResources>, components: List<SuitePackComponent>): List<PackResources> {
@@ -94,9 +95,7 @@ object SuitePack {
         val suiteIndex = resources.indexOfFirst { checkId(it.packId()) }.takeIf { it >= 0 } ?: return resources
         val missingComponents = filterMissingComponents(components)
         if (missingComponents.isNotEmpty()) {
-            throw AchieveToDoServerException(
-                "Missing or corrupted required datapacks: ${missingComponents.joinToString { it.fileName }}"
-            )
+            error("Missing or corrupted required datapacks: ${missingComponents.joinToString { it.fileName }}")
         }
         val componentResources = components.flatMap { component ->
             val componentPack = Pack.readMetaAndCreate(
@@ -165,7 +164,7 @@ abstract class SuitePackCreateWorldChecker(@Origin val screen: CreateWorldScreen
         val missingComponents = SuitePack.filterMissingComponents(components)
         if (missingComponents.isNotEmpty()) {
             Minecraft.getInstance().gui.setScreen(
-                SuitePackComponentsInstallers.DownloadScreen(
+                DownloadSuitePackComponentsScreen(
                     components = missingComponents,
                     onComplete = ::createWorld,
                     onCancel = ::exitToCreateWorldScreen,
@@ -335,7 +334,7 @@ abstract class SuitePackIntegratedServerSync {
             val missingComponents = SuitePack.filterMissingComponents(components)
             if (missingComponents.isNotEmpty()) {
                 Minecraft.getInstance().gui.setScreen(
-                    SuitePackComponentsInstallers.DownloadScreen(
+                    DownloadSuitePackComponentsScreen(
                         components = missingComponents,
                         onComplete = { openWorldLoadLevelStem(levelStorage, levelDat, safeMode, onCancel) },
                         onCancel = {
@@ -375,14 +374,62 @@ class SuitePackDedicatedServerSync {
             levelStorage: LevelStorageAccess,
             original: Operation<PackRepository>,
             @Local(name = ["settings"]) settings: DedicatedServerSettings,
-        ): PackRepository {
-            val config = levelStorage.requireAcknowledgedModServerConfig()
+            @Cancellable ci: CallbackInfo,
+        ): PackRepository? {
+            val config = levelStorage.readModServerConfig()
+            if (config == null || !config.acknowledged) {
+                if (config == null) {
+                    levelStorage.saveModServerConfig(ModServerConfig.DEDICATED_DEFAULT)
+                }
+                AchieveToDoMod.logger.error(
+                    """
+                    Server config is not acknowledged!
+                    Please review the config and change "acknowledged" from false to true.
+                    
+                    Config file: <world_folder>/$CONFIG_PATH
+                    """.trimIndent()
+                )
+                ci.cancel()
+                return null
+            }
             val components = SuitePack.getRequiredComponents(config, settings.properties.hardcore)
             val missingComponents = SuitePack.filterMissingComponents(components)
             if (missingComponents.isNotEmpty()) {
-                SuitePackComponentsInstallers.failDedicatedServerWithInstallationGuide(missingComponents)
+                logInvalidComponents(missingComponents)
+                ci.cancel()
+                return null
             }
             return original.call(levelStorage).apply { suitePackComponents = components }
+        }
+
+        private fun logInvalidComponents(components: List<SuitePackComponent>) {
+            val cachePath = AchieveToDoMod.DATAPACKS_CACHE_PATH
+            val curl = if (Util.getPlatform() == Util.OS.WINDOWS) "curl.exe" else "curl"
+            AchieveToDoMod.logger.error(buildString {
+                appendLine("Missing or corrupted required datapacks!")
+                appendLine()
+                components.forEachIndexed { index, pack ->
+                    appendLine("${index + 1}. [${pack.title}] -> ${pack.fileName} (SHA-1:${pack.dl.sha1})")
+                    when (val dl = pack.dl) {
+                        is SuitePackComponent.Download.Modrinth -> appendLine(
+                            """
+                            Run in console to download with correct name:
+                            $curl -A "${AchieveToDoMod.USER_AGENT}" --create-dirs -Lo "$cachePath/${pack.fileName}" "${dl.url}"
+                            """.trimIndent()
+                        )
+
+                        is SuitePackComponent.Download.Mediafire -> appendLine(
+                            """
+                            Open browser and download file (AD): ${dl.url}
+                            Unzip it and rename the inner file to: ${pack.fileName}
+                            """.trimIndent()
+                        )
+                    }
+                    appendLine()
+                }
+                appendLine("All files must be saved to: <server_folder>/$cachePath")
+                append("Restart the server once all files are in place.")
+            })
         }
     }
 }

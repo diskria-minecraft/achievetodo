@@ -1,11 +1,11 @@
 package io.github.diskria.achievetodo.server
 
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.config.ModServerConfigManager
-import io.github.diskria.achievetodo.config.SuitePack
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.client.InternalPack
+import io.github.diskria.achievetodo.config.ModServerConfigManager
+import io.github.diskria.achievetodo.config.SuitePack
 import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
 import io.github.diskria.achievetodo.landmarks.ServerLandmarksManager
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
@@ -471,34 +471,4 @@ suspend fun MinecraftServer.awaitPlayers() {
         delay(50.milliseconds)
     }
     delay(100.milliseconds)
-}
-
-class AchieveToDoServerException(message: String) : IllegalStateException(formatBoxMessage(message)) {
-    companion object {
-        private fun formatBoxMessage(rawMessage: String): String {
-            val lines = rawMessage.trimIndent().lines()
-            val coreHeader = " [ ${AchieveToDoMod.NAME} ] "
-
-            val paddedLines = lines.map { "  $it" }
-            val maxLineLength = paddedLines.maxOfOrNull { it.length } ?: 0
-            val minHeaderWidth = coreHeader.length + 10
-            val maxLength = maxOf(minHeaderWidth, maxLineLength)
-
-            val totalEquals = maxLength - coreHeader.length
-            val leftEquals = totalEquals / 2
-            val rightEquals = totalEquals - leftEquals
-
-            val topHeader = "=".repeat(leftEquals) + coreHeader + "=".repeat(rightEquals)
-            val bottomBorder = "=".repeat(topHeader.length)
-
-            return buildString {
-                appendLine()
-                appendLine(topHeader)
-                paddedLines.forEach { line ->
-                    appendLine(line)
-                }
-                append(bottomBorder)
-            }
-        }
-    }
 }
