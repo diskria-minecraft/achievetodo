@@ -105,7 +105,7 @@ object SuitePack {
             val componentPack = Pack.readMetaAndCreate(
                 PackLocationInfo(
                     component.datapackName,
-                    Component.literal(component.title),
+                    Component.literal(component.name),
                     PackSource.BUILT_IN,
                     Optional.empty(),
                 ),
@@ -169,10 +169,8 @@ abstract class SuitePackCreateWorldChecker(@Origin val screen: CreateWorldScreen
         if (missingComponents.isNotEmpty()) {
             val downloadScreen = SuitePackDownloadComponentsScreen(missingComponents) { result ->
                 if (result) {
-                    println("Approved on create")
                     createWorld()
                 } else {
-                    println("Canceled on create")
                     exitToCreateWorldScreen()
                 }
             }
@@ -241,7 +239,7 @@ class SuitePackCustomizer {
             val supportedList = listOf(
                 Component.translatable("selectWorld.gameMode.hardcore").withStyle(BacCorePack.HARDCORE.color),
             ) + BacCompatiblePack.ALL.map {
-                Component.literal(it.main.title).withStyle(it.main.color)
+                Component.literal(it.main.name).withStyle(it.main.color)
             }
             val description = Component.translatable(
                 "achievetodo.suite.description",
@@ -337,16 +335,13 @@ abstract class SuitePackIntegratedServerSync {
         @Cancellable ci: CallbackInfo,
     ): WorldStem? {
         levelStorage.readModServerConfig()?.let { config ->
-            val isHardcore = levelDat.parseDifficultySettings().hardcore
-            val components = SuitePack.getRequiredComponents(config, isHardcore)
+            val components = SuitePack.getRequiredComponents(config, levelDat.parseDifficultySettings().hardcore)
             val missingComponents = SuitePack.filterMissingComponents(components)
             if (missingComponents.isNotEmpty()) {
                 val downloadScreen = SuitePackDownloadComponentsScreen(missingComponents) { result ->
                     if (result) {
-                        println("Approved on load")
                         openWorldLoadLevelStem(levelStorage, levelDat, safeMode, onCancel)
                     } else {
-                        println("Canceled on load")
                         levelStorage.safeClose()
                         onCancel.run()
                     }
@@ -418,7 +413,7 @@ class SuitePackDedicatedServerSync {
                 appendLine("Missing or corrupted required datapacks!")
                 appendLine()
                 components.forEachIndexed { index, pack ->
-                    appendLine("${index + 1}. [${pack.title}] -> ${pack.fileName} (SHA-256:${pack.dl.sha256})")
+                    appendLine("${index + 1}. [${pack.name}] -> ${pack.fileName} (SHA-256:${pack.dl.sha256})")
                     when (val dl = pack.dl) {
                         is SuitePackComponent.Download.Modrinth -> {
                             appendLine("Run in console to download with correct name:")

@@ -44,19 +44,12 @@ import kotlin.io.path.inputStream
 import kotlin.io.path.outputStream
 
 object ModServerConfigManager {
+
+    var config: ModServerConfig? = null
+
     fun registerHooks() {
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
-            AchieveToDoMod.logger.info("Loading server config...")
-            val config = server.levelStorage.readModServerConfig()
-            if (config == null) {
-                AchieveToDoMod.logger.warn("  Config not found. Skipping...")
-                return@register
-            }
-            if (!config.modEnabled) {
-                AchieveToDoMod.logger.warn("  Disabled via config. Exiting...")
-                return@register
-            }
-            AchieveToDoMod.logger.info("Done! $config")
+            config = server.levelStorage.readModServerConfig()?.takeIf { it.modEnabled } ?: return@register
         }
     }
 }
@@ -212,33 +205,35 @@ class ModServerConfigViewState(@Origin val state: WorldCreationUiState) {
 @KMixin<LevelStorageAccess>(Side.Common)
 class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
 
-    private var config: ModServerConfig? = null
+    private val configPath by lazy { levelStorage.levelDirectory.path / CONFIG_PATH }
+    private var modServerConfig: ModServerConfig? = null
 
     @Extension
     fun readModServerConfig(): ModServerConfig? {
-        if (config == null) {
-            config = runCatching {
-                getConfigPath().inputStream().use { Json.decodeFromStream<ModServerConfig>(it) }
+        if (modServerConfig == null) {
+            modServerConfig = runCatching {
+                configPath.inputStream().use { Json.decodeFromStream<ModServerConfig>(it) }
             }.getOrNull()
         }
-        return config
+        return modServerConfig
     }
 
     @Extension
     fun saveModServerConfig(config: ModServerConfig): Boolean {
+        if (config == modServerConfig) {
+            return true
+        }
         val isSaved = runCatching {
-            with(getConfigPath()) {
+            with(configPath) {
                 parent.createDirectories()
                 outputStream().use { configJson.encodeToStream(config, it) }
             }
         }.isSuccess
         if (isSaved) {
-            this@ModServerConfigStorage.config = config
+            modServerConfig = config
         }
         return isSaved
     }
-
-    private fun getConfigPath() = levelStorage.levelDirectory.path / CONFIG_PATH
 
     companion object {
         const val CONFIG_PATH = "config/${AchieveToDoMod.ID}/server.json"

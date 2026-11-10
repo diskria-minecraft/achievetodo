@@ -4,14 +4,13 @@ import net.minecraft.ChatFormatting
 
 data class SuitePackComponent(
     val id: String,
-    val title: String,
+    val name: String,
     val color: ChatFormatting,
     val pageUrl: String,
     val dl: Download,
 ) {
     val fileName: String get() = "$id.zip"
     val datapackName: String get() = "file/$fileName"
-    val reasonKey: String get() = "downloader.reason.$id"
 
     sealed interface Download {
 
@@ -36,7 +35,7 @@ data class SuitePackComponent(
 object BacCorePack {
     val MAIN = SuitePackComponent(
         id = "bacap",
-        title = "BlazeandCave's Advancements Pack",
+        name = "BlazeandCave's Advancements Pack (BACAP)",
         color = ChatFormatting.AQUA,
         pageUrl = "https://modrinth.com/datapack/blazeandcaves-advancements-pack",
         dl = SuitePackComponent.Download.Modrinth(
@@ -47,7 +46,7 @@ object BacCorePack {
 
     val HARDCORE = SuitePackComponent(
         id = "bacap_hardcore",
-        title = "BlazeandCave's Advancements Pack Hardcore Version",
+        name = "BACAP - Hardcore Version",
         color = ChatFormatting.RED,
         pageUrl = "https://modrinth.com/datapack/blazeandcaves-advancements-pack-hardcore-version",
         dl = SuitePackComponent.Download.Modrinth(
@@ -119,14 +118,14 @@ data class BacCompatiblePack(val main: SuitePackComponent, val compat: SuitePack
         ) = BacCompatiblePack(
             main = SuitePackComponent(
                 id = id,
-                title = title,
+                name = title,
                 color = color,
                 pageUrl = mainPageUrl,
                 dl = mainDl,
             ),
             compat = SuitePackComponent(
                 id = "bacap_$id",
-                title = "BlazeandCave's Advancements Pack $title version",
+                name = "BACAP - $title Version",
                 color = color,
                 pageUrl = "https://www.planetminecraft.com/data-pack/blazeandcave-s-advancements-pack-terralith-version",
                 dl = compatDl,

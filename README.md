@@ -74,15 +74,7 @@ This makes it easy to create all kinds of custom challenges or special gameplay 
 <details>
 <summary>Server-side setup</summary>
 
-1. **Create a Single-Player World**. In the world creation menu, enable all the settings you plan to use on your server (e.g., hardcore mode, Terralith, co-op, rewards, etc.). Review each difficulty’s description (easy, normal, hard, chaos) to understand how it affects gameplay.
-
-2. **Check Data Packs**. Once the single-player world has been generated, open it and run the `/datapack list` command. Take note of which data packs are active, including any external packs (like `bacap.zip`) and AchieveToDo’s built-in overrides (e.g., `achievetodo:bacap_override`).
-
-3. **Replicate the Setup**. Upload the same external `.zip` data packs from your single-player world to your server’s datapacks folder, enable them in the same order shown by the `/datapack list` command and make sure to also enable the corresponding AchieveToDo override packs (e.g., `achievetodo:bacap_override`) in the **same order**.
-
-4. **Configure the Server**. In your server’s `server.properties` file, create the `achievetodo-configName` parameter. Set this parameter to the difficulty name you selected when creating the single-player world (easy, normal, hard, or chaos).
-
-5. **Custom Configuration (Optional)**. Instead of using one of the built-in difficulty modes, you can specify the name of a custom configuration file as the value for the `achievetodo-configName` parameter.
+Soon...
 
 </details>
 

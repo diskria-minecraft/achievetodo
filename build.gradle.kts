@@ -83,6 +83,12 @@ loom {
                 "--enable-native-access=ALL-UNNAMED",
             )
             systemProperties.put("mixin.debug.export", "true")
+            environmentVars.putAll(
+                mapOf(
+                    "SDL_VIDEODRIVER" to "wayland",
+                    "SDL_WL_CURSOR_WARP" to 0,
+                )
+            )
         }
     }
     runs.all {
