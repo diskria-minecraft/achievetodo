@@ -14,7 +14,7 @@ import io.github.diskria.achievetodo.client.BacCorePack
 import io.github.diskria.achievetodo.client.SuitePackComponent
 import io.github.diskria.achievetodo.config.ModServerConfigStorage.Companion.CONFIG_PATH
 import io.github.diskria.achievetodo.extensions.DfuPair
-import io.github.diskria.achievetodo.extensions.calcSha1OrNull
+import io.github.diskria.achievetodo.extensions.calcSha256OrNull
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType
@@ -51,12 +51,17 @@ import java.nio.file.Path
 import java.util.*
 import java.util.function.Consumer
 import javax.lang.model.element.Modifier
+import kotlin.io.path.createDirectories
 import kotlin.io.path.div
 import kotlin.jvm.optionals.getOrNull
 
 object SuitePack {
 
-    private val ID = AchieveToDoMod.getIdentifier("suite")
+    private const val NAME = "suite"
+    private val ID = AchieveToDoMod.getIdentifier(NAME)
+
+    const val CACHE_PATH = ".${AchieveToDoMod.ID}/$NAME"
+    val CACHE_DIR = FabricLoader.getInstance().gameDir / CACHE_PATH
 
     fun register() {
         val mod = FabricLoader.getInstance().getModContainer(AchieveToDoMod.ID).getOrNull() ?: return
@@ -71,24 +76,23 @@ object SuitePack {
             if (isHardcore) add(BacCorePack.HARDCORE)
             if (config.terralithEnabled) {
                 add(BacCompatiblePack.TERRALITH.main)
-                 add(BacCompatiblePack.TERRALITH.compat)
+//                add(BacCompatiblePack.TERRALITH.compat)
             }
             if (config.amplifiedNetherEnabled) {
                 add(BacCompatiblePack.AMPLIFIED_NETHER.main)
-                 add(BacCompatiblePack.AMPLIFIED_NETHER.compat)
+//                add(BacCompatiblePack.AMPLIFIED_NETHER.compat)
             }
             if (config.nullscapeEnabled) {
                 add(BacCompatiblePack.NULLSCAPE.main)
-                 add(BacCompatiblePack.NULLSCAPE.compat)
+//                add(BacCompatiblePack.NULLSCAPE.compat)
             }
         }
     }
 
-    fun filterMissingComponents(components: List<SuitePackComponent>): List<SuitePackComponent> =
-        components.filter {
-            val cachePack = AchieveToDoMod.datapacksCacheDir / it.fileName
-            cachePack.calcSha1OrNull() != it.dl.sha1
-        }
+    fun filterMissingComponents(components: List<SuitePackComponent>) = components.filter {
+        val cachePack = CACHE_DIR / it.fileName
+        cachePack.calcSha256OrNull() != it.dl.sha256
+    }
 
     fun unfoldComponents(resources: List<PackResources>, components: List<SuitePackComponent>): List<PackResources> {
         if (components.isEmpty()) return resources
@@ -105,7 +109,7 @@ object SuitePack {
                     PackSource.BUILT_IN,
                     Optional.empty(),
                 ),
-                FilePackResources.FileResourcesSupplier(AchieveToDoMod.datapacksCacheDir / component.fileName),
+                FilePackResources.FileResourcesSupplier(CACHE_DIR / component.fileName),
                 PackType.SERVER_DATA,
                 PackSelectionConfig(true, Pack.Position.BOTTOM, false),
             )
@@ -163,13 +167,16 @@ abstract class SuitePackCreateWorldChecker(@Origin val screen: CreateWorldScreen
         }
         val missingComponents = SuitePack.filterMissingComponents(components)
         if (missingComponents.isNotEmpty()) {
-            Minecraft.getInstance().gui.setScreen(
-                DownloadSuitePackComponentsScreen(
-                    components = missingComponents,
-                    onComplete = ::createWorld,
-                    onCancel = ::exitToCreateWorldScreen,
-                )
-            )
+            val downloadScreen = SuitePackDownloadComponentsScreen(missingComponents) { result ->
+                if (result) {
+                    println("Approved on create")
+                    createWorld()
+                } else {
+                    println("Canceled on create")
+                    exitToCreateWorldScreen()
+                }
+            }
+            Minecraft.getInstance().gui.setScreen(downloadScreen)
             return
         }
         unfoldSuitePack(uiState, components)
@@ -330,19 +337,21 @@ abstract class SuitePackIntegratedServerSync {
         @Cancellable ci: CallbackInfo,
     ): WorldStem? {
         levelStorage.readModServerConfig()?.let { config ->
-            val components = SuitePack.getRequiredComponents(config, levelDat.parseDifficultySettings().hardcore)
+            val isHardcore = levelDat.parseDifficultySettings().hardcore
+            val components = SuitePack.getRequiredComponents(config, isHardcore)
             val missingComponents = SuitePack.filterMissingComponents(components)
             if (missingComponents.isNotEmpty()) {
-                Minecraft.getInstance().gui.setScreen(
-                    DownloadSuitePackComponentsScreen(
-                        components = missingComponents,
-                        onComplete = { openWorldLoadLevelStem(levelStorage, levelDat, safeMode, onCancel) },
-                        onCancel = {
-                            levelStorage.safeClose()
-                            onCancel.run()
-                        },
-                    )
-                )
+                val downloadScreen = SuitePackDownloadComponentsScreen(missingComponents) { result ->
+                    if (result) {
+                        println("Approved on load")
+                        openWorldLoadLevelStem(levelStorage, levelDat, safeMode, onCancel)
+                    } else {
+                        println("Canceled on load")
+                        levelStorage.safeClose()
+                        onCancel.run()
+                    }
+                }
+                Minecraft.getInstance().gui.setScreen(downloadScreen)
                 ci.cancel()
                 return null
             }
@@ -396,6 +405,7 @@ class SuitePackDedicatedServerSync {
             val missingComponents = SuitePack.filterMissingComponents(components)
             if (missingComponents.isNotEmpty()) {
                 logInvalidComponents(missingComponents)
+                SuitePack.CACHE_DIR.createDirectories()
                 ci.cancel()
                 return null
             }
@@ -403,31 +413,32 @@ class SuitePackDedicatedServerSync {
         }
 
         private fun logInvalidComponents(components: List<SuitePackComponent>) {
-            val cachePath = AchieveToDoMod.DATAPACKS_CACHE_PATH
             val curl = if (Util.getPlatform() == Util.OS.WINDOWS) "curl.exe" else "curl"
             AchieveToDoMod.logger.error(buildString {
                 appendLine("Missing or corrupted required datapacks!")
                 appendLine()
                 components.forEachIndexed { index, pack ->
-                    appendLine("${index + 1}. [${pack.title}] -> ${pack.fileName} (SHA-1:${pack.dl.sha1})")
+                    appendLine("${index + 1}. [${pack.title}] -> ${pack.fileName} (SHA-256:${pack.dl.sha256})")
                     when (val dl = pack.dl) {
-                        is SuitePackComponent.Download.Modrinth -> appendLine(
-                            """
-                            Run in console to download with correct name:
-                            $curl -A "${AchieveToDoMod.USER_AGENT}" --create-dirs -Lo "$cachePath/${pack.fileName}" "${dl.url}"
-                            """.trimIndent()
-                        )
+                        is SuitePackComponent.Download.Modrinth -> {
+                            appendLine("Run in console to download with correct name:")
 
-                        is SuitePackComponent.Download.Mediafire -> appendLine(
-                            """
-                            Open browser and download file (AD): ${dl.url}
-                            Unzip it and rename the inner file to: ${pack.fileName}
-                            """.trimIndent()
-                        )
+                            val cachePackPath = "${SuitePack.CACHE_PATH}/${pack.fileName}"
+                            appendLine(
+                                """
+                                $curl -A "${AchieveToDoMod.USER_AGENT}" --create-dirs -Lo "$cachePackPath" "${dl.url}"
+                                """.trimIndent()
+                            )
+                        }
+
+                        is SuitePackComponent.Download.Mediafire -> {
+                            appendLine("Open browser and download file (AD): ${dl.url}")
+                            appendLine("Unzip it and rename the inner file to: ${pack.fileName}")
+                        }
                     }
                     appendLine()
                 }
-                appendLine("All files must be saved to: <server_folder>/$cachePath")
+                appendLine("All files must be saved to: <server_root>/${SuitePack.CACHE_PATH}")
                 append("Restart the server once all files are in place.")
             })
         }

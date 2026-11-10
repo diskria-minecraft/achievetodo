@@ -16,14 +16,18 @@ data class SuitePackComponent(
     sealed interface Download {
 
         val url: String
-        val sha1: String
+        val sha256: String
         val supportsDirect: Boolean get() = true
 
-        data class Modrinth(val baseUrl: String, override val sha1: String) : Download {
+        data class Modrinth(val baseUrl: String, override val sha256: String) : Download {
             override val url: String get() = "$baseUrl?mr_download_reason=dependency"
         }
 
-        data class Mediafire(override val url: String, val unzipMeSha1: String, override val sha1: String) : Download {
+        data class Mediafire(
+            override val url: String,
+            val unzipMeSha256: String,
+            override val sha256: String,
+        ) : Download {
             override val supportsDirect: Boolean get() = false
         }
     }
@@ -37,7 +41,7 @@ object BacCorePack {
         pageUrl = "https://modrinth.com/datapack/blazeandcaves-advancements-pack",
         dl = SuitePackComponent.Download.Modrinth(
             baseUrl = "https://cdn.modrinth.com/data/VoVJ47kN/versions/YPEkY5bZ/BlazeandCave%27s%20Advancements%20Pack%201.21.1.zip",
-            sha1 = "18bb8fc57e606a1ad41b3f326c6f211e83d4fd2b",
+            sha256 = "ce391fe46846d7fb357b7fbdd42387d260ae1a9516c601d1ba9ab09c584971d7",
         ),
     )
 
@@ -48,7 +52,7 @@ object BacCorePack {
         pageUrl = "https://modrinth.com/datapack/blazeandcaves-advancements-pack-hardcore-version",
         dl = SuitePackComponent.Download.Modrinth(
             baseUrl = "https://cdn.modrinth.com/data/QEv1xmKi/versions/ZHHHw5wF/BlazeandCave%27s%20Advancements%20Pack%20Hardcore.zip",
-            sha1 = "9c20e14bbef224d2cc4ce63c8d24de1abc7a2475",
+            sha256 = "1baf5f1bc7c48c819cb6b3081cb124793a316b3568352c853b94757bb4237446",
         ),
     )
 }
@@ -62,12 +66,12 @@ data class BacCompatiblePack(val main: SuitePackComponent, val compat: SuitePack
             mainPageUrl = "https://modrinth.com/datapack/terralith",
             mainDl = SuitePackComponent.Download.Modrinth(
                 baseUrl = "https://cdn.modrinth.com/data/8oi3bsk5/versions/fqnsIp6d/Terralith_v2.6.5%2B26.3.zip",
-                sha1 = "f177f61facf8c43705debe1e1508792dcf4d5323",
+                sha256 = "9764f1d11a0bfe99c2cd96cd54f346fe756165d14a6f855b394954c171d603d5",
             ),
             compatDl = SuitePackComponent.Download.Mediafire(
                 url = "https://www.mediafire.com/file/rvmh35b6bvyjhj7/%255BUNZIP_ME%255D_BlazeandCave%2527s_Advancements_Pack_Terralith_1.18.3.zip/file",
-                unzipMeSha1 = "23725f7b5f730f178c23c6b26daa001fa579b07d",
-                sha1 = "1a666bd0d6c9eff05ef90d4c58e4b9836399f9b2",
+                unzipMeSha256 = "",
+                sha256 = "",
             ),
         )
 
@@ -78,12 +82,12 @@ data class BacCompatiblePack(val main: SuitePackComponent, val compat: SuitePack
             mainPageUrl = "https://modrinth.com/datapack/amplified-nether",
             mainDl = SuitePackComponent.Download.Modrinth(
                 baseUrl = "https://cdn.modrinth.com/data/wXiGiyGX/versions/sKKMLxcI/Amplified_Nether_v1.3.0%2B26.3.zip",
-                sha1 = "c1252e0b65462f80f33baa8d2bc4e11eade19699",
+                sha256 = "cb2699a5f399c5f3ff92a0107325e1d82730650b36231b4d084d85af2aa86fd1",
             ),
             compatDl = SuitePackComponent.Download.Mediafire(
                 url = "https://www.mediafire.com/file/sdg25wqdqk1uzfx/%255BUNZIP_ME%255D_BlazeandCave%2527s_Advancements_Pack_Amplified_Nether_1.18.3.zip/file",
-                unzipMeSha1 = "03c941f721bb94623738acaaffcb3501ebd32ee2",
-                sha1 = "4070cca88d1709286969cd5dacb8aba4b5addfb7",
+                unzipMeSha256 = "",
+                sha256 = "",
             ),
         )
 
@@ -94,12 +98,12 @@ data class BacCompatiblePack(val main: SuitePackComponent, val compat: SuitePack
             mainPageUrl = "https://modrinth.com/datapack/nullscape",
             mainDl = SuitePackComponent.Download.Modrinth(
                 baseUrl = "https://cdn.modrinth.com/data/LPjGiSO4/versions/BJjbILcf/Nullscape_v2.0.1%2B26.3.zip",
-                sha1 = "d759ee004b6d6e633bc849eee0ea2a929de8eabc",
+                sha256 = "69dc8ebbd2509d3f3d2b42b18036a38828855939768cccedebcb168c641f4224",
             ),
             compatDl = SuitePackComponent.Download.Mediafire(
                 url = "https://www.mediafire.com/file/bw97wde10zqbsuh/%255BUNZIP_ME%255D_BlazeandCave%2527s_Advancements_Pack_Nullscape_1.18.3.zip/file",
-                unzipMeSha1 = "3b6c4fe8016eb77d6776e86d7d9166b3a0c59561",
-                sha1 = "4e53953e042f14cbc8aaef86474a572fca8ebf3f",
+                unzipMeSha256 = "",
+                sha256 = "",
             ),
         )
 

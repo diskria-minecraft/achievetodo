@@ -1,6 +1,5 @@
 package io.github.diskria.achievetodo.client
 
-import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.AchieveToDoMod.Companion.ID
 import io.github.diskria.achievetodo.abilities.AbilitiesHierarchyLayerType
 import io.github.diskria.achievetodo.abilities.AbilityType
@@ -12,13 +11,10 @@ import io.github.diskria.achievetodo.server.Constants
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.MutableComponent
 import net.minecraft.world.phys.AABB
-import java.nio.file.Path
-import kotlin.io.path.div
 
 class AchieveToDoClient : ClientModInitializer {
 

@@ -9,20 +9,19 @@ import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
 
 @Environment(EnvType.CLIENT)
-class DownloadSuitePackComponentsScreen(
+class SuitePackDownloadComponentsScreen(
     private val components: List<SuitePackComponent>,
-    private val onComplete: () -> Unit,
-    private val onCancel: () -> Unit,
+    private val callback: (result: Boolean) -> Unit,
 ) : Screen(Component.literal("Download")) {
 
     override fun init() {
         super.init()
         addRenderableWidget(
-            Button.builder(CommonComponents.GUI_DONE) { onComplete() }
+            Button.builder(CommonComponents.GUI_DONE) { callback(true) }
                 .bounds(width / 2 - 155 + 80, 124, 150, 20).build()
         )
         addRenderableWidget(
-            Button.builder(CommonComponents.GUI_CANCEL) { onCancel() }
+            Button.builder(CommonComponents.GUI_CANCEL) { callback(false) }
                 .bounds(width / 2 - 155 + 80, 164, 150, 20).build()
         )
     }
