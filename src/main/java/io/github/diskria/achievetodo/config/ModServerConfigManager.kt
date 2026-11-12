@@ -7,6 +7,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.AchieveToDoMod
+import io.github.diskria.achievetodo.suite.onModServerConfigChanged
 import io.github.diskria.lapis.annotations.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -49,7 +50,7 @@ object ModServerConfigManager {
 
     fun registerHooks() {
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
-            config = server.levelStorage.readModServerConfig()?.takeIf { it.modEnabled } ?: return@register
+            config = server.modServerConfig?.takeIf { it.modEnabled } ?: return@register
         }
     }
 }
@@ -63,16 +64,17 @@ data class ModServerConfig(
     val amplifiedNetherEnabled: Boolean,
     val nullscapeEnabled: Boolean,
 ) {
+    fun acknowledge(): ModServerConfig = if (acknowledged) this else copy(acknowledged = true)
+
     companion object {
-        val DEDICATED_DEFAULT = ModServerConfig(
+        val DEFAULT = ModServerConfig(
             acknowledged = false,
             modEnabled = true,
             itemRewards = false,
-            terralithEnabled = false,
+            terralithEnabled = true,
             amplifiedNetherEnabled = false,
             nullscapeEnabled = false,
         )
-        val INTEGRATED_DEFAULT = DEDICATED_DEFAULT.copy(acknowledged = true)
     }
 }
 
@@ -81,8 +83,8 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
 
     @Extension
     fun setModServerConfig(config: ModServerConfig) {
-        screen.uiState.modServerConfig = config.copy(acknowledged = true)
-        screen.updateInitialSuitePackComponents()
+        screen.uiState.modServerConfig = config.acknowledge()
+        screen.onModServerConfigChanged()
     }
 
     @WrapOperation(
@@ -146,9 +148,7 @@ class ModServerConfigBridgeOnRecreateWorld {
         original: Operation<CreateWorldScreen>,
         @Local(name = ["access"]) levelStorage: LevelStorageAccess,
     ): CreateWorldScreen = original.call(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
-        setModServerConfig(
-            levelStorage.readModServerConfig() ?: ModServerConfig.INTEGRATED_DEFAULT.copy(modEnabled = false)
-        )
+        setModServerConfig(levelStorage.readModServerConfig() ?: ModServerConfig.DEFAULT.copy(modEnabled = false))
     }
 }
 
@@ -194,7 +194,7 @@ abstract class GridLayoutsHeightFix(@Origin val layout: GridLayout) {
 @KMixin<WorldCreationUiState>(Side.Client)
 class ModServerConfigViewState(@Origin val state: WorldCreationUiState) {
     @Extension
-    var modServerConfig: ModServerConfig = ModServerConfig.INTEGRATED_DEFAULT
+    var modServerConfig: ModServerConfig = ModServerConfig.DEFAULT.acknowledge()
         set(value) {
             if (field == value) return
             field = value
@@ -216,6 +216,26 @@ class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
             }.getOrNull()
         }
         return modServerConfig
+    }
+
+    @Extension
+    fun validateDedicatedModServerConfig(): ModServerConfig? {
+        val config = readModServerConfig()
+        if (config == null || !config.acknowledged) {
+            if (config == null) {
+                levelStorage.saveModServerConfig(ModServerConfig.DEFAULT)
+            }
+            AchieveToDoMod.logger.error(
+                """
+                Server config is not acknowledged!
+                Please review the config and change "acknowledged" from false to true.
+                
+                Config file: <world_folder>/$CONFIG_PATH
+                """.trimIndent()
+            )
+            return null
+        }
+        return config
     }
 
     @Extension
@@ -245,9 +265,9 @@ class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
 abstract class ModServerConfigServerShortcut {
 
     @Extension
-    val levelStorage: LevelStorageAccess get() = storageSource
+    val modServerConfig: ModServerConfig? get() = levelStorage.readModServerConfig()
 
     @MappingName("storageSource")
     @KShadow(Modifier.PROTECTED, Modifier.FINAL)
-    abstract val storageSource: LevelStorageAccess
+    abstract val levelStorage: LevelStorageAccess
 }

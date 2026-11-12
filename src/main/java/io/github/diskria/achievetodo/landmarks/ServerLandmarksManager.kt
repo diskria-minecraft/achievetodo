@@ -7,20 +7,14 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.extensions.decodeOrNull
 import io.github.diskria.achievetodo.extensions.toNbtOrNull
-import io.github.diskria.achievetodo.server.awaitPlayers
 import io.github.diskria.lapis.annotations.*
-import kotlinx.coroutines.*
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
-import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.Tag
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceKey
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.commands.PlaceCommand
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.WorldGenRegion
@@ -43,26 +37,22 @@ import org.spongepowered.asm.mixin.injection.At
 import java.util.concurrent.ConcurrentHashMap
 import javax.lang.model.element.Modifier
 import kotlin.jvm.optionals.getOrNull
-import kotlin.time.Duration.Companion.milliseconds
 
 object ServerLandmarksManager {
 
     val loadedLandmarks = ConcurrentHashMap<ResourceKey<Level>, ConcurrentHashMap<ChunkPos, MutableSet<Landmark>>>()
 
     fun addLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
-        val inChunk = loadedLandmarks
+        loadedLandmarks
             .getOrPut(level.dimension()) { ConcurrentHashMap() }
             .getOrPut(chunkPos) { ConcurrentHashMap.newKeySet() }
-        if (inChunk.add(landmark)) {
-            level.server.sendDebugMessage(landmark, chunkPos, resize = false)
-        }
+            .add(landmark)
     }
 
     fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
         val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
-        if (inChunk.remove(current) && inChunk.add(resized)) {
-            level.server.sendDebugMessage(resized, chunkPos, resize = true)
-        }
+        inChunk.remove(current)
+        inChunk.add(resized)
     }
 
     fun registerHooks() {
@@ -77,92 +67,12 @@ object ServerLandmarksManager {
         ServerChunkEvents.CHUNK_UNLOAD.register { level, chunk ->
             val inDimension = loadedLandmarks[level.dimension()] ?: return@register
             if (chunk.allStarts.any { it.value.landmark != null }) {
-                chunk.landmarks?.let {
-                    inDimension[chunk.pos]?.removeAll(it)
-//                    level.server.logToChat("Unloaded landmarks: $it")
-                }
-            } else {
-                val unloaded = inDimension.remove(chunk.pos).orEmpty().ifEmpty { return@register }
-//                level.server.logToChat("Unloaded landmarks: $unloaded")
+                chunk.landmarks?.let { inDimension[chunk.pos]?.removeAll(it) }
             }
         }
         ServerLifecycleEvents.SERVER_STOPPED.register {
             loadedLandmarks.clear()
         }
-    }
-
-    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private val resizeJobs = ConcurrentHashMap<String, Job>()
-    private const val RESIZE_NOTIFICATIONS_DELAY = 3000L
-
-    /*
-    datapacks/achievetodo-utils/data/achievetodo/function/draw_landmark_wireframe.mcfunction
-    $fill $(minX) $(minY) $(minZ) $(maxX) $(minY) $(minZ) $(wireframe_block)
-    $fill $(minX) $(minY) $(maxZ) $(maxX) $(minY) $(maxZ) $(wireframe_block)
-    $fill $(minX) $(minY) $(minZ) $(minX) $(minY) $(maxZ) $(wireframe_block)
-    $fill $(maxX) $(minY) $(minZ) $(maxX) $(minY) $(maxZ) $(wireframe_block)
-    $fill $(minX) $(maxY) $(minZ) $(maxX) $(maxY) $(minZ) $(wireframe_block)
-    $fill $(minX) $(maxY) $(maxZ) $(maxX) $(maxY) $(maxZ) $(wireframe_block)
-    $fill $(minX) $(maxY) $(minZ) $(minX) $(maxY) $(maxZ) $(wireframe_block)
-    $fill $(maxX) $(maxY) $(minZ) $(maxX) $(maxY) $(maxZ) $(wireframe_block)
-    $fill $(minX) $(minY) $(minZ) $(minX) $(maxY) $(minZ) $(wireframe_block)
-    $fill $(maxX) $(minY) $(minZ) $(maxX) $(maxY) $(minZ) $(wireframe_block)
-    $fill $(minX) $(minY) $(maxZ) $(minX) $(maxY) $(maxZ) $(wireframe_block)
-    $fill $(maxX) $(minY) $(maxZ) $(maxX) $(maxY) $(maxZ) $(wireframe_block)
-
-    $fill $(minX) $(minY) $(minZ) $(minX) $(minY) $(minZ) $(corner_block)
-    $fill $(maxX) $(minY) $(minZ) $(maxX) $(minY) $(minZ) $(corner_block)
-    $fill $(minX) $(minY) $(maxZ) $(minX) $(minY) $(maxZ) $(corner_block)
-    $fill $(maxX) $(minY) $(maxZ) $(maxX) $(minY) $(maxZ) $(corner_block)
-    $fill $(minX) $(maxY) $(minZ) $(minX) $(maxY) $(minZ) $(corner_block)
-    $fill $(maxX) $(maxY) $(minZ) $(maxX) $(maxY) $(minZ) $(corner_block)
-    $fill $(minX) $(maxY) $(maxZ) $(minX) $(maxY) $(maxZ) $(corner_block)
-    $fill $(maxX) $(maxY) $(maxZ) $(maxX) $(maxY) $(maxZ) $(corner_block)
-    */
-    @Suppress("SpellCheckingInspection")
-    fun MinecraftServer.sendDebugMessage(landmark: Landmark, chunkPos: ChunkPos, resize: Boolean) {
-        val (wireframeBlock, cornerBlock) = if (resize) {
-            "diamond_block" to "netherite_block"
-        } else {
-            "copper_block" to "gold_block"
-        }
-        val (prefix, color) = if (resize) {
-            "Resized" to ChatFormatting.LIGHT_PURPLE
-        } else {
-            "Generated" to ChatFormatting.GOLD
-        }
-        val baseMessage = Component.literal("$prefix ${landmark.type.id} ").withStyle(color)
-        fun commandButton(name: String, color: ChatFormatting, command: String) =
-            Component.literal("[$name]").withStyle { style ->
-                style.withColor(color).withBold(true).withClickEvent(ClickEvent.RunCommand(command))
-            }
-
-        val bb = landmark.bb
-        val tpButton = commandButton(
-            "TP", ChatFormatting.GREEN,
-            "/tp @s ${bb.center.x} ${bb.center.y} ${bb.center.z}"
-        )
-        val drawButton = commandButton(
-            "Draw", ChatFormatting.AQUA,
-            """
-            /function achievetodo:draw_landmark_wireframe {
-                minX:${bb.minX()},minY:${bb.minY()},minZ:${bb.minZ()},
-                maxX:${bb.maxX()},maxY:${bb.maxY()},maxZ:${bb.maxZ()},
-                wireframe_block:"minecraft:$wireframeBlock",corner_block:"minecraft:$cornerBlock"
-            }
-            """.trimIndent().replace(Regex("\\s*\n\\s*"), "")
-        )
-        val resizeJobId = if (resize) "${landmark.type}_${chunkPos.x}_${chunkPos.z}" else null
-        resizeJobId?.let { resizeJobs[it]?.cancel() }
-        val job = scope.launch {
-            if (resizeJobId != null) delay(RESIZE_NOTIFICATIONS_DELAY.milliseconds)
-            awaitPlayers()
-            execute(wrapRunnable {
-//                logToChat(baseMessage.append(tpButton).append(" ").append(drawButton))
-                resizeJobId?.let { resizeJobs.remove(it) }
-            })
-        }
-        resizeJobId?.let { resizeJobs[resizeJobId] = job }
     }
 }
 

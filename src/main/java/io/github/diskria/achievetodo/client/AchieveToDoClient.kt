@@ -124,7 +124,7 @@ class AchieveToDoClient : ClientModInitializer {
         fun isTargetInLockedLandmark(dimension: DimensionType, aabb: AABB): Boolean =
             lockedLandmarks.any { landmark ->
                 landmark.intersects(aabb) &&
-                    AbilityType.fromLandmark(landmark.type)?.let { isAbilityLocked(it) } == true
+                        AbilityType.fromLandmark(landmark.type)?.let { isAbilityLocked(it) } == true
             }
 
         fun getAbilityRows(): List<List<AbilityType>>? {

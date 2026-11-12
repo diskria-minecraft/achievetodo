@@ -1,27 +1,16 @@
 package io.github.diskria.achievetodo.server
 
-import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.abilities.DimensionType
-import io.github.diskria.achievetodo.client.InternalPack
 import io.github.diskria.achievetodo.config.ModServerConfigManager
-import io.github.diskria.achievetodo.config.SuitePack
 import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
 import io.github.diskria.achievetodo.landmarks.ServerLandmarksManager
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
 import io.github.diskria.achievetodo.qol.TrackedAdvancement
-import kotlinx.coroutines.delay
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper
-import net.fabricmc.fabric.api.resource.ResourcePackActivationType
-import net.fabricmc.loader.api.FabricLoader
-import net.fabricmc.loader.api.ModContainer
+import io.github.diskria.achievetodo.suite.SuitePack
 import net.minecraft.advancements.AdvancementHolder
-import net.minecraft.network.chat.Component
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.phys.AABB
-import java.util.function.Consumer
-import kotlin.time.Duration.Companion.milliseconds
 
 class AchieveToDoServer {
 
@@ -445,30 +434,4 @@ class AchieveToDoServer {
 
     private fun findAbilityAdvancement(player: ServerPlayer, ability: AbilityType): AdvancementHolder? =
         player.level().server.advancements.get(AbilityAdvancementsTabGenerator.buildAdvancementId(ability))
-
-    companion object {
-        private fun registerInternalDataPacks() {
-            FabricLoader.getInstance().getModContainer(AchieveToDoMod.ID)
-                .ifPresent(Consumer { modContainer: ModContainer? ->
-                    for (internalPack in InternalPack.entries) {
-                        ResourceManagerHelper.registerBuiltinResourcePack(
-                            AchieveToDoMod.getIdentifier(internalPack.datapackName),
-                            modContainer!!,
-                            ResourcePackActivationType.NORMAL
-                        )
-                    }
-                })
-        }
-    }
-}
-
-fun MinecraftServer.logToChat(component: Component) = playerList.broadcastSystemMessage(component, false)
-fun MinecraftServer.logToChat(message: String) = logToChat(Component.literal(message))
-
-suspend fun MinecraftServer.awaitPlayers() {
-    if (playerList.players.isNotEmpty()) return
-    while (isRunning && playerList.players.isEmpty()) {
-        delay(50.milliseconds)
-    }
-    delay(100.milliseconds)
 }
