@@ -1,5 +1,6 @@
 package io.github.diskria.achievetodo.extensions
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import net.minecraft.network.chat.Component
 import net.minecraft.server.packs.PackLocationInfo
 import net.minecraft.server.packs.PackMetadataResources
@@ -46,3 +47,5 @@ object EmptyPackResourcesSupplier : Pack.ResourcesSupplier {
     override fun openResources(location: PackLocationInfo, metadata: Pack.Metadata): Stream<PackResources> =
         Stream.empty()
 }
+
+operator fun <R> Operation<R>.invoke(vararg args: Any?): R = call(*args)

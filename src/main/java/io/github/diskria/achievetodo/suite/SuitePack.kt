@@ -7,6 +7,7 @@ import io.github.diskria.achievetodo.config.ModServerConfig
 import io.github.diskria.achievetodo.extensions.calcSha256OrNull
 import io.github.diskria.achievetodo.extensions.capitalized
 import io.github.diskria.achievetodo.extensions.createPackMetadata
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.Side
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
@@ -107,6 +108,6 @@ class SuitePackCustomizer {
             original: Operation<Pack.Metadata>,
         ): Pack.Metadata =
             if (SuitePack.checkPack(location.id)) createPackMetadata(SuitePack.buildDescription())
-            else original.call(location, resources, currentPackVersion, type)
+            else original(location, resources, currentPackVersion, type)
     }
 }

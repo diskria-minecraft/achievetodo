@@ -9,10 +9,6 @@
   "achievetodo.suite.nullscape.description": "Required because Nullscape is enabled.",
   "achievetodo.suite.bacap_nullscape.description": "Integrates Nullscape advancements into BACAP.",
 
-  "achievetodo.suite.dl.title": "To play you need to download %s",
-  "achievetodo.suite.dl.open_project": "Check out the project page to appreciate the creators!",
-  "achievetodo.suite.dl.modrinth": "Direct download from Modrinth",
-  "achievetodo.suite.dl.mediafire": "Open browser and download file from Mediafire",
   "achievetodo.world_creation_tab.progression.easy.tooltip": "Similar to Normal mode, but abilities unlock even more rapidly. All basic abilities are available right from the start.",
   "achievetodo.world_creation_tab.progression.normal.tooltip": "Similar to Hard mode, but abilities unlock faster to maintain a constant level of engagement — you’ll often be just a step away from the next unlock. Only vision is available by default among the basic abilities.",
   "achievetodo.world_creation_tab.progression.hard.tooltip": "This mode is closer to an RPG experience, where advancements take center stage over the core AchieveToDo idea. Abilities unlock in a way that covers all BlazeandCaves advancements, and the first one you earn must be done blindly.",

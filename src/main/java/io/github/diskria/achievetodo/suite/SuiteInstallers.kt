@@ -10,6 +10,7 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.extensions.calcSha256OrNull
 import io.github.diskria.achievetodo.extensions.extractNestedZip
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
@@ -125,7 +126,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         repository: PackRepository,
         output: Consumer<*>,
         original: Operation<PackSelectionModel>,
-    ): PackSelectionModel = original.call(onListChanged, iconGetter, repository, output).apply {
+    ) = original(onListChanged, iconGetter, repository, output).apply {
         onInstallClicked = { component ->
             ConfirmLinkScreen.confirmLinkNow(screen, URI.create(component.download.pageUrl))
         }
@@ -146,9 +147,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         height: Int,
         title: Component,
         original: Operation<TransferableSelectionList>,
-    ): TransferableSelectionList = original.call(
-        minecraft, screen, width, height, if (isSuiteInstallerScreen) MISSING_COLUMN_TITLE else title
-    )
+    ) = original(minecraft, screen, width, height, if (isSuiteInstallerScreen) MISSING_COLUMN_TITLE else title)
 
     @WrapOperation(
         method = ["init"],
@@ -165,9 +164,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         height: Int,
         title: Component,
         original: Operation<TransferableSelectionList>,
-    ): TransferableSelectionList = original.call(
-        minecraft, screen, width, height, if (isSuiteInstallerScreen) INSTALLED_COLUMN_TITLE else title
-    )
+    ) = original(minecraft, screen, width, height, if (isSuiteInstallerScreen) INSTALLED_COLUMN_TITLE else title)
 
     @WrapOperation(
         method = ["init"],
@@ -183,7 +180,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         original: Operation<Button.Builder>,
         @Local(name = ["footer"]) footer: LinearLayout,
     ): Button.Builder {
-        val folderButton = original.call(message, onPress)
+        val folderButton = original(message, onPress)
         if (isSuiteInstallerScreen) {
             doneButton = footer.addChild(Button.builder(CommonComponents.GUI_DONE) { onDone() }.width(100).build())
             folderButton.width(100)
@@ -203,9 +200,10 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         message: Component,
         onPress: OnPress,
         original: Operation<Button.Builder>,
-    ): Button.Builder =
-        if (isSuiteInstallerScreen) original.call(CommonComponents.GUI_BACK, onPress).width(100)
-        else original.call(message, onPress)
+    ) = when {
+        isSuiteInstallerScreen -> original(CommonComponents.GUI_BACK, onPress).width(100)
+        else -> original(message, onPress)
+    }
 
     @WrapWithCondition(
         method = ["populateLists"],
@@ -219,7 +217,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
 
     @WrapMethod(method = ["populateLists"])
     fun updateDoneButtonActive(transferredEntry: PackSelectionModel.EntryBase?, original: Operation<Void>) {
-        original.call(transferredEntry)
+        original(transferredEntry)
         doneButton?.active = SuitePack.isInstalled(suiteComponents)
     }
 
@@ -290,7 +288,7 @@ abstract class SuiteInstallerPackColumns {
 
     @WrapMethod(method = ["findNewPacks"])
     fun regroupComponentPacks(original: Operation<Void>) {
-        original.call()
+        original()
         val componentsPackRepository = repository as? SuiteInstallerScreen.ComponentsPackRepository ?: return
         val newlyMissing = installedPacks.filter { it.isMissingSuiteComponent }
         if (newlyMissing.isNotEmpty()) {
@@ -326,7 +324,7 @@ abstract class SuiteInstallerPackEntryBase {
 
     @WrapMethod(method = ["toggleSelection"])
     fun interceptToggleSelection(original: Operation<Unit>) {
-        val suiteComponent = pack.suiteComponent ?: return original.call()
+        val suiteComponent = pack.suiteComponent ?: return original()
         model.onInstallClicked(suiteComponent)
     }
 
@@ -375,9 +373,9 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
             target = $$"Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;getSelected()Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;"
         )]
     )
-    @Coerce
-    fun forceSelected(list: TransferableSelectionList, original: Operation<*>): Any? =
-        if (isMissingSuiteComponent) entry else original.call(list)
+    @Coerce // AbstractSelectionList.Entry
+    fun forceSelected(list: TransferableSelectionList, original: Operation<Any?>) =
+        if (isMissingSuiteComponent) entry else original(list)
 
     @WrapOperation(
         method = ["extractContent"],
@@ -386,8 +384,8 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
             target = "Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;isFocused()Z"
         )]
     )
-    fun forceFocused(list: TransferableSelectionList, original: Operation<Boolean>): Boolean =
-        isMissingSuiteComponent || original.call(list)
+    fun forceFocused(list: TransferableSelectionList, original: Operation<Boolean>) =
+        isMissingSuiteComponent || original(list)
 
     @KShadow(Modifier.PRIVATE, Modifier.FINAL)
     abstract val pack: PackSelectionModel.Entry

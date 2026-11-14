@@ -21,7 +21,7 @@ class SyncObtainedAdvancementsCountPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(count: Int) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.count) }
+                context.action(payload.count)
             }
         }
     }

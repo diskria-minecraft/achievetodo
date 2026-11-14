@@ -7,6 +7,7 @@ import com.mojang.serialization.Lifecycle
 import io.github.diskria.achievetodo.config.ModServerConfig
 import io.github.diskria.achievetodo.config.modServerConfig
 import io.github.diskria.achievetodo.config.readModServerConfig
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.Side
 import net.minecraft.client.Minecraft
@@ -35,7 +36,7 @@ class WorldCreateWarningSuppressors {
         suppressWarnings: Boolean,
         original: Operation<Void>,
     ) {
-        original.call(
+        original(
             minecraft,
             thisScreen,
             lifecycle,
@@ -58,7 +59,7 @@ class WorldOpenWarningSuppressors {
         if (levelStorage.readModServerConfig()?.canSuppress(SUPPRESS_BACKUP_WARNINGS) == true) {
             onProceed.run()
         } else {
-            original.call(levelStorage, oldCustomized, onProceed, onCancel)
+            original(levelStorage, oldCustomized, onProceed, onCancel)
         }
     }
 }

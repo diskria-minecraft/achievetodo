@@ -24,7 +24,7 @@ class CheckTargetInLockedLandmarkPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(dimension: DimensionType, aabb: AABB) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.dimension, payload.aabb) }
+                context.action(payload.dimension, payload.aabb)
             }
         }
     }

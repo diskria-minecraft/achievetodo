@@ -23,7 +23,7 @@ class SyncAbilitiesConfigurationPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(configuration: Map<AbilityType, Int>) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.configuration) }
+                context.action(payload.configuration)
             }
         }
     }

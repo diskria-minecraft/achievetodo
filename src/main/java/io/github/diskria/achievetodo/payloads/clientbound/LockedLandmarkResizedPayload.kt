@@ -26,7 +26,7 @@ class LockedLandmarkResizedPayload private constructor(
             action: ClientPlayNetworking.Context.(type: LandmarkType, oldBB: BoundingBox, newBB: BoundingBox) -> Unit,
         ) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.type, payload.oldBB, payload.newBB) }
+                context.action(payload.type, payload.oldBB, payload.newBB)
             }
         }
     }

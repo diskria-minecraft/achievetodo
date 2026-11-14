@@ -7,6 +7,7 @@ import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.landmarks.Landmark
 import io.github.diskria.achievetodo.payloads.clientbound.*
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload.Client.send
+import io.github.diskria.achievetodo.qol.AdvancementsFogManager
 import io.github.diskria.achievetodo.server.Constants
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.fabricmc.api.ClientModInitializer
@@ -20,6 +21,7 @@ class AchieveToDoClient : ClientModInitializer {
 
     override fun onInitializeClient() {
         registerPayloadListeners()
+        AdvancementsFogManager.Client.init()
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             abilitiesConfiguration.clear()
             lockedLandmarksSet.clear()

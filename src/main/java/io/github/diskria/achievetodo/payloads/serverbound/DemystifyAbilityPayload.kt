@@ -19,7 +19,7 @@ class DemystifyAbilityPayload private constructor(
     object Server {
         fun listen(action: ServerPlayNetworking.Context.(ability: AbilityType) -> Unit) {
             ServerPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.server().execute { context.action(payload.ability) }
+                context.action(payload.ability)
             }
         }
     }

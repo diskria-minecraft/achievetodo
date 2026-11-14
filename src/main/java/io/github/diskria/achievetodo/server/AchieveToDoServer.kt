@@ -6,6 +6,7 @@ import io.github.diskria.achievetodo.config.ModServerConfigManager
 import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
 import io.github.diskria.achievetodo.landmarks.ServerLandmarksManager
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
+import io.github.diskria.achievetodo.qol.AdvancementsFogManager
 import io.github.diskria.achievetodo.qol.TrackedAdvancement
 import io.github.diskria.achievetodo.suite.SuitePack
 import net.minecraft.advancements.AdvancementHolder
@@ -303,6 +304,7 @@ class AchieveToDoServer {
         ServerLandmarksManager.registerHooks()
         ModServerConfigManager.registerHooks()
         SuitePack.register()
+        AdvancementsFogManager.init()
         /*
         registerInternalDataPacks()
         ServerLifecycleEvents.SERVER_STARTING.register { server ->

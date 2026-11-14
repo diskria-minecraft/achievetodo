@@ -7,6 +7,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.AchieveToDoMod
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.suite.onModServerConfigChanged
 import io.github.diskria.lapis.annotations.*
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -46,11 +47,12 @@ import kotlin.io.path.outputStream
 
 object ModServerConfigManager {
 
-    var config: ModServerConfig? = null
-
     fun registerHooks() {
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
-            config = server.modServerConfig?.takeIf { it.modEnabled } ?: return@register
+            ModServerConfig.current = server.modServerConfig?.takeIf { it.modEnabled }
+        }
+        ServerLifecycleEvents.SERVER_STOPPED.register {
+            ModServerConfig.current = null
         }
     }
 }
@@ -60,21 +62,25 @@ data class ModServerConfig(
     val acknowledged: Boolean,
     val modEnabled: Boolean,
     val itemRewards: Boolean,
+    val advancementsRevealMode: Int,
     val terralithEnabled: Boolean,
     val amplifiedNetherEnabled: Boolean,
     val nullscapeEnabled: Boolean,
 ) {
-    fun acknowledge(): ModServerConfig = if (acknowledged) this else copy(acknowledged = true)
+    fun acknowledge() = copy(acknowledged = true)
 
     companion object {
         val DEFAULT = ModServerConfig(
             acknowledged = false,
             modEnabled = true,
             itemRewards = false,
-            terralithEnabled = true,
+            advancementsRevealMode = 2,
+            terralithEnabled = false,
             amplifiedNetherEnabled = false,
             nullscapeEnabled = false,
         )
+
+        var current: ModServerConfig? = null
     }
 }
 
@@ -101,7 +107,7 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
     ): MenuTabBar.Builder {
         val modifiedTabs = tabs + ModServerConfigTab(uiState)
         GridLayoutsHeightFix.apply(modifiedTabs.mapNotNull { (it as? GridLayoutTab)?.layout as? GridLayout })
-        return original.call(barBuilder, modifiedTabs)
+        return original(barBuilder, modifiedTabs)
     }
 
     @WrapOperation(
@@ -122,7 +128,7 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
         @Cancellable cir: CallbackInfoReturnable<Boolean>,
     ) {
         if (levelStorage.saveModServerConfig(uiState.modServerConfig)) {
-            original.call(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
+            original(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
         } else {
             cir.returnValue = false
         }
@@ -147,7 +153,7 @@ class ModServerConfigBridgeOnRecreateWorld {
         tempDataPackDir: Path?,
         original: Operation<CreateWorldScreen>,
         @Local(name = ["access"]) levelStorage: LevelStorageAccess,
-    ): CreateWorldScreen = original.call(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
+    ) = original(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
         setModServerConfig(levelStorage.readModServerConfig() ?: ModServerConfig.DEFAULT.copy(modEnabled = false))
     }
 }

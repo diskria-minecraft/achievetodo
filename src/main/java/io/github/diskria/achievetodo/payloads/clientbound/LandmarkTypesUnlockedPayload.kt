@@ -22,7 +22,7 @@ class LandmarkTypesUnlockedPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(landmarks: Set<LandmarkType>) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.landmarks) }
+                context.action(payload.landmarks)
             }
         }
     }

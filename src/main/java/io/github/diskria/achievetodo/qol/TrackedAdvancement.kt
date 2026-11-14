@@ -17,7 +17,6 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.scores.ScoreHolder
 import net.minecraft.world.scores.Scoreboard
 import kotlin.math.abs
-import kotlin.math.max
 
 sealed class TrackedAdvancement(val advancementId: String) {
 
@@ -143,7 +142,7 @@ private val trackedAdvancements = mapOf(
         val currentX = abs(scoreboard.getScore(OnARail.CURRENT_X, owner))
         val currentZ = abs(scoreboard.getScore(OnARail.CURRENT_Z, owner))
         when {
-            isLegalX && isLegalZ -> max(currentX, currentZ)
+            isLegalX && isLegalZ -> maxOf(currentX, currentZ)
             isLegalX -> currentX
             isLegalZ -> currentZ
             else -> 0

@@ -24,7 +24,7 @@ class LandmarksLockedStatusChangedPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(landmarks: Set<Landmark>, isLocked: Boolean) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute { context.action(payload.landmarks, payload.isLocked) }
+                context.action(payload.landmarks, payload.isLocked)
             }
         }
     }

@@ -22,9 +22,7 @@ class TrackedAdvancementProgressChangedPayload private constructor(
     object Client {
         fun listen(action: ClientPlayNetworking.Context.(advancementId: String, progress: Int) -> Unit) {
             ClientPlayNetworking.registerGlobalReceiver(TYPE) { payload, context ->
-                context.client().execute {
-                    context.action(payload.advancementId, payload.progress)
-                }
+                context.action(payload.advancementId, payload.progress)
             }
         }
     }

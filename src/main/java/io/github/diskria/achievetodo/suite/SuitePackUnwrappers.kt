@@ -11,6 +11,7 @@ import com.mojang.serialization.Dynamic
 import io.github.diskria.achievetodo.config.modServerConfig
 import io.github.diskria.achievetodo.config.readModServerConfig
 import io.github.diskria.achievetodo.config.validateDedicatedModServerConfig
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -72,12 +73,12 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     fun validateComponentsOnCreate(original: Operation<Void>) {
         if (dataPacksApplying) {
             dataPacksApplying = false
-            original.call()
+            original()
             return
         }
         val components = resolveRequiredComponents()
         if (components == initialRequiredComponents) {
-            original.call()
+            original()
             return
         }
         val onRetry = { createWorld() }
@@ -109,7 +110,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
         uiState: WorldCreationUiState,
         dataConfiguration: WorldDataConfiguration,
         original: Operation<Boolean>,
-    ) = !dataPacksApplying && original.call(uiState, dataConfiguration)
+    ) = !dataPacksApplying && original(uiState, dataConfiguration)
 
     @WrapOperation(
         method = ["tryApplyNewDataPacks", $$"lambda$applyNewPackConfig$5"],
@@ -119,7 +120,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
         )]
     )
     fun waitApplyDataPacks(gui: Gui, screen: Screen, original: Operation<Void>) {
-        original.call(gui, screen)
+        original(gui, screen)
         finishApplyDataPacks(screen)
     }
 
@@ -173,7 +174,7 @@ abstract class SuitePackWorldOpenResolvers {
         levelStorage: LevelStorageAccess,
         original: Operation<PackRepository>,
         @Local(argsOnly = true, name = ["worldDataAndGenSettings"]) worldDataAndGenSettings: WorldDataAndGenSettings,
-    ): PackRepository = original.call(levelStorage).apply {
+    ) = original(levelStorage).apply {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = worldDataAndGenSettings.data.isHardcore
             suiteComponents = SuitePack.getRequiredComponents(config, isHardcore)
@@ -201,7 +202,7 @@ abstract class SuitePackWorldOpenResolvers {
             val isHardcore = levelDat.parseDifficultySettings().hardcore
             packRepository.suiteComponents = SuitePack.getRequiredComponents(config, isHardcore)
         }
-        return original.call(worldOpenFlows, packConfig, worldDataGetter, worldDataSupplier)
+        return original(worldOpenFlows, packConfig, worldDataGetter, worldDataSupplier)
     }
 
     @WrapOperation(
@@ -235,7 +236,7 @@ abstract class SuitePackWorldOpenResolvers {
             }
             packRepository.suiteComponents = components
         }
-        return original.call(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
+        return original(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
     }
 
     @KShadow(Modifier.PRIVATE)
@@ -280,7 +281,7 @@ class SuitePackDedicatedServerResolver {
                 ci.cancel()
                 return null
             }
-            return original.call(levelStorage).apply { suiteComponents = components }
+            return original(levelStorage).apply { suiteComponents = components }
         }
     }
 }

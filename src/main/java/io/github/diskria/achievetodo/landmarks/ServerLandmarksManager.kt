@@ -5,7 +5,9 @@ import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
+import io.github.diskria.achievetodo.config.ModServerConfig
 import io.github.diskria.achievetodo.extensions.decodeOrNull
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.extensions.toNbtOrNull
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents
@@ -43,6 +45,7 @@ object ServerLandmarksManager {
     val loadedLandmarks = ConcurrentHashMap<ResourceKey<Level>, ConcurrentHashMap<ChunkPos, MutableSet<Landmark>>>()
 
     fun addLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
+        if (ModServerConfig.current == null) return
         loadedLandmarks
             .getOrPut(level.dimension()) { ConcurrentHashMap() }
             .getOrPut(chunkPos) { ConcurrentHashMap.newKeySet() }
@@ -50,6 +53,7 @@ object ServerLandmarksManager {
     }
 
     fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
+        if (ModServerConfig.current == null) return
         val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
         inChunk.remove(current)
         inChunk.add(resized)
@@ -57,6 +61,7 @@ object ServerLandmarksManager {
 
     fun registerHooks() {
         ServerChunkEvents.CHUNK_LOAD.register { level, chunk, _ ->
+            if (ModServerConfig.current == null) return@register
             val chunkPos = chunk.pos
             level.structureManager().startsForStructure(chunkPos.x, chunkPos.z) { true }.forEach { start ->
                 val structureLandmark = start.landmark ?: return@forEach
@@ -65,6 +70,7 @@ object ServerLandmarksManager {
             chunk.landmarks?.forEach { featureLandmark -> addLandmark(level, chunkPos, featureLandmark) }
         }
         ServerChunkEvents.CHUNK_UNLOAD.register { level, chunk ->
+            if (ModServerConfig.current == null) return@register
             val inDimension = loadedLandmarks[level.dimension()] ?: return@register
             if (chunk.allStarts.any { it.value.landmark != null }) {
                 chunk.landmarks?.let { inDimension[chunk.pos]?.removeAll(it) }
@@ -104,7 +110,7 @@ class LandmarksBridgeToLevelChunk {
         original: Operation<*>,
         @Local(argsOnly = true, name = ["protoChunk"]) from: ProtoChunk,
     ) {
-        original.call(to, structureReferences)
+        original(to, structureReferences)
         to.landmarks = from.landmarks?.toSet()
     }
 }
@@ -128,7 +134,7 @@ class ChunkLandmarksNbt {
         )]
     )
     fun saveToChunk(chunk: ChunkAccess, structureReferences: Map<*, *>, original: Operation<*>) {
-        original.call(chunk, structureReferences)
+        original(chunk, structureReferences)
         chunk.landmarks = landmarksNbt?.decodeOrNull(Landmark.SET_CODEC)
     }
 
@@ -205,7 +211,7 @@ class StructureLandmarkGeneratorTracker {
         original: Operation<*>,
     ) {
         fun generate() {
-            original.call(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
+            original(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
         }
 
         val landmarkType = landmarkType ?: return generate()
@@ -251,7 +257,7 @@ class FeatureLandmarkGeneratorTracker {
     ): Boolean {
         val featureHolder = featureToPlace.feature
         return levelGenerator.resolveFeatureGeneration(featureHolder, chunk, byPlaceCommand = false) {
-            original.call(placer, featureToPlace, random, originPos)
+            original(placer, featureToPlace, random, originPos)
         }
     }
 }
@@ -294,7 +300,7 @@ class PlaceCommandPatches {
         ): Boolean {
             val targetChunk = levelGenerator.getChunk(originPos)
             return levelGenerator.resolveFeatureGeneration(featureHolder, targetChunk, byPlaceCommand = true) {
-                original.call(feature, levelGenerator, chunkGenerator, random, originPos)
+                original(feature, levelGenerator, chunkGenerator, random, originPos)
             }
         }
     }
