@@ -101,7 +101,7 @@ class SuitePackCustomizer {
             resources: Pack.ResourcesSupplier,
             currentPackVersion: PackFormat,
             type: PackType,
-            op: Op<Pack.Metadata>,
+            op: Op<Pack.Metadata>
         ): Pack.Metadata =
             if (SuitePack.checkPack(location.id)) createPackMetadata(SuitePack.buildDescription())
             else op(location, resources, currentPackVersion, type)

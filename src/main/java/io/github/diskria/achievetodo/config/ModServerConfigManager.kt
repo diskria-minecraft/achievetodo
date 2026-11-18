@@ -2,6 +2,7 @@
 
 package io.github.diskria.achievetodo.config
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
@@ -34,8 +35,6 @@ import net.minecraft.world.level.LevelSettings
 import net.minecraft.world.level.storage.LevelDataAndDimensions.WorldDataAndGenSettings
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.spongepowered.asm.mixin.injection.At
-import org.spongepowered.asm.mixin.injection.Inject
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 import java.nio.file.Path
 import java.util.*
@@ -85,7 +84,7 @@ data class ModServerConfig(
 }
 
 @KMixin<CreateWorldScreen>(Side.Client)
-abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
+class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
 
     @Extension
     fun setModServerConfig(config: ModServerConfig) {
@@ -96,14 +95,14 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
     @WrapOperation(
         method = ["init"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/client/gui/components/tabs/MenuTabBar$Builder;addTabs([Lnet/minecraft/client/gui/components/tabs/Tab;)Lnet/minecraft/client/gui/components/tabs/MenuTabBar$Builder;"
         )]
     )
     fun CreateWorldScreen.injectModServerConfigTab(
         barBuilder: MenuTabBar.Builder,
         tabs: Array<Tab>,
-        op: Op<MenuTabBar.Builder>,
+        op: Op<MenuTabBar.Builder>
     ): MenuTabBar.Builder {
         val modifiedTabs = tabs + ModServerConfigTab(uiState)
         GridLayoutsHeightFix.apply(modifiedTabs.mapNotNull { (it as? GridLayoutTab)?.layout as? GridLayout })
@@ -113,9 +112,12 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
     @WrapOperation(
         method = ["createNewWorld"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;createLevelFromExistingSettings(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/ReloadableServerResources;Lnet/minecraft/core/LayeredRegistryAccess;Lnet/minecraft/world/level/storage/LevelDataAndDimensions$WorldDataAndGenSettings;Ljava/util/Optional;)V"
         )]
+    )
+    context(
+        @Cancellable cir: CallbackInfoReturnable<Boolean>,
     )
     fun CreateWorldScreen.saveModServerConfig(
         worldOpenFlows: WorldOpenFlows,
@@ -124,8 +126,7 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
         registry: LayeredRegistryAccess<*>,
         worldDataAndGenSettings: WorldDataAndGenSettings,
         gameRules: Optional<*>,
-        op: Op<Unit>,
-        @Cancellable cir: CallbackInfoReturnable<Boolean>,
+        op: Op<Unit>
     ) {
         if (levelStorage.saveModServerConfig(uiState.modServerConfig)) {
             op(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
@@ -141,7 +142,7 @@ class ModServerConfigBridgeOnRecreateWorld {
     @WrapOperation(
         method = ["recreateWorld"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;createFromExisting(Lnet/minecraft/client/Minecraft;Ljava/lang/Runnable;Lnet/minecraft/world/level/LevelSettings;Lnet/minecraft/client/gui/screens/worldselection/WorldCreationContext;Ljava/nio/file/Path;)Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;"
         )]
     )
@@ -154,7 +155,7 @@ class ModServerConfigBridgeOnRecreateWorld {
         levelSettings: LevelSettings,
         creationContext: WorldCreationContext,
         tempDataPackDir: Path?,
-        op: Op<CreateWorldScreen>,
+        op: Op<CreateWorldScreen>
     ) = op(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
         setModServerConfig(levelStorage.readModServerConfig() ?: ModServerConfig.DEFAULT.copy(modEnabled = false))
     }
@@ -183,12 +184,15 @@ abstract class GridLayoutsHeightFix(@Origin val layout: GridLayout) {
         )
     }
 
-    @Inject(method = ["arrangeElements"], at = [At("TAIL")])
+    @ModifyExpressionValue(
+        method = ["arrangeElements"], at = [At("INVOKE", target = "Ljava/lang/Math;max(II)I", ordinal = 0)]
+    )
     context(
         @Local(name = ["maxRow"]) maxRow: Int,
     )
-    fun updateLastOccupiedRow(ci: CallbackInfo) {
+    fun updateLastOccupiedRow(original: Int): Int {
         lastOccupiedRow = maxRow
+        return original
     }
 
     @KShadow(Modifier.PRIVATE)

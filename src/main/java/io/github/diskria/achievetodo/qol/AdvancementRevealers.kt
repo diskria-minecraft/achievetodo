@@ -27,13 +27,12 @@ class AdvancementVisibilityRevealer {
     companion object {
         @ModifyExpressionValue(
             method = [$$"evaluateVisibility(Lnet/minecraft/advancements/AdvancementNode;Ljava/util/function/Predicate;Lnet/minecraft/server/advancements/AdvancementVisibilityEvaluator$Output;)V"],
-            at = [At(value = "CONSTANT", args = ["intValue=2"])]
+            at = [At("CONSTANT", args = ["intValue=2"])]
         )
         fun cancelStackPadding(original: Int): Int = if (revealMode != null) -1 else original
 
         @ModifyExpressionValue(
-            method = ["evaluateVisiblityForUnfinishedNode"],
-            at = [At(value = "CONSTANT", args = ["intValue=2"])]
+            method = ["evaluateVisiblityForUnfinishedNode"], at = [At("CONSTANT", args = ["intValue=2"])]
         )
         context(
             @Local(name = ["ascendants"], argsOnly = true) ascendants: Stack<*>,
@@ -49,7 +48,7 @@ class AdvancementVisibilityRevealer {
 
         @WrapOperation(
             method = [$$"evaluateVisibility(Lnet/minecraft/advancements/AdvancementNode;Lit/unimi/dsi/fastutil/Stack;Ljava/util/function/Predicate;Lnet/minecraft/server/advancements/AdvancementVisibilityEvaluator$Output;)Z"],
-            at = [At(value = "INVOKE", target = "Ljava/util/function/Predicate;test(Ljava/lang/Object;)Z")]
+            at = [At("INVOKE", target = "Ljava/util/function/Predicate;test(Ljava/lang/Object;)Z")]
         )
         fun resolveTabReveal(isDoneTest: Predicate<*>, node: Any, op: Op<Boolean>): Boolean {
             if (op(isDoneTest, node)) return true
@@ -75,7 +74,7 @@ abstract class AdvancementTabsRevealer {
 
     @WrapOperation(
         method = ["registerListeners(Lnet/minecraft/advancements/AdvancementHolder;)V"],
-        at = [At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementProgress;isDone()Z")]
+        at = [At("INVOKE", target = "Lnet/minecraft/advancements/AdvancementProgress;isDone()Z")]
     )
     context(
         @Local(argsOnly = true, name = ["holder"]) advancement: AdvancementHolder,

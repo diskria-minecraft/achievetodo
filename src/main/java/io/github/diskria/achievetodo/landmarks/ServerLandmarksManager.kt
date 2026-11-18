@@ -99,10 +99,7 @@ abstract class ChunkLandmarksData {
 class LandmarksBridgeToLevelChunk {
     @WrapOperation(
         method = [$$"<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/chunk/LevelChunk;setAllReferences(Ljava/util/Map;)V"
-        )]
+        at = [At("INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;setAllReferences(Ljava/util/Map;)V")]
     )
     context(
         @Local(argsOnly = true, name = ["protoChunk"]) from: ProtoChunk,
@@ -119,17 +116,14 @@ class ChunkLandmarksNbt {
     @Extension
     var landmarksNbt: Tag? = null
 
-    @ModifyReturnValue(method = ["write"], at = [At(value = "TAIL")])
+    @ModifyReturnValue(method = ["write"], at = [At("TAIL")])
     fun saveToNbt(compound: CompoundTag) = compound.apply {
         landmarksNbt?.let { put(LANDMARKS_TAG_NAME, it) }
     }
 
     @WrapOperation(
         method = ["read"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/world/level/chunk/ChunkAccess;setAllReferences(Ljava/util/Map;)V"
-        )]
+        at = [At("INVOKE", target = "Lnet/minecraft/world/level/chunk/ChunkAccess;setAllReferences(Ljava/util/Map;)V")]
     )
     fun saveToChunk(chunk: ChunkAccess, structureReferences: Map<*, *>, op: Op<Unit>) {
         op(chunk, structureReferences)
@@ -139,7 +133,7 @@ class ChunkLandmarksNbt {
     companion object {
         private const val LANDMARKS_TAG_NAME = "achievetodo_landmarks"
 
-        @ModifyReturnValue(method = ["parse"], at = [At(value = "TAIL")])
+        @ModifyReturnValue(method = ["parse"], at = [At("TAIL")])
         context(
             @Local(argsOnly = true, name = ["chunkData"]) compound: CompoundTag,
         )
@@ -147,7 +141,7 @@ class ChunkLandmarksNbt {
             landmarksNbt = compound.get(LANDMARKS_TAG_NAME)
         }
 
-        @ModifyReturnValue(method = ["copyOf"], at = [At(value = "TAIL")])
+        @ModifyReturnValue(method = ["copyOf"], at = [At("TAIL")])
         context(
             @Local(argsOnly = true, name = ["chunk"]) chunk: ChunkAccess,
         )
@@ -159,7 +153,7 @@ class ChunkLandmarksNbt {
 
 @KMixin<Structure>(Side.Common)
 class StructureLandmarkDetector {
-    @ModifyReturnValue(method = ["generate"], at = [At(value = "RETURN", ordinal = 0)])
+    @ModifyReturnValue(method = ["generate"], at = [At("RETURN", ordinal = 0)])
     context(
         @Local(argsOnly = true, name = ["selected"]) holder: Holder<Structure>,
     )
@@ -178,7 +172,7 @@ class StructureLandmarkNbt {
     @Extension
     var landmark: Landmark? = null
 
-    @ModifyReturnValue(method = ["createTag"], at = [At(value = "RETURN", ordinal = 1)])
+    @ModifyReturnValue(method = ["createTag"], at = [At("RETURN", ordinal = 1)])
     fun saveToNbt(compound: CompoundTag) = compound.apply {
         landmarkType?.toNbtOrNull(LandmarkType.CODEC)?.let { put(LANDMARK_TYPE_TAG_NAME, it) }
         landmark?.toNbtOrNull(Landmark.CODEC)?.let { put(LANDMARK_TAG_NAME, it) }
@@ -188,7 +182,7 @@ class StructureLandmarkNbt {
         private const val LANDMARK_TYPE_TAG_NAME = "achievetodo_landmarkType"
         private const val LANDMARK_TAG_NAME = "achievetodo_landmark"
 
-        @ModifyReturnValue(method = ["loadStaticStart"], at = [At(value = "RETURN", ordinal = 2)])
+        @ModifyReturnValue(method = ["loadStaticStart"], at = [At("RETURN", ordinal = 2)])
         context(
             @Local(argsOnly = true, name = ["tag"]) compound: CompoundTag,
         )
@@ -210,7 +204,7 @@ class StructureLandmarkGeneratorTracker {
         random: RandomSource,
         chunkBB: BoundingBox,
         targetChunkPos: ChunkPos,
-        op: Op<Unit>,
+        op: Op<Unit>
     ) {
         fun generate() = op(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
 
@@ -242,7 +236,7 @@ class FeatureLandmarkGeneratorTracker {
     @WrapOperation(
         method = ["applyBiomeDecoration"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/world/level/levelgen/placement/FeaturePlacer;placeWithBiomeCheck(Lnet/minecraft/world/level/levelgen/placement/PlacedFeature;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
         )]
     )
@@ -255,7 +249,7 @@ class FeatureLandmarkGeneratorTracker {
         featureToPlace: PlacedFeature,
         random: RandomSource,
         originPos: BlockPos,
-        op: Op<Boolean>,
+        op: Op<Boolean>
     ): Boolean {
         val featureHolder = featureToPlace.feature
         return levelGenerator.resolveFeatureGeneration(featureHolder, chunk, byPlaceCommand = false) {
@@ -267,7 +261,7 @@ class FeatureLandmarkGeneratorTracker {
 @KMixin<PlaceCommand>(Side.Common)
 class PlaceCommandPatches {
     companion object {
-        @ModifyReturnValue(method = ["placeStructure"], at = [At(value = "TAIL")])
+        @ModifyReturnValue(method = ["placeStructure"], at = [At("TAIL")])
         context(
             @Local(name = ["level"]) level: ServerLevel,
             @Local(name = ["start"]) start: StructureStart,
@@ -287,7 +281,7 @@ class PlaceCommandPatches {
         @WrapOperation(
             method = ["placeFeature"],
             at = [At(
-                value = "INVOKE",
+                "INVOKE",
                 target = "Lnet/minecraft/world/level/levelgen/feature/Feature;place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
             )]
         )
@@ -300,7 +294,7 @@ class PlaceCommandPatches {
             chunkGenerator: ChunkGenerator,
             random: RandomSource,
             originPos: BlockPos,
-            op: Op<Boolean>,
+            op: Op<Boolean>
         ): Boolean {
             val targetChunk = levelGenerator.getChunk(originPos)
             return levelGenerator.resolveFeatureGeneration(featureHolder, targetChunk, byPlaceCommand = true) {
@@ -312,7 +306,7 @@ class PlaceCommandPatches {
 
 @KMixin<WorldGenRegion>(Side.Common, InitStrategy.Synchronized)
 class RegionBlockTracker {
-    @ModifyReturnValue(method = ["setBlock"], at = [At(value = "RETURN")])
+    @ModifyReturnValue(method = ["setBlock"], at = [At("RETURN")])
     context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,
         @Local(argsOnly = true, name = ["blockState"]) blockState: BlockState,
@@ -325,7 +319,7 @@ class RegionBlockTracker {
 
 @KMixin<Level>(Side.Common, InitStrategy.Synchronized)
 class LevelBlockTracker {
-    @ModifyReturnValue(method = ["setBlock"], at = [At(value = "RETURN")])
+    @ModifyReturnValue(method = ["setBlock"], at = [At("RETURN")])
     context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,
         @Local(argsOnly = true, name = ["blockState"]) blockState: BlockState,

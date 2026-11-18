@@ -93,7 +93,7 @@ class SuiteInstallerPackCustomizer {
     @Extension
     var suiteComponent: SuiteComponent? = null
 
-    @ModifyReturnValue(method = ["getCompatibility"], at = [At(value = "RETURN")])
+    @ModifyReturnValue(method = ["getCompatibility"], at = [At("RETURN")])
     fun overrideCompatibility(original: PackCompatibility) =
         if (isInstalledSuiteComponent) PackCompatibility.COMPATIBLE
         else original
@@ -116,7 +116,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
     @WrapOperation(
         method = ["<init>"],
         at = [At(
-            value = "NEW",
+            "NEW",
             target = "(Ljava/util/function/Consumer;Ljava/util/function/Function;Lnet/minecraft/server/packs/repository/PackRepository;Ljava/util/function/Consumer;)Lnet/minecraft/client/gui/screens/packs/PackSelectionModel;",
         )]
     )
@@ -125,7 +125,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         iconGetter: Function<*, *>,
         repository: PackRepository,
         output: Consumer<*>,
-        op: Op<PackSelectionModel>,
+        op: Op<PackSelectionModel>
     ) = op(onListChanged, iconGetter, repository, output).apply {
         onInstallClicked = { component ->
             ConfirmLinkScreen.confirmLinkNow(screen, URI.create(component.download.pageUrl))
@@ -135,7 +135,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
     @WrapOperation(
         method = ["init"],
         at = [At(
-            value = "NEW",
+            "NEW",
             target = "(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/packs/PackSelectionScreen;IILnet/minecraft/network/chat/Component;)Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;",
             ordinal = 0
         )]
@@ -146,13 +146,13 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         width: Int,
         height: Int,
         title: Component,
-        op: Op<TransferableSelectionList>,
+        op: Op<TransferableSelectionList>
     ) = op(minecraft, screen, width, height, if (isSuiteInstallerScreen) MISSING_COLUMN_TITLE else title)
 
     @WrapOperation(
         method = ["init"],
         at = [At(
-            value = "NEW",
+            "NEW",
             target = "(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/packs/PackSelectionScreen;IILnet/minecraft/network/chat/Component;)Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;",
             ordinal = 1
         )]
@@ -163,15 +163,15 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
         width: Int,
         height: Int,
         title: Component,
-        op: Op<TransferableSelectionList>,
+        op: Op<TransferableSelectionList>
     ) = op(minecraft, screen, width, height, if (isSuiteInstallerScreen) INSTALLED_COLUMN_TITLE else title)
 
     @WrapOperation(
         method = ["init"],
         at = [At(
-            value = "INVOKE",
-            ordinal = 0,
-            target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;"
+            "INVOKE",
+            target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;",
+            ordinal = 0
         )]
     )
     context(
@@ -189,9 +189,9 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
     @WrapOperation(
         method = ["init"],
         at = [At(
-            value = "INVOKE",
-            ordinal = 1,
-            target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;"
+            "INVOKE",
+            target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;",
+            ordinal = 1
         )]
     )
     fun renameDoneToBackAndMakeSmaller(message: Component, onPress: OnPress, op: Op<Button.Builder>) = when {
@@ -201,11 +201,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
 
     @WrapWithCondition(
         method = ["populateLists"],
-        at = [At(
-            value = "FIELD",
-            target = "Lnet/minecraft/client/gui/components/Button;active:Z",
-            opcode = Opcodes.PUTFIELD,
-        )]
+        at = [At("FIELD", target = "Lnet/minecraft/client/gui/components/Button;active:Z", opcode = Opcodes.PUTFIELD)]
     )
     fun keepBackButtonActive(button: Button, active: Boolean): Boolean = !isSuiteInstallerScreen
 
@@ -339,9 +335,9 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
     @WrapWithCondition(
         method = ["extractContent"],
         at = [At(
-            value = "INVOKE",
-            ordinal = 0,
-            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V"
+            "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V",
+            ordinal = 0
         )]
     )
     fun hideIcon(
@@ -355,7 +351,7 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
 
     @WrapWithCondition(
         method = ["extractContent"],
-        at = [At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V")]
+        at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V")]
     )
     fun hideHoveredIconBackground(graphics: GuiGraphicsExtractor, x0: Int, y0: Int, x1: Int, y1: Int, col: Int) =
         !isMissingSuiteComponent
@@ -363,7 +359,7 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
     @WrapOperation(
         method = ["extractContent"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;getSelected()Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;"
         )]
     )
@@ -372,10 +368,7 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
 
     @WrapOperation(
         method = ["extractContent"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;isFocused()Z"
-        )]
+        at = [At("INVOKE", target = "Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;isFocused()Z")]
     )
     fun forceFocused(list: TransferableSelectionList, op: Op<Boolean>) = isMissingSuiteComponent || op(list)
 

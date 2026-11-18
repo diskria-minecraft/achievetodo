@@ -127,7 +127,7 @@ abstract class AdvancementsFogTracker {
     @WrapOperation(
         method = ["flushDirty"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;send(Lnet/minecraft/network/protocol/Packet;)V"
         )]
     )
@@ -261,7 +261,7 @@ abstract class AdvancementWidgetFogChildren {
 }
 
 @KMixin<AdvancementWidget>(Side.Client)
-abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidget) {
+class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidget) {
 
     @Extension
     val isFogHint: Boolean get() = widget.advancement.id.namespace == HINT_NAMESPACE
@@ -273,7 +273,7 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
     @WrapWithCondition(
         method = ["extractRenderState"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
         )]
     )
@@ -288,15 +288,15 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
     @WrapOperation(
         method = ["extractRenderState"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
         )]
     )
-    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, stack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
-        if (!isFogHint) return op(graphics, stack, x, y)
+    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, itemStack, x, y)
         graphics.tempAlpha = 0.625f
         try {
-            op(graphics, stack, x, y)
+            op(graphics, itemStack, x, y)
         } finally {
             graphics.tempAlpha = null
         }
@@ -304,7 +304,7 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
 
     @WrapOperation(
         method = ["extractConnectivity"],
-        at = [At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V")]
+        at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V")]
     )
     context(
         @Local(argsOnly = true, name = ["xo"]) originX: Int,
@@ -319,7 +319,7 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
 
     @WrapOperation(
         method = ["extractConnectivity"],
-        at = [At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;verticalLine(IIII)V")]
+        at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;verticalLine(IIII)V")]
     )
     context(
         @Local(argsOnly = true, name = ["xo"]) originX: Int,

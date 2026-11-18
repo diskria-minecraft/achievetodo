@@ -34,7 +34,7 @@ class ItemAlphaSupportGraphics {
     @WrapOperation(
         method = ["item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/renderer/state/gui/GuiRenderState;addItem(Lnet/minecraft/client/renderer/state/gui/GuiItemRenderState;)V"
         )]
     )
@@ -45,11 +45,11 @@ class ItemAlphaSupportGraphics {
 }
 
 @KMixin<GuiRenderer>(Side.Client)
-class ItemAlphaSupportGui {
+class ItemAlphaSupportRenderer {
 
     @WrapOperation(
         method = ["submitBlitFromItemAtlas"],
-        at = [At(value = "NEW", target = "net/minecraft/client/renderer/state/gui/BlitRenderState")]
+        at = [At("NEW", target = "net/minecraft/client/renderer/state/gui/BlitRenderState")]
     )
     context(
         @Local(argsOnly = true, name = ["itemState"]) guiItemState: GuiItemRenderState,
@@ -65,7 +65,7 @@ class ItemAlphaSupportGui {
         color: Int,
         scissorArea: ScreenRectangle?,
         bounds: ScreenRectangle?,
-        op: Op<BlitRenderState>,
+        op: Op<BlitRenderState>
     ): BlitRenderState {
         val finalColor = guiItemState.tempAlpha?.let { ARGB.colorFromFloat(it, it, it, it) } ?: color
         return op(pipeline, textureSetup, pose, x0, y0, x1, y1, u0, u1, v0, v1, finalColor, scissorArea, bounds)

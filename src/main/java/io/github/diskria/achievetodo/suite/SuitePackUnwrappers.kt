@@ -48,7 +48,7 @@ class SuitePackOpenUnwrapper {
 }
 
 @KMixin<MinecraftServer>(Side.Common)
-abstract class SuitePackReloadUnwrapper {
+class SuitePackReloadUnwrapper {
 
     @ModifyReturnValue(method = [$$"lambda$reloadResources$0"], at = [At("RETURN")])
     fun MinecraftServer.unwrapResources(resources: ImmutableList<PackResources>): ImmutableList<PackResources> =
@@ -102,20 +102,20 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     @WrapOperation(
         method = ["tryApplyNewDataPacks"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/WorldCreationUiState;tryUpdateDataConfiguration(Lnet/minecraft/world/level/WorldDataConfiguration;)Z"
         )]
     )
     fun forceApplyDataPacks(
         uiState: WorldCreationUiState,
         dataConfiguration: WorldDataConfiguration,
-        op: Op<Boolean>,
+        op: Op<Boolean>
     ) = !dataPacksApplying && op(uiState, dataConfiguration)
 
     @WrapOperation(
         method = ["tryApplyNewDataPacks", $$"lambda$applyNewPackConfig$5"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"
         )]
     )
@@ -166,7 +166,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["createLevelFromExistingSettings"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
         )]
     )
@@ -183,7 +183,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["recreateWorldData"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldDataBlocking(Lnet/minecraft/server/WorldLoader$PackConfig;Lnet/minecraft/server/WorldLoader$WorldDataSupplier;Lnet/minecraft/server/WorldLoader$ResultFactory;)Ljava/lang/Object;"
         )]
     )
@@ -197,7 +197,7 @@ abstract class SuitePackWorldOpenResolvers {
         packConfig: PackConfig,
         worldDataGetter: WorldDataSupplier<*>,
         worldDataSupplier: ResultFactory<*, *>,
-        op: Op<Any>,
+        op: Op<Any>
     ): Any {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = levelDat.parseDifficultySettings().hardcore
@@ -209,7 +209,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["openWorldLoadLevelStem"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldStem(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lcom/mojang/serialization/Dynamic;ZLnet/minecraft/server/packs/repository/PackRepository;)Lnet/minecraft/server/WorldStem;"
         )]
     )
@@ -223,7 +223,7 @@ abstract class SuitePackWorldOpenResolvers {
         levelDat: Dynamic<*>,
         safeMode: Boolean,
         packRepository: PackRepository,
-        op: Op<WorldStem>,
+        op: Op<WorldStem>
     ): WorldStem? {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = levelDat.parseDifficultySettings().hardcore
@@ -260,7 +260,7 @@ class SuitePackDedicatedServerResolver {
         @WrapOperation(
             method = ["main"],
             at = [At(
-                value = "INVOKE",
+                "INVOKE",
                 target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
             )]
         )
@@ -270,7 +270,7 @@ class SuitePackDedicatedServerResolver {
         )
         fun validateAndResolveComponentsOnStart(
             levelStorage: LevelStorageAccess,
-            op: Op<PackRepository>,
+            op: Op<PackRepository>
         ): PackRepository? {
             val config = levelStorage.validateDedicatedModServerConfig()
             if (config == null) {

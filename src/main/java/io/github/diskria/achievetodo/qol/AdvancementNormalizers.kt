@@ -30,16 +30,20 @@ class AdvancementChildrenNormalizer(@Origin val current: AdvancementNode) {
     @ModifyReturnValue(method = ["children"], at = [At("RETURN")])
     fun normalizeChildren(original: Iterable<AdvancementNode>): Iterable<AdvancementNode> {
         normalizedChildren?.let { return it }
-        val list = original as? Collection ?: return original
-        if (list.size <= 1) return list.toList().also { normalizedChildren = it }
-        val sorted = list
-            .sortedBy { it.holder().id }
-            .sortedBy { it.countAdvancements() }
-        return ArrayDeque<AdvancementNode>(sorted.size).apply {
-            sorted.asReversed().forEachIndexed { index, node ->
-                if (index % 2 == 0) addFirst(node) else addLast(node)
+        val list = original.toList()
+        val result = if (list.size > 1) {
+            val sorted = list
+                .sortedBy { it.holder().id }
+                .sortedBy { it.countAdvancements() }
+            ArrayDeque<AdvancementNode>(sorted.size).apply {
+                sorted.asReversed().forEachIndexed { index, node ->
+                    if (index % 2 == 0) addFirst(node) else addLast(node)
+                }
             }
-        }.also { normalizedChildren = it }
+        } else {
+            list
+        }
+        return result.also { normalizedChildren = it }
     }
 }
 

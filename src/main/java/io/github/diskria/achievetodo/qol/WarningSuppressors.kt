@@ -24,7 +24,7 @@ class WorldCreateWarningSuppressors {
     @WrapOperation(
         method = ["onCreate"],
         at = [At(
-            value = "INVOKE",
+            "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;confirmWorldCreation(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V"
         )]
     )
@@ -34,7 +34,7 @@ class WorldCreateWarningSuppressors {
         lifecycle: Lifecycle,
         onConfirm: Runnable,
         skipWarn: Boolean,
-        op: Op<Unit>,
+        op: Op<Unit>
     ) {
         val finalSkipWarn = skipWarn || uiState.modServerConfig.canSuppress(SUPPRESS_EXPERIMENTAL_FEATURES_WARNINGS)
         op(minecraft, thisScreen, lifecycle, onConfirm, finalSkipWarn)
@@ -49,7 +49,7 @@ class WorldOpenWarningSuppressors {
         oldCustomized: Boolean,
         onProceed: Runnable,
         onCancel: Runnable,
-        op: Op<Unit>,
+        op: Op<Unit>
     ) {
         if (levelStorage.readModServerConfig()?.canSuppress(SUPPRESS_BACKUP_WARNINGS) == true) {
             onProceed.run()
