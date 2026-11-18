@@ -2,12 +2,12 @@ package io.github.diskria.achievetodo.qol
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.*
 import io.github.diskria.achievetodo.qol.AdvancementsFogManager.Client.HINT_NAMESPACE
+import io.github.diskria.achievetodo.utils.tempAlpha
 import io.github.diskria.advancements_search.client.AdvancementsScreenMixin
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.api.EnvType
@@ -21,14 +21,8 @@ import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.advancements.AdvancementNode
 import net.minecraft.advancements.AdvancementType
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.navigation.ScreenRectangle
-import net.minecraft.client.gui.render.GuiRenderer
-import net.minecraft.client.gui.render.TextureSetup
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
-import net.minecraft.client.renderer.state.gui.BlitRenderState
-import net.minecraft.client.renderer.state.gui.GuiItemRenderState
-import net.minecraft.client.renderer.state.gui.GuiRenderState
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
@@ -38,11 +32,9 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.PlayerAdvancements
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.server.network.ServerGamePacketListenerImpl
-import net.minecraft.util.ARGB
 import net.minecraft.util.CommonColors
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
-import org.joml.Matrix3x2fc
 import org.spongepowered.asm.mixin.injection.At
 import javax.lang.model.element.Modifier
 import kotlin.jvm.optionals.getOrNull
@@ -118,11 +110,7 @@ class ClientboundUpdateAdvancementsFogPayload private constructor(
     }
 }
 
-data class AdvancementFogHint(
-    val icon: ItemStackTemplate,
-    val x: Float,
-    val y: Float,
-) {
+data class AdvancementFogHint(val icon: ItemStackTemplate, val x: Float, val y: Float) {
     companion object {
         val STREAM_CODEC = StreamCodec.composite(
             ItemStackTemplate.STREAM_CODEC, AdvancementFogHint::icon,
@@ -143,13 +131,11 @@ abstract class AdvancementsFogTracker {
             target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;send(Lnet/minecraft/network/protocol/Packet;)V"
         )]
     )
-    fun sendFogUpdate(
-        connection: ServerGamePacketListenerImpl,
-        packet: Packet<*>,
-        original: Operation<Unit>,
+    context(
         @Local(name = ["added"]) addedNodes: Set<AdvancementNode>,
         @Local(name = ["removed"]) removedNodeIds: Set<Identifier>,
-    ) {
+    )
+    fun sendFogUpdate(connection: ServerGamePacketListenerImpl, packet: Packet<*>, op: Op<Unit>) {
         val tree = connection.player.level().server.advancements.tree()
         val nodesToCheck = buildSet {
             addedNodes.forEach { node ->
@@ -196,7 +182,7 @@ abstract class AdvancementsFogTracker {
                 ClientboundUpdateAdvancementsFogPayload.Server.send(isFirstPacket, added, removed)
             }
         }
-        original(connection, packet)
+        op(connection, packet)
     }
 
     private val AdvancementHolder.isVisible: Boolean get() = this in visible
@@ -212,11 +198,11 @@ abstract class AdvancementsFogTracker {
 abstract class AdvancementTabFog {
 
     @WrapMethod(method = ["addWidget"])
-    fun AdvancementTab.onAddWidget(widget: AdvancementWidget, original: Operation<Unit>) {
+    fun AdvancementTab.onAddWidget(widget: AdvancementWidget, op: Op<Unit>) {
         if (rootAdvancement.id == AdvancementsScreenMixin.SEARCH_RESULTS_ROOT_ADVANCEMENT_ID || widget.isFogHint) {
-            return original(widget)
+            return op(widget)
         }
-        original(widget)
+        op(widget)
         widget.parentWidget?.let { parent ->
             val fogHints = parent.fogHints
             val expectedSize = AdvancementsFogManager.Client.getHintsFor(parent)?.size ?: 0
@@ -252,10 +238,10 @@ abstract class AdvancementTabFog {
 abstract class AdvancementWidgetFogChildren {
 
     @Extension
-    val parentWidget: AdvancementWidget? get() = parent
+    val fogHints: List<AdvancementWidget> get() = children.filter { it.isFogHint }
 
     @Extension
-    val fogHints: List<AdvancementWidget> get() = children.filter { it.isFogHint }
+    val parentWidget: AdvancementWidget? get() = parent
 
     @Extension
     fun removeFogHints() {
@@ -281,13 +267,8 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
     val isFogHint: Boolean get() = widget.advancement.id.namespace == HINT_NAMESPACE
 
     @WrapMethod(method = ["isMouseOver"])
-    fun disableFogHintHover(
-        scrollX: Int,
-        scrollY: Int,
-        mouseX: Int,
-        mouseY: Int,
-        original: Operation<Boolean>
-    ) = !isFogHint && original(scrollX, scrollY, mouseX, mouseY)
+    fun disableFogHintHover(originX: Int, originY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
+        !isFogHint && op(originX, originY, mouseX, mouseY)
 
     @WrapWithCondition(
         method = ["extractRenderState"],
@@ -300,10 +281,8 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
         graphics: GuiGraphicsExtractor,
         renderPipeline: RenderPipeline,
         location: Identifier,
-        x: Int,
-        y: Int,
-        width: Int,
-        height: Int,
+        x: Int, y: Int,
+        width: Int, height: Int,
     ) = !isFogHint
 
     @WrapOperation(
@@ -313,19 +292,13 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
         )]
     )
-    fun fadeFogHintItem(
-        graphics: GuiGraphicsExtractor,
-        itemStack: ItemStack,
-        x: Int,
-        y: Int,
-        original: Operation<Unit>,
-    ) {
-        if (!isFogHint) return original(graphics, itemStack, x, y)
-        graphics.itemAlpha = 0.625f
+    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, stack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, stack, x, y)
+        graphics.tempAlpha = 0.625f
         try {
-            original(graphics, itemStack, x, y)
+            op(graphics, stack, x, y)
         } finally {
-            graphics.itemAlpha = 1f
+            graphics.tempAlpha = null
         }
     }
 
@@ -333,107 +306,34 @@ abstract class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidge
         method = ["extractConnectivity"],
         at = [At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V")]
     )
-    fun drawHorizontalZebra(
-        graphics: GuiGraphicsExtractor,
-        x0: Int,
-        x1: Int,
-        y: Int,
-        color: Int,
-        original: Operation<Unit>,
-        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
-        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
+    context(
+        @Local(argsOnly = true, name = ["xo"]) originX: Int,
+        @Local(argsOnly = true, name = ["yo"]) originY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
-    ) {
-        if (!isFogHint) return original(graphics, x0, x1, y, color)
+    )
+    fun drawHorizontalZebra(graphics: GuiGraphicsExtractor, x0: Int, x1: Int, y: Int, color: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, x0, x1, y, color)
         if (isBorderPass) return
-        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
+        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardPixel(graphics, x, y, originX, originY) }
     }
 
     @WrapOperation(
         method = ["extractConnectivity"],
         at = [At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;verticalLine(IIII)V")]
     )
-    fun drawVerticalZebra(
-        graphics: GuiGraphicsExtractor,
-        x: Int,
-        y0: Int,
-        y1: Int,
-        color: Int,
-        original: Operation<Unit>,
-        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
-        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
+    context(
+        @Local(argsOnly = true, name = ["xo"]) originX: Int,
+        @Local(argsOnly = true, name = ["yo"]) originY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
-    ) {
-        if (!isFogHint) return original(graphics, x, y0, y1, color)
+    )
+    fun drawVerticalZebra(graphics: GuiGraphicsExtractor, x: Int, y0: Int, y1: Int, color: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, x, y0, y1, color)
         if (isBorderPass) return
-        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
+        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, originX, originY) }
     }
 
     private fun drawChessboardPixel(graphics: GuiGraphicsExtractor, x: Int, y: Int, originX: Int, originY: Int) {
         val isWhiteCell = (((x - originX) + (y - originY)) and 1) == 0
         graphics.fill(x, y, x + 1, y + 1, if (isWhiteCell) CommonColors.WHITE else CommonColors.BLACK)
-    }
-}
-
-@KMixin<GuiItemRenderState>(Side.Client)
-abstract class FogItemRenderState {
-
-    @Extension
-    var alpha: Float = 1f
-}
-
-@KMixin<GuiGraphicsExtractor>(Side.Client)
-abstract class FogItemGraphics {
-
-    @Extension
-    var itemAlpha: Float = 1f
-
-    @WrapOperation(
-        method = ["item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/renderer/state/gui/GuiRenderState;addItem(Lnet/minecraft/client/renderer/state/gui/GuiItemRenderState;)V"
-        )]
-    )
-    fun attachItemAlpha(
-        guiRenderState: GuiRenderState,
-        itemState: GuiItemRenderState,
-        original: Operation<Unit>,
-    ) {
-        if (itemAlpha < 1f) {
-            itemState.alpha = itemAlpha
-        }
-        original(guiRenderState, itemState)
-    }
-}
-
-@KMixin<GuiRenderer>(Side.Client)
-abstract class FogItemRenderer {
-
-    @WrapOperation(
-        method = ["submitBlitFromItemAtlas"],
-        at = [At(value = "NEW", target = "net/minecraft/client/renderer/state/gui/BlitRenderState")]
-    )
-    fun applyItemAlpha(
-        pipeline: RenderPipeline,
-        textureSetup: TextureSetup,
-        pose: Matrix3x2fc,
-        x0: Int,
-        y0: Int,
-        x1: Int,
-        y1: Int,
-        u0: Float,
-        u1: Float,
-        v0: Float,
-        v1: Float,
-        color: Int,
-        scissorArea: ScreenRectangle?,
-        bounds: ScreenRectangle?,
-        original: Operation<BlitRenderState>,
-        @Local(argsOnly = true, name = ["itemState"]) itemState: GuiItemRenderState,
-    ): BlitRenderState {
-        val alpha = itemState.alpha
-        val tintedColor = if (alpha < 1f) ARGB.colorFromFloat(alpha, alpha, alpha, alpha) else color
-        return original(pipeline, textureSetup, pose, x0, y0, x1, y1, u0, u1, v0, v1, tintedColor, scissorArea, bounds)
     }
 }

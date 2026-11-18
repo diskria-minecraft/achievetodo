@@ -3,7 +3,6 @@ package io.github.diskria.achievetodo.suite
 import com.google.common.collect.ImmutableList
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
@@ -11,6 +10,7 @@ import com.mojang.serialization.Dynamic
 import io.github.diskria.achievetodo.config.modServerConfig
 import io.github.diskria.achievetodo.config.readModServerConfig
 import io.github.diskria.achievetodo.config.validateDedicatedModServerConfig
+import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.client.Minecraft
@@ -70,15 +70,15 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     }
 
     @WrapMethod(method = ["onCreate"])
-    fun validateComponentsOnCreate(original: Operation<Void>) {
+    fun validateComponentsOnCreate(op: Op<Unit>) {
         if (dataPacksApplying) {
             dataPacksApplying = false
-            original()
+            op()
             return
         }
         val components = resolveRequiredComponents()
         if (components == initialRequiredComponents) {
-            original()
+            op()
             return
         }
         val onRetry = { createWorld() }
@@ -109,8 +109,8 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     fun forceApplyDataPacks(
         uiState: WorldCreationUiState,
         dataConfiguration: WorldDataConfiguration,
-        original: Operation<Boolean>,
-    ) = !dataPacksApplying && original(uiState, dataConfiguration)
+        op: Op<Boolean>,
+    ) = !dataPacksApplying && op(uiState, dataConfiguration)
 
     @WrapOperation(
         method = ["tryApplyNewDataPacks", $$"lambda$applyNewPackConfig$5"],
@@ -119,8 +119,8 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
             target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"
         )]
     )
-    fun waitApplyDataPacks(gui: Gui, screen: Screen, original: Operation<Void>) {
-        original(gui, screen)
+    fun waitApplyDataPacks(gui: Gui, screen: Screen, op: Op<Unit>) {
+        op(gui, screen)
         finishApplyDataPacks(screen)
     }
 
@@ -170,11 +170,10 @@ abstract class SuitePackWorldOpenResolvers {
             target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
         )]
     )
-    fun resolveComponentsOnCreate(
-        levelStorage: LevelStorageAccess,
-        original: Operation<PackRepository>,
+    context(
         @Local(argsOnly = true, name = ["worldDataAndGenSettings"]) worldDataAndGenSettings: WorldDataAndGenSettings,
-    ) = original(levelStorage).apply {
+    )
+    fun resolveComponentsOnCreate(levelStorage: LevelStorageAccess, op: Op<PackRepository>) = op(levelStorage).apply {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = worldDataAndGenSettings.data.isHardcore
             suiteComponents = SuitePack.getRequiredComponents(config, isHardcore)
@@ -188,21 +187,23 @@ abstract class SuitePackWorldOpenResolvers {
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldDataBlocking(Lnet/minecraft/server/WorldLoader$PackConfig;Lnet/minecraft/server/WorldLoader$WorldDataSupplier;Lnet/minecraft/server/WorldLoader$ResultFactory;)Ljava/lang/Object;"
         )]
     )
+    context(
+        @Local(argsOnly = true, name = ["levelSourceAccess"]) levelStorage: LevelStorageAccess,
+        @Local(name = ["levelDataTag"]) levelDat: Dynamic<*>,
+        @Local(name = ["packRepository"]) packRepository: PackRepository,
+    )
     fun resolveComponentsOnRecreate(
         worldOpenFlows: WorldOpenFlows,
         packConfig: PackConfig,
         worldDataGetter: WorldDataSupplier<*>,
         worldDataSupplier: ResultFactory<*, *>,
-        original: Operation<*>,
-        @Local(argsOnly = true, name = ["levelSourceAccess"]) levelStorage: LevelStorageAccess,
-        @Local(name = ["levelDataTag"]) levelDat: Dynamic<*>,
-        @Local(name = ["packRepository"]) packRepository: PackRepository,
+        op: Op<Any>,
     ): Any {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = levelDat.parseDifficultySettings().hardcore
             packRepository.suiteComponents = SuitePack.getRequiredComponents(config, isHardcore)
         }
-        return original(worldOpenFlows, packConfig, worldDataGetter, worldDataSupplier)
+        return op(worldOpenFlows, packConfig, worldDataGetter, worldDataSupplier)
     }
 
     @WrapOperation(
@@ -212,15 +213,17 @@ abstract class SuitePackWorldOpenResolvers {
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldStem(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lcom/mojang/serialization/Dynamic;ZLnet/minecraft/server/packs/repository/PackRepository;)Lnet/minecraft/server/WorldStem;"
         )]
     )
+    context(
+        @Local(argsOnly = true, name = ["onCancel"]) onCancel: Runnable,
+        @Cancellable ci: CallbackInfo,
+    )
     fun validateAndResolveComponentsOnOpen(
         worldOpenFlows: WorldOpenFlows,
         levelStorage: LevelStorageAccess,
         levelDat: Dynamic<*>,
         safeMode: Boolean,
         packRepository: PackRepository,
-        original: Operation<WorldStem>,
-        @Local(argsOnly = true, name = ["onCancel"]) onCancel: Runnable,
-        @Cancellable ci: CallbackInfo,
+        op: Op<WorldStem>,
     ): WorldStem? {
         levelStorage.readModServerConfig()?.let { config ->
             val isHardcore = levelDat.parseDifficultySettings().hardcore
@@ -236,7 +239,7 @@ abstract class SuitePackWorldOpenResolvers {
             }
             packRepository.suiteComponents = components
         }
-        return original(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
+        return op(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
     }
 
     @KShadow(Modifier.PRIVATE)
@@ -261,11 +264,13 @@ class SuitePackDedicatedServerResolver {
                 target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
             )]
         )
-        fun validateAndResolveComponentsOnStart(
-            levelStorage: LevelStorageAccess,
-            original: Operation<PackRepository>,
+        context(
             @Local(name = ["settings"]) settings: DedicatedServerSettings,
             @Cancellable ci: CallbackInfo,
+        )
+        fun validateAndResolveComponentsOnStart(
+            levelStorage: LevelStorageAccess,
+            op: Op<PackRepository>,
         ): PackRepository? {
             val config = levelStorage.validateDedicatedModServerConfig()
             if (config == null) {
@@ -281,7 +286,7 @@ class SuitePackDedicatedServerResolver {
                 ci.cancel()
                 return null
             }
-            return original(levelStorage).apply { suiteComponents = components }
+            return op(levelStorage).apply { suiteComponents = components }
         }
     }
 }

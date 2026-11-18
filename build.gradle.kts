@@ -68,9 +68,6 @@ repositories {
             includeGroup("maven.modrinth")
         }
     }
-
-    // TODO: Required for Lapis KSP.
-    maven("https://central.sonatype.com/repository/maven-snapshots/")
 }
 
 // Local Dev Env

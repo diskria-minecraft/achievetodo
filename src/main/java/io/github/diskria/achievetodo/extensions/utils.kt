@@ -48,4 +48,6 @@ object EmptyPackResourcesSupplier : Pack.ResourcesSupplier {
         Stream.empty()
 }
 
-operator fun <R> Operation<R>.invoke(vararg args: Any?): R = call(*args)
+typealias Op<R> = Operation<R>
+
+operator fun <R> Op<R>.invoke(vararg args: Any?): R = call(*args)

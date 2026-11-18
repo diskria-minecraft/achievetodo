@@ -1,10 +1,10 @@
 package io.github.diskria.achievetodo.qol
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.config.ModServerConfig
+import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.KShadow
@@ -35,10 +35,10 @@ class AdvancementVisibilityRevealer {
             method = ["evaluateVisiblityForUnfinishedNode"],
             at = [At(value = "CONSTANT", args = ["intValue=2"])]
         )
-        fun resolveRevealDepth(
-            original: Int,
+        context(
             @Local(name = ["ascendants"], argsOnly = true) ascendants: Stack<*>,
-        ): Int {
+        )
+        fun resolveRevealDepth(original: Int): Int {
             if (ascendants !is ObjectArrayList<*>) return original
             val revealMode = revealMode ?: return original
             return when {
@@ -51,19 +51,19 @@ class AdvancementVisibilityRevealer {
             method = [$$"evaluateVisibility(Lnet/minecraft/advancements/AdvancementNode;Lit/unimi/dsi/fastutil/Stack;Ljava/util/function/Predicate;Lnet/minecraft/server/advancements/AdvancementVisibilityEvaluator$Output;)Z"],
             at = [At(value = "INVOKE", target = "Ljava/util/function/Predicate;test(Ljava/lang/Object;)Z")]
         )
-        fun resolveTabReveal(isDoneTest: Predicate<*>, node: Any, original: Operation<Boolean>): Boolean {
-            if (original(isDoneTest, node)) return true
+        fun resolveTabReveal(isDoneTest: Predicate<*>, node: Any, op: Op<Boolean>): Boolean {
+            if (op(isDoneTest, node)) return true
             val revealMode = revealMode ?: return false
             if (node !is AdvancementNode) return false
             val rootNode = node.root()
             return when {
                 rootNode.holder().id.toString() == "blazeandcave:bacap/root" -> true
                 node.holder().id.toString() == "blazeandcave:technical/you_are_a_big_cheater" -> {
-                    original(isDoneTest, rootNode)
+                    op(isDoneTest, rootNode)
                 }
 
                 !node.isDisplayable -> false
-                revealMode == -1 -> rootNode.hasAnyDone { original(isDoneTest, it) }
+                revealMode == -1 -> rootNode.hasAnyDone { op(isDoneTest, it) }
                 else -> revealMode == -2
             }
         }
@@ -77,12 +77,11 @@ abstract class AdvancementTabsRevealer {
         method = ["registerListeners(Lnet/minecraft/advancements/AdvancementHolder;)V"],
         at = [At(value = "INVOKE", target = "Lnet/minecraft/advancements/AdvancementProgress;isDone()Z")]
     )
-    fun revealTab(
-        progress: AdvancementProgress,
-        original: Operation<Boolean>,
+    context(
         @Local(argsOnly = true, name = ["holder"]) advancement: AdvancementHolder,
-    ): Boolean {
-        if (original(progress)) return true
+    )
+    fun revealTab(progress: AdvancementProgress, op: Op<Boolean>): Boolean {
+        if (op(progress)) return true
         val revealMode = revealMode ?: return false
         if (revealMode == -2 && advancement.value.isRoot) {
             markForVisibilityUpdate(advancement)

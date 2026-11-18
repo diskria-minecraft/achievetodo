@@ -1,13 +1,9 @@
 package io.github.diskria.achievetodo.suite
 
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.config.ModServerConfig
-import io.github.diskria.achievetodo.extensions.calcSha256OrNull
-import io.github.diskria.achievetodo.extensions.capitalized
-import io.github.diskria.achievetodo.extensions.createPackMetadata
-import io.github.diskria.achievetodo.extensions.invoke
+import io.github.diskria.achievetodo.extensions.*
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.Side
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
@@ -105,9 +101,9 @@ class SuitePackCustomizer {
             resources: Pack.ResourcesSupplier,
             currentPackVersion: PackFormat,
             type: PackType,
-            original: Operation<Pack.Metadata>,
+            op: Op<Pack.Metadata>,
         ): Pack.Metadata =
             if (SuitePack.checkPack(location.id)) createPackMetadata(SuitePack.buildDescription())
-            else original(location, resources, currentPackVersion, type)
+            else op(location, resources, currentPackVersion, type)
     }
 }

@@ -2,10 +2,10 @@ package io.github.diskria.achievetodo.landmarks
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.config.ModServerConfig
+import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.decodeOrNull
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.extensions.toNbtOrNull
@@ -104,13 +104,11 @@ class LandmarksBridgeToLevelChunk {
             target = "Lnet/minecraft/world/level/chunk/LevelChunk;setAllReferences(Ljava/util/Map;)V"
         )]
     )
-    fun copyLandmarks(
-        to: LevelChunk,
-        structureReferences: Map<*, *>,
-        original: Operation<*>,
+    context(
         @Local(argsOnly = true, name = ["protoChunk"]) from: ProtoChunk,
-    ) {
-        original(to, structureReferences)
+    )
+    fun copyLandmarks(to: LevelChunk, structureReferences: Map<*, *>, op: Op<Unit>) {
+        op(to, structureReferences)
         to.landmarks = from.landmarks?.toSet()
     }
 }
@@ -133,8 +131,8 @@ class ChunkLandmarksNbt {
             target = "Lnet/minecraft/world/level/chunk/ChunkAccess;setAllReferences(Ljava/util/Map;)V"
         )]
     )
-    fun saveToChunk(chunk: ChunkAccess, structureReferences: Map<*, *>, original: Operation<*>) {
-        original(chunk, structureReferences)
+    fun saveToChunk(chunk: ChunkAccess, structureReferences: Map<*, *>, op: Op<Unit>) {
+        op(chunk, structureReferences)
         chunk.landmarks = landmarksNbt?.decodeOrNull(Landmark.SET_CODEC)
     }
 
@@ -142,26 +140,30 @@ class ChunkLandmarksNbt {
         private const val LANDMARKS_TAG_NAME = "achievetodo_landmarks"
 
         @ModifyReturnValue(method = ["parse"], at = [At(value = "TAIL")])
-        fun readFromNbt(
-            result: SerializableChunkData,
+        context(
             @Local(argsOnly = true, name = ["chunkData"]) compound: CompoundTag,
-        ) = result.apply { landmarksNbt = compound.get(LANDMARKS_TAG_NAME) }
+        )
+        fun readFromNbt(result: SerializableChunkData) = result.apply {
+            landmarksNbt = compound.get(LANDMARKS_TAG_NAME)
+        }
 
         @ModifyReturnValue(method = ["copyOf"], at = [At(value = "TAIL")])
-        fun readFromChunk(
-            result: SerializableChunkData,
+        context(
             @Local(argsOnly = true, name = ["chunk"]) chunk: ChunkAccess,
-        ) = result.apply { landmarksNbt = chunk.landmarks?.toNbtOrNull(Landmark.SET_CODEC) }
+        )
+        fun readFromChunk(result: SerializableChunkData) = result.apply {
+            landmarksNbt = chunk.landmarks?.toNbtOrNull(Landmark.SET_CODEC)
+        }
     }
 }
 
 @KMixin<Structure>(Side.Common)
 class StructureLandmarkDetector {
     @ModifyReturnValue(method = ["generate"], at = [At(value = "RETURN", ordinal = 0)])
-    fun detectLandmarkType(
-        start: StructureStart,
+    context(
         @Local(argsOnly = true, name = ["selected"]) holder: Holder<Structure>,
-    ) = start.apply {
+    )
+    fun detectLandmarkType(start: StructureStart) = start.apply {
         val structureKey = holder.unwrapKey().getOrNull() ?: return@apply
         landmarkType = LandmarkType.fromStructure(structureKey)
     }
@@ -187,10 +189,10 @@ class StructureLandmarkNbt {
         private const val LANDMARK_TAG_NAME = "achievetodo_landmark"
 
         @ModifyReturnValue(method = ["loadStaticStart"], at = [At(value = "RETURN", ordinal = 2)])
-        fun readFromNbt(
-            result: StructureStart,
+        context(
             @Local(argsOnly = true, name = ["tag"]) compound: CompoundTag,
-        ) = result.apply {
+        )
+        fun readFromNbt(result: StructureStart) = result.apply {
             landmarkType = compound.get(LANDMARK_TYPE_TAG_NAME)?.decodeOrNull(LandmarkType.CODEC)
             landmark = compound.get(LANDMARK_TAG_NAME)?.decodeOrNull(Landmark.CODEC)
         }
@@ -208,11 +210,9 @@ class StructureLandmarkGeneratorTracker {
         random: RandomSource,
         chunkBB: BoundingBox,
         targetChunkPos: ChunkPos,
-        original: Operation<*>,
+        op: Op<Unit>,
     ) {
-        fun generate() {
-            original(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
-        }
+        fun generate() = op(levelGenerator, structureManager, chunkGenerator, random, chunkBB, targetChunkPos)
 
         val landmarkType = landmarkType ?: return generate()
         val (_, bb) = levelGenerator.trackLandmarkBounds { generate() }
@@ -246,18 +246,20 @@ class FeatureLandmarkGeneratorTracker {
             target = "Lnet/minecraft/world/level/levelgen/placement/FeaturePlacer;placeWithBiomeCheck(Lnet/minecraft/world/level/levelgen/placement/PlacedFeature;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
         )]
     )
+    context(
+        @Local(argsOnly = true, name = ["level"]) levelGenerator: WorldGenLevel,
+        @Local(argsOnly = true, name = ["chunk"]) chunk: ChunkAccess,
+    )
     fun trackFeatureLandmarkGeneration(
         placer: FeaturePlacer,
         featureToPlace: PlacedFeature,
         random: RandomSource,
         originPos: BlockPos,
-        original: Operation<Boolean>,
-        @Local(argsOnly = true, name = ["level"]) levelGenerator: WorldGenLevel,
-        @Local(argsOnly = true, name = ["chunk"]) chunk: ChunkAccess,
+        op: Op<Boolean>,
     ): Boolean {
         val featureHolder = featureToPlace.feature
         return levelGenerator.resolveFeatureGeneration(featureHolder, chunk, byPlaceCommand = false) {
-            original(placer, featureToPlace, random, originPos)
+            op(placer, featureToPlace, random, originPos)
         }
     }
 }
@@ -266,11 +268,11 @@ class FeatureLandmarkGeneratorTracker {
 class PlaceCommandPatches {
     companion object {
         @ModifyReturnValue(method = ["placeStructure"], at = [At(value = "TAIL")])
-        fun rememberPlacedStructureLandmark(
-            original: Int,
+        context(
             @Local(name = ["level"]) level: ServerLevel,
             @Local(name = ["start"]) start: StructureStart,
-        ): Int {
+        )
+        fun rememberPlacedStructureLandmark(original: Int): Int {
             start.landmark?.let { landmark ->
                 val startChunkPos = start.chunkPos
                 val targetChunk = level.getChunk(startChunkPos.x, startChunkPos.z)
@@ -289,18 +291,20 @@ class PlaceCommandPatches {
                 target = "Lnet/minecraft/world/level/levelgen/feature/Feature;place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
             )]
         )
+        context(
+            @Local(argsOnly = true, name = ["featureHolder"]) featureHolder: Holder<Feature>,
+        )
         fun trackFeatureLandmarkGeneration(
             feature: Feature,
             levelGenerator: WorldGenLevel,
             chunkGenerator: ChunkGenerator,
             random: RandomSource,
             originPos: BlockPos,
-            original: Operation<Boolean>,
-            @Local(argsOnly = true, name = ["featureHolder"]) featureHolder: Holder<Feature>,
+            op: Op<Boolean>,
         ): Boolean {
             val targetChunk = levelGenerator.getChunk(originPos)
             return levelGenerator.resolveFeatureGeneration(featureHolder, targetChunk, byPlaceCommand = true) {
-                original(feature, levelGenerator, chunkGenerator, random, originPos)
+                op(feature, levelGenerator, chunkGenerator, random, originPos)
             }
         }
     }
@@ -309,11 +313,11 @@ class PlaceCommandPatches {
 @KMixin<WorldGenRegion>(Side.Common, InitStrategy.Synchronized)
 class RegionBlockTracker {
     @ModifyReturnValue(method = ["setBlock"], at = [At(value = "RETURN")])
-    fun LevelWriter.trackBlockPlacing(
-        placed: Boolean,
+    context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,
         @Local(argsOnly = true, name = ["blockState"]) blockState: BlockState,
-    ): Boolean {
+    )
+    fun LevelWriter.trackBlockPlacing(placed: Boolean): Boolean {
         if (placed) LevelWriterTracker.onBlockPlaced(this, pos, blockState)
         return placed
     }
@@ -322,11 +326,11 @@ class RegionBlockTracker {
 @KMixin<Level>(Side.Common, InitStrategy.Synchronized)
 class LevelBlockTracker {
     @ModifyReturnValue(method = ["setBlock"], at = [At(value = "RETURN")])
-    fun LevelWriter.trackBlockPlacing(
-        placed: Boolean,
+    context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,
         @Local(argsOnly = true, name = ["blockState"]) blockState: BlockState,
-    ): Boolean {
+    )
+    fun LevelWriter.trackBlockPlacing(placed: Boolean): Boolean {
         if (placed) LevelWriterTracker.onBlockPlaced(this, pos, blockState)
         return placed
     }

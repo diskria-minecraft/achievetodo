@@ -2,7 +2,7 @@ package io.github.diskria.achievetodo.qol
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
+import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.Extension
 import io.github.diskria.lapis.annotations.KMixin
@@ -22,8 +22,8 @@ class AdvancementChildrenNormalizer(@Origin val current: AdvancementNode) {
     }
 
     @WrapMethod(method = ["addChild"])
-    fun invalidateAncestors(child: AdvancementNode, original: Operation<Void>) {
-        original(child)
+    fun invalidateAncestors(child: AdvancementNode, op: Op<Unit>) {
+        op(child)
         generateSequence(current) { it.parent() }.forEach { it.invalidateNormalizedChildren() }
     }
 

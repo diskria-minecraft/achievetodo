@@ -2,11 +2,11 @@
 
 package io.github.diskria.achievetodo.config
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.AchieveToDoMod
+import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.suite.onModServerConfigChanged
 import io.github.diskria.lapis.annotations.*
@@ -103,11 +103,11 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
     fun CreateWorldScreen.injectModServerConfigTab(
         barBuilder: MenuTabBar.Builder,
         tabs: Array<Tab>,
-        original: Operation<MenuTabBar.Builder>,
+        op: Op<MenuTabBar.Builder>,
     ): MenuTabBar.Builder {
         val modifiedTabs = tabs + ModServerConfigTab(uiState)
         GridLayoutsHeightFix.apply(modifiedTabs.mapNotNull { (it as? GridLayoutTab)?.layout as? GridLayout })
-        return original(barBuilder, modifiedTabs)
+        return op(barBuilder, modifiedTabs)
     }
 
     @WrapOperation(
@@ -124,11 +124,11 @@ abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen)
         registry: LayeredRegistryAccess<*>,
         worldDataAndGenSettings: WorldDataAndGenSettings,
         gameRules: Optional<*>,
-        original: Operation<*>,
+        op: Op<Unit>,
         @Cancellable cir: CallbackInfoReturnable<Boolean>,
     ) {
         if (levelStorage.saveModServerConfig(uiState.modServerConfig)) {
-            original(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
+            op(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
         } else {
             cir.returnValue = false
         }
@@ -145,15 +145,17 @@ class ModServerConfigBridgeOnRecreateWorld {
             target = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;createFromExisting(Lnet/minecraft/client/Minecraft;Ljava/lang/Runnable;Lnet/minecraft/world/level/LevelSettings;Lnet/minecraft/client/gui/screens/worldselection/WorldCreationContext;Ljava/nio/file/Path;)Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;"
         )]
     )
+    context(
+        @Local(name = ["access"]) levelStorage: LevelStorageAccess,
+    )
     fun copyConfig(
         minecraft: Minecraft,
         onClose: Runnable,
         levelSettings: LevelSettings,
         creationContext: WorldCreationContext,
         tempDataPackDir: Path?,
-        original: Operation<CreateWorldScreen>,
-        @Local(name = ["access"]) levelStorage: LevelStorageAccess,
-    ) = original(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
+        op: Op<CreateWorldScreen>,
+    ) = op(minecraft, onClose, levelSettings, creationContext, tempDataPackDir).apply {
         setModServerConfig(levelStorage.readModServerConfig() ?: ModServerConfig.DEFAULT.copy(modEnabled = false))
     }
 }
@@ -182,7 +184,10 @@ abstract class GridLayoutsHeightFix(@Origin val layout: GridLayout) {
     }
 
     @Inject(method = ["arrangeElements"], at = [At("TAIL")])
-    fun updateLastOccupiedRow(ci: CallbackInfo, @Local(name = ["maxRow"]) maxRow: Int) {
+    context(
+        @Local(name = ["maxRow"]) maxRow: Int,
+    )
+    fun updateLastOccupiedRow(ci: CallbackInfo) {
         lastOccupiedRow = maxRow
     }
 
