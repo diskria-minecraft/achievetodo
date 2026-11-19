@@ -7,8 +7,7 @@ import com.llamalad7.mixinextras.sugar.Local
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.*
 import io.github.diskria.achievetodo.qol.AdvancementsFogManager.Client.HINT_NAMESPACE
-import io.github.diskria.achievetodo.utils.tempAlpha
-import io.github.diskria.advancements_search.client.AdvancementsScreenMixin
+import io.github.diskria.achievetodo.utils.itemTempAlpha
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -37,7 +36,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
 import org.spongepowered.asm.mixin.injection.At
 import javax.lang.model.element.Modifier
-import kotlin.jvm.optionals.getOrNull
 
 object AdvancementsFogManager {
 
@@ -61,7 +59,7 @@ object AdvancementsFogManager {
             ClientPlayConnectionEvents.DISCONNECT.register { _, _ -> hints.clear() }
         }
 
-        fun getHintsFor(widget: AdvancementWidget) = hints[widget.advancement.id]
+        fun getHintsFor(id: Identifier) = hints[id]
     }
 }
 
@@ -139,36 +137,32 @@ abstract class AdvancementsFogTracker {
         val tree = connection.player.level().server.advancements.tree()
         val nodesToCheck = buildSet {
             addedNodes.forEach { node ->
-                if (node.advancement().display.isEmpty) return@forEach
+                if (!node.isDisplayable) return@forEach
                 add(node)
                 node.parent()?.let { parent ->
-                    if (parent.holder().isVisible) add(parent)
+                    if (parent.isRevealed) add(parent)
                 }
             }
             removedNodeIds.forEach { id ->
                 val node = tree.get(id) ?: return@forEach
-                if (node.advancement().display.isEmpty) return@forEach
+                if (!node.isDisplayable) return@forEach
                 node.parent()?.let { parent ->
-                    if (parent.holder().isVisible) add(parent)
+                    if (parent.isRevealed) add(parent)
                 }
             }
         }
         val added = mutableMapOf<Identifier, List<AdvancementFogHint>>()
         val removed = removedNodeIds.filterTo(mutableSetOf()) { id ->
             val node = tree.get(id) ?: return@filterTo true
-            node.advancement().display.isPresent && node.children().any { it.advancement().display.isPresent }
+            node.isDisplayable && node.children().any { it.isDisplayable }
         }
         nodesToCheck.forEach { node ->
             val nodeId = node.holder().id
             val hints = node.children().mapNotNull { child ->
-                if (child.holder().isVisible) return@mapNotNull null
-                val childDisplay = child.advancement().display.getOrNull() ?: return@mapNotNull null
+                if (child.isRevealed) return@mapNotNull null
+                val childDisplay = child.getVisibleDisplay() ?: return@mapNotNull null
                 if (childDisplay.hidden) return@mapNotNull null
-                AdvancementFogHint(
-                    icon = childDisplay.icon,
-                    x = child.x(),
-                    y = child.y(),
-                )
+                AdvancementFogHint(childDisplay.icon, child.x(), child.y())
             }
             if (hints.isNotEmpty()) {
                 added[nodeId] = hints
@@ -185,49 +179,30 @@ abstract class AdvancementsFogTracker {
         op(connection, packet)
     }
 
-    private val AdvancementHolder.isVisible: Boolean get() = this in visible
-
     @KShadow(Modifier.PRIVATE)
     abstract val isFirstPacket: Boolean
 
+    @MappingName("visible")
     @KShadow(Modifier.PRIVATE, Modifier.FINAL)
-    abstract val visible: Set<AdvancementHolder>
+    abstract val revealed: Set<AdvancementHolder>
+
+    private val AdvancementNode.isRevealed: Boolean get() = holder() in revealed
 }
 
 @KMixin<AdvancementTab>(Side.Client)
-abstract class AdvancementTabFog {
+abstract class AdvancementTabFog(@Origin val tab: AdvancementTab) {
 
-    @WrapMethod(method = ["addWidget"])
-    fun AdvancementTab.onAddWidget(widget: AdvancementWidget, op: Op<Unit>) {
-        if (rootAdvancement.id == AdvancementsScreenMixin.SEARCH_RESULTS_ROOT_ADVANCEMENT_ID || widget.isFogHint) {
-            return op(widget)
-        }
-        op(widget)
-        widget.parentWidget?.let { parent ->
-            val fogHints = parent.fogHints
-            val expectedSize = AdvancementsFogManager.Client.getHintsFor(parent)?.size ?: 0
-            if (fogHints.size != expectedSize) {
-                fogHints.forEach { widgets.remove(it.advancement) }
-                parent.removeFogHints()
-                addFogHintsFor(parent)
-            }
-            parent.moveFogHintsToFront()
-        }
-        addFogHintsFor(widget)
+    @Extension
+    fun removeWidget(holder: AdvancementHolder) {
+        widgets.remove(holder)
     }
 
-    private fun AdvancementTab.addFogHintsFor(source: AdvancementWidget) {
-        val sourceId = source.advancement.id
-        AdvancementsFogManager.Client.getHintsFor(source)?.forEachIndexed { index, hint ->
-            val uniquePath = "${sourceId.namespace}/${sourceId.path}/$index"
-            val advancement = Advancement.Builder
-                .recipeAdvancement()
-                .display(hint.icon, Component.empty(), Component.empty(), AdvancementType.TASK, false, false, false)
-                .parent(source.advancement)
-                .build(Identifier.fromNamespaceAndPath(HINT_NAMESPACE, uniquePath))
-            val node = AdvancementNode(advancement, source.advancementNode).apply { setLocation(hint.x, hint.y) }
-            addAdvancement(node)
-        }
+    @WrapMethod(method = ["addWidget"])
+    fun onAddWidget(widget: AdvancementWidget, op: Op<Unit>) {
+        op(widget)
+        if (tab.rootAdvancement.isSearchResultsRoot || widget.advancement.isFogHint) return
+        widget.parent?.rebuildFogHints(tab)
+        widget.attachFogHintsToParent(tab)
     }
 
     @KShadow(Modifier.PRIVATE, Modifier.FINAL)
@@ -235,72 +210,58 @@ abstract class AdvancementTabFog {
 }
 
 @KMixin<AdvancementWidget>(Side.Client)
-abstract class AdvancementWidgetFogChildren {
+abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementWidget) {
+
+    private val id: Identifier get() = widget.advancement.id
 
     @Extension
-    val fogHints: List<AdvancementWidget> get() = children.filter { it.isFogHint }
+    val fogHints: List<AdvancementWidget> get() = children.filter { it.advancement.isFogHint }
 
     @Extension
-    val parentWidget: AdvancementWidget? get() = parent
+    val parent: AdvancementWidget? get() = parentWidget
 
     @Extension
-    fun removeFogHints() {
+    fun attachFogHintsToParent(tab: AdvancementTab) {
+        val builderBase = Advancement.Builder.recipeAdvancement().parent(widget.advancement)
+        AdvancementsFogManager.Client.getHintsFor(advancementNode.holder().id).orEmpty().forEachIndexed { index, hint ->
+            val childHolder = builderBase
+                .display(hint.icon, Component.empty(), Component.empty(), AdvancementType.TASK, false, false, false)
+                .build(Identifier.fromNamespaceAndPath(HINT_NAMESPACE, "${id.namespace}/${id.path}/$index"))
+            val childNode = AdvancementNode(childHolder, advancementNode).apply { setLocation(hint.x, hint.y) }
+            tab.addAdvancement(childNode)
+        }
+        moveFogHintsToFront()
+    }
+
+    @Extension
+    fun rebuildFogHints(tab: AdvancementTab) {
+        val expectedSize = AdvancementsFogManager.Client.getHintsFor(advancementNode.holder().id)?.size ?: 0
+        val fogHints = fogHints
+        if (fogHints.size == expectedSize) return
+        fogHints.forEach { tab.removeWidget(it.advancement) }
         children.removeAll(fogHints)
+        attachFogHintsToParent(tab)
     }
 
-    @Extension
-    fun moveFogHintsToFront() {
-        children.sortByDescending { it.isFogHint }
+    private fun moveFogHintsToFront() {
+        children.sortByDescending { it.advancement.isFogHint }
     }
+
+    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    abstract val advancementNode: AdvancementNode
 
     @KShadow(Modifier.PRIVATE, Modifier.FINAL)
     abstract val children: MutableList<AdvancementWidget>
 
+    @MappingName("parent")
     @KShadow(Modifier.PRIVATE)
-    abstract val parent: AdvancementWidget?
+    abstract val parentWidget: AdvancementWidget?
 }
 
 @KMixin<AdvancementWidget>(Side.Client)
-class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidget) {
+class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
 
-    @Extension
-    val isFogHint: Boolean get() = widget.advancement.id.namespace == HINT_NAMESPACE
-
-    @WrapMethod(method = ["isMouseOver"])
-    fun disableFogHintHover(originX: Int, originY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
-        !isFogHint && op(originX, originY, mouseX, mouseY)
-
-    @WrapWithCondition(
-        method = ["extractRenderState"],
-        at = [At(
-            "INVOKE",
-            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
-        )]
-    )
-    fun hideFogHintFrame(
-        graphics: GuiGraphicsExtractor,
-        renderPipeline: RenderPipeline,
-        location: Identifier,
-        x: Int, y: Int,
-        width: Int, height: Int,
-    ) = !isFogHint
-
-    @WrapOperation(
-        method = ["extractRenderState"],
-        at = [At(
-            "INVOKE",
-            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
-        )]
-    )
-    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
-        if (!isFogHint) return op(graphics, itemStack, x, y)
-        graphics.tempAlpha = 0.625f
-        try {
-            op(graphics, itemStack, x, y)
-        } finally {
-            graphics.tempAlpha = null
-        }
-    }
+    private val isFogHint get() = widget.advancement.isFogHint
 
     @WrapOperation(
         method = ["extractConnectivity"],
@@ -331,6 +292,42 @@ class AdvancementWidgetFogRenderer(@Origin val widget: AdvancementWidget) {
         if (isBorderPass) return
         (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, originX, originY) }
     }
+
+    @WrapWithCondition(
+        method = ["extractRenderState"],
+        at = [At(
+            "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
+        )]
+    )
+    fun hideFogHintFrame(
+        graphics: GuiGraphicsExtractor,
+        renderPipeline: RenderPipeline,
+        location: Identifier,
+        x: Int, y: Int,
+        width: Int, height: Int,
+    ) = !isFogHint
+
+    @WrapOperation(
+        method = ["extractRenderState"],
+        at = [At(
+            "INVOKE",
+            target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
+        )]
+    )
+    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, itemStack, x, y)
+        graphics.itemTempAlpha = 0.8_800_555_35_35.toFloat() / 2
+        try {
+            op(graphics, itemStack, x, y)
+        } finally {
+            graphics.itemTempAlpha = null
+        }
+    }
+
+    @WrapMethod(method = ["isMouseOver"])
+    fun disableFogHintHover(originX: Int, originY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
+        !isFogHint && op(originX, originY, mouseX, mouseY)
 
     private fun drawChessboardPixel(graphics: GuiGraphicsExtractor, x: Int, y: Int, originX: Int, originY: Int) {
         val isWhiteCell = (((x - originX) + (y - originY)) and 1) == 0

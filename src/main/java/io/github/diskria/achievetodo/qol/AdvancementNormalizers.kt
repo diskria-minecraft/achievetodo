@@ -3,6 +3,7 @@ package io.github.diskria.achievetodo.qol
 import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
 import io.github.diskria.achievetodo.extensions.Op
+import io.github.diskria.achievetodo.extensions.countAdvancements
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.Extension
 import io.github.diskria.lapis.annotations.KMixin
@@ -32,19 +33,16 @@ class AdvancementChildrenNormalizer(@Origin val current: AdvancementNode) {
         normalizedChildren?.let { return it }
         val list = original.toList()
         val result = if (list.size > 1) {
-            val sorted = list
-                .sortedBy { it.holder().id }
-                .sortedBy { it.countAdvancements() }
-            ArrayDeque<AdvancementNode>(sorted.size).apply {
+            val sorted = list.sortedBy { it.holder().id }.sortedBy { it.countAdvancements() }
+            val pyramid = ArrayDeque<AdvancementNode>(sorted.size).apply {
                 sorted.asReversed().forEachIndexed { index, node ->
                     if (index % 2 == 0) addFirst(node) else addLast(node)
                 }
             }
+            pyramid
         } else {
             list
         }
         return result.also { normalizedChildren = it }
     }
 }
-
-private fun AdvancementNode.countAdvancements(): Int = 1 + children().sumOf { it.countAdvancements() }

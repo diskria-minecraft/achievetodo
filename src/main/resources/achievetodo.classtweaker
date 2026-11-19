@@ -1,7 +1,5 @@
 classTweaker v1 official
 
-accessible field net/minecraft/client/gui/screens/advancements/AdvancementWidget advancementNode Lnet/minecraft/advancements/AdvancementNode;
-
 #accessible field net/minecraft/server/ServerScoreboard server Lnet/minecraft/server/MinecraftServer;
 
 #accessible class net/minecraft/screen/slot/ArmorSlot

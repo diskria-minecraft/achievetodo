@@ -19,17 +19,11 @@ import net.minecraft.util.ARGB
 import org.joml.Matrix3x2fc
 import org.spongepowered.asm.mixin.injection.At
 
-@KMixin<GuiItemRenderState>(Side.Client)
-class ItemAlphaSupportRenderState {
-    @Extension
-    var tempAlpha: Float? = null
-}
-
 @KMixin<GuiGraphicsExtractor>(Side.Client)
 class ItemAlphaSupportGraphics {
 
     @Extension
-    var tempAlpha: Float? = null
+    var itemTempAlpha: Float? = null
 
     @WrapOperation(
         method = ["item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V"],
@@ -39,9 +33,15 @@ class ItemAlphaSupportGraphics {
         )]
     )
     fun attachItemAlpha(guiState: GuiRenderState, guiItemState: GuiItemRenderState, op: Op<Unit>) {
-        guiItemState.tempAlpha = tempAlpha
+        guiItemState.tempAlpha = itemTempAlpha
         op(guiState, guiItemState)
     }
+}
+
+@KMixin<GuiItemRenderState>(Side.Client)
+class ItemAlphaSupportRenderState {
+    @Extension
+    var tempAlpha: Float? = null
 }
 
 @KMixin<GuiRenderer>(Side.Client)
@@ -54,7 +54,7 @@ class ItemAlphaSupportRenderer {
     context(
         @Local(argsOnly = true, name = ["itemState"]) guiItemState: GuiItemRenderState,
     )
-    fun applyItemAlpha(
+    fun applyItemTempAlpha(
         pipeline: RenderPipeline,
         textureSetup: TextureSetup,
         pose: Matrix3x2fc,

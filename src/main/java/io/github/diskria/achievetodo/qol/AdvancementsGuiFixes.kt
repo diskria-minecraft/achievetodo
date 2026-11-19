@@ -32,28 +32,28 @@ abstract class AdvancementTabFixes {
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
     fun fixVisualMinX(minX: Int, x0: Int, op: Op<Int>) =
-        op(minX, widget.x + FRAME_OFFSET_X + widget.spritePadH - WINDOW_EDGE_GAP)
+        op(minX, widget.x + FRAME_OFFSET_X + widget.frameSpritePadH - WINDOW_EDGE_GAP)
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;max(II)I", ordinal = 0)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
     fun fixVisualMaxX(maxX: Int, x1: Int, op: Op<Int>) =
-        op(maxX, widget.x + FRAME_OFFSET_X + FRAME_SPRITE_SIZE - widget.spritePadH + WINDOW_EDGE_GAP)
+        op(maxX, widget.x + FRAME_OFFSET_X + FRAME_SPRITE_SIZE - widget.frameSpritePadH + WINDOW_EDGE_GAP)
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;min(II)I", ordinal = 1)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
     fun fixVisualMinY(minY: Int, y0: Int, op: Op<Int>) =
-        op(minY, widget.y + widget.spritePadV - WINDOW_EDGE_GAP)
+        op(minY, widget.y + widget.frameSpritePadV - WINDOW_EDGE_GAP)
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;max(II)I", ordinal = 1)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
     fun fixVisualMaxY(maxY: Int, y1: Int, op: Op<Int>) =
-        op(maxY, widget.y + FRAME_SPRITE_SIZE - widget.spritePadV + WINDOW_EDGE_GAP)
+        op(maxY, widget.y + FRAME_SPRITE_SIZE - widget.frameSpritePadV + WINDOW_EDGE_GAP)
 
     @KShadow(Modifier.PRIVATE)
     abstract val minX: Int
@@ -61,14 +61,14 @@ abstract class AdvancementTabFixes {
     @KShadow(Modifier.PRIVATE)
     abstract val minY: Int
 
-    private val AdvancementWidget.spritePadH
+    private val AdvancementWidget.frameSpritePadH
         get() = when (display.type) {
             AdvancementType.TASK -> 1
             AdvancementType.GOAL -> 2
             AdvancementType.CHALLENGE -> 0
         }
 
-    private val AdvancementWidget.spritePadV
+    private val AdvancementWidget.frameSpritePadV
         get() = when (display.type) {
             AdvancementType.TASK -> 1
             else -> 0
@@ -91,7 +91,7 @@ class AdvancementWidgetFixes {
             At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V", ordinal = 2),
         ]
     )
-    fun fixConnectivityCorner(
+    fun fixConnectivityBorderCorner(
         graphics: GuiGraphicsExtractor,
         x0: Int, x1: Int,
         y: Int,
