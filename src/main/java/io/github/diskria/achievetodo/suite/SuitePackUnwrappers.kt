@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.At
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import java.nio.file.Path
 import java.util.function.Consumer
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.PRIVATE
 import kotlin.io.path.createDirectories
 
 @KMixin<PackRepository>(Side.Common)
@@ -102,7 +102,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     @WrapOperation(
         method = ["tryApplyNewDataPacks"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/WorldCreationUiState;tryUpdateDataConfiguration(Lnet/minecraft/world/level/WorldDataConfiguration;)Z"
         )]
     )
@@ -115,7 +115,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     @WrapOperation(
         method = ["tryApplyNewDataPacks", $$"lambda$applyNewPackConfig$5"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/Gui;setScreen(Lnet/minecraft/client/gui/screens/Screen;)V"
         )]
     )
@@ -142,15 +142,15 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     }
 
     @MappingName("onCreate")
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract fun createWorld()
 
     @MappingName("getDataPackSelectionSettings")
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract fun getOrCreateTempPack(dataConfiguration: WorldDataConfiguration): DfuPair<Path, PackRepository>?
 
     @MappingName("tryApplyNewDataPacks")
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract fun applyDataPacks(
         packRepository: PackRepository,
         canShowExperimentalFeaturesWarning: Boolean,
@@ -166,7 +166,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["createLevelFromExistingSettings"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
         )]
     )
@@ -183,7 +183,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["recreateWorldData"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldDataBlocking(Lnet/minecraft/server/WorldLoader$PackConfig;Lnet/minecraft/server/WorldLoader$WorldDataSupplier;Lnet/minecraft/server/WorldLoader$ResultFactory;)Ljava/lang/Object;"
         )]
     )
@@ -209,7 +209,7 @@ abstract class SuitePackWorldOpenResolvers {
     @WrapOperation(
         method = ["openWorldLoadLevelStem"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;loadWorldStem(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lcom/mojang/serialization/Dynamic;ZLnet/minecraft/server/packs/repository/PackRepository;)Lnet/minecraft/server/WorldStem;"
         )]
     )
@@ -242,7 +242,7 @@ abstract class SuitePackWorldOpenResolvers {
         return op(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
     }
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract fun openWorldLoadLevelStem(
         levelStorage: LevelStorageAccess,
         levelDat: Dynamic<*>,
@@ -260,7 +260,7 @@ class SuitePackDedicatedServerResolver {
         @WrapOperation(
             method = ["main"],
             at = [At(
-                "INVOKE",
+                value = "INVOKE",
                 target = $$"Lnet/minecraft/server/packs/repository/ServerPacksSource;createPackRepository(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;)Lnet/minecraft/server/packs/repository/PackRepository;"
             )]
         )

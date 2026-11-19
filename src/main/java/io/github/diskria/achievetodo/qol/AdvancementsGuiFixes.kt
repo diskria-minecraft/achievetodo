@@ -4,6 +4,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
+import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Widget
+import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Window
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.KShadow
 import io.github.diskria.lapis.annotations.Side
@@ -12,7 +14,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
 import org.spongepowered.asm.mixin.injection.At
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.PRIVATE
 
 @KMixin<AdvancementTab>(Side.Client)
 abstract class AdvancementTabFixes {
@@ -31,34 +33,42 @@ abstract class AdvancementTabFixes {
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
-    fun fixVisualMinX(minX: Int, x0: Int, op: Op<Int>) =
-        op(minX, widget.x + FRAME_OFFSET_X + widget.frameSpritePadH - WINDOW_EDGE_GAP)
+    fun fixVisualMinX(minX: Int, x0: Int, op: Op<Int>) = op(
+        minX,
+        widget.x + Widget.FRAME_X_OFFSET + widget.frameSpritePadH - Window.TREE_PADDING
+    )
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;max(II)I", ordinal = 0)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
-    fun fixVisualMaxX(maxX: Int, x1: Int, op: Op<Int>) =
-        op(maxX, widget.x + FRAME_OFFSET_X + FRAME_SPRITE_SIZE - widget.frameSpritePadH + WINDOW_EDGE_GAP)
+    fun fixVisualMaxX(maxX: Int, x1: Int, op: Op<Int>) = op(
+        maxX,
+        widget.x + Widget.FRAME_X_OFFSET + Widget.FRAME_SPRITE_SIZE - widget.frameSpritePadH + Window.TREE_PADDING
+    )
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;min(II)I", ordinal = 1)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
-    fun fixVisualMinY(minY: Int, y0: Int, op: Op<Int>) =
-        op(minY, widget.y + widget.frameSpritePadV - WINDOW_EDGE_GAP)
+    fun fixVisualMinY(minY: Int, y0: Int, op: Op<Int>) = op(
+        minY,
+        widget.y + widget.frameSpritePadV - Window.TREE_PADDING
+    )
 
     @WrapOperation(method = ["addWidget"], at = [At("INVOKE", target = "Ljava/lang/Math;max(II)I", ordinal = 1)])
     context(
         @Local(argsOnly = true, name = ["widget"]) widget: AdvancementWidget,
     )
-    fun fixVisualMaxY(maxY: Int, y1: Int, op: Op<Int>) =
-        op(maxY, widget.y + FRAME_SPRITE_SIZE - widget.frameSpritePadV + WINDOW_EDGE_GAP)
+    fun fixVisualMaxY(maxY: Int, y1: Int, op: Op<Int>) = op(
+        maxY,
+        widget.y + Widget.FRAME_SPRITE_SIZE - widget.frameSpritePadV + Window.TREE_PADDING
+    )
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract val minX: Int
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract val minY: Int
 
     private val AdvancementWidget.frameSpritePadH
@@ -73,12 +83,6 @@ abstract class AdvancementTabFixes {
             AdvancementType.TASK -> 1
             else -> 0
         }
-
-    companion object {
-        private const val FRAME_SPRITE_SIZE = 26
-        private const val FRAME_OFFSET_X = 3
-        private const val WINDOW_EDGE_GAP = 1
-    }
 }
 
 @KMixin<AdvancementWidget>(Side.Client)

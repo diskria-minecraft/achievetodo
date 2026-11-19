@@ -88,13 +88,13 @@ sealed class TrackedAdvancement(val advancementId: String) {
 private fun String.trackObjective(
     names: Set<String>,
     total: Int,
-    resolver: (scoreboard: Scoreboard, owner: ScoreHolder, score: Int) -> Int = { _, _, i -> i },
+    resolver: (scoreboard: Scoreboard, owner: ScoreHolder, score: Int) -> Int = { _, _, score -> score },
 ) = this to TrackedAdvancement.Objective(this, names, total, resolver)
 
 private fun String.trackObjective(
     name: String,
     total: Int,
-    resolver: (scoreboard: Scoreboard, owner: ScoreHolder, score: Int) -> Int = { _, _, i -> i },
+    resolver: (scoreboard: Scoreboard, owner: ScoreHolder, score: Int) -> Int = { _, _, score -> score },
 ) = trackObjective(setOf(name), total, resolver)
 
 private fun <T : Any> String.trackStat(total: Int, key: T, type: StatType<T>) =
@@ -221,7 +221,7 @@ private val trackedAdvancements = mapOf(
     ),
 )
 
-object OnARail {
+private object OnARail {
     const val ELIGIBLE_X_FLAG = "bac_oar_eligible_x"
     const val ELIGIBLE_Z_FLAG = "bac_oar_eligible_z"
     const val CURRENT_X = "bac_oar_current_x"

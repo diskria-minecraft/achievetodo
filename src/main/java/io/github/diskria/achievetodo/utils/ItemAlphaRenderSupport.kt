@@ -28,7 +28,7 @@ class ItemAlphaSupportGraphics {
     @WrapOperation(
         method = ["item(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;III)V"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/state/gui/GuiRenderState;addItem(Lnet/minecraft/client/renderer/state/gui/GuiItemRenderState;)V"
         )]
     )

@@ -35,7 +35,8 @@ import org.spongepowered.asm.mixin.injection.Coerce
 import java.net.URI
 import java.util.function.Consumer
 import java.util.function.Function
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
 import kotlin.io.path.createDirectories
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.listDirectoryEntries
@@ -169,7 +170,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
     @WrapOperation(
         method = ["init"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;",
             ordinal = 0
         )]
@@ -189,7 +190,7 @@ class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
     @WrapOperation(
         method = ["init"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/components/Button;builder(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/components/Button$OnPress;)Lnet/minecraft/client/gui/components/Button$Builder;",
             ordinal = 1
         )]
@@ -294,15 +295,15 @@ abstract class SuiteInstallerPackColumns {
         installedPacks.sortByDescending { componentsPackRepository.orderedPackIds.indexOf(it.id) }
     }
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val repository: PackRepository
 
     @MappingName("unselected")
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val missingPacks: MutableList<Pack>
 
     @MappingName("selected")
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val installedPacks: MutableList<Pack>
 }
 
@@ -318,11 +319,11 @@ abstract class SuiteInstallerPackEntryBase {
         model.onInstallClicked(suiteComponent)
     }
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val pack: Pack
 
     @MappingName("this$0")
-    @KShadow(Modifier.FINAL)
+    @KShadow(FINAL)
     abstract var model: PackSelectionModel
 }
 
@@ -335,7 +336,7 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
     @WrapWithCondition(
         method = ["extractContent"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V",
             ordinal = 0
         )]
@@ -359,7 +360,7 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
     @WrapOperation(
         method = ["extractContent"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/packs/TransferableSelectionList;getSelected()Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;"
         )]
     )
@@ -372,6 +373,6 @@ abstract class SuiteInstallerPackEntry(@Origin val entry: TransferableSelectionL
     )
     fun forceFocused(list: TransferableSelectionList, op: Op<Boolean>) = isMissingSuiteComponent || op(list)
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val pack: PackSelectionModel.Entry
 }

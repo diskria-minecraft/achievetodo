@@ -38,7 +38,7 @@ import org.spongepowered.asm.mixin.injection.At
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 import java.nio.file.Path
 import java.util.*
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.*
 import kotlin.io.path.createDirectories
 import kotlin.io.path.div
 import kotlin.io.path.inputStream
@@ -95,7 +95,7 @@ class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
     @WrapOperation(
         method = ["init"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/components/tabs/MenuTabBar$Builder;addTabs([Lnet/minecraft/client/gui/components/tabs/Tab;)Lnet/minecraft/client/gui/components/tabs/MenuTabBar$Builder;"
         )]
     )
@@ -112,7 +112,7 @@ class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
     @WrapOperation(
         method = ["createNewWorld"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = $$"Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;createLevelFromExistingSettings(Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;Lnet/minecraft/server/ReloadableServerResources;Lnet/minecraft/core/LayeredRegistryAccess;Lnet/minecraft/world/level/storage/LevelDataAndDimensions$WorldDataAndGenSettings;Ljava/util/Optional;)V"
         )]
     )
@@ -142,7 +142,7 @@ class ModServerConfigBridgeOnRecreateWorld {
     @WrapOperation(
         method = ["recreateWorld"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;createFromExisting(Lnet/minecraft/client/Minecraft;Ljava/lang/Runnable;Lnet/minecraft/world/level/LevelSettings;Lnet/minecraft/client/gui/screens/worldselection/WorldCreationContext;Ljava/nio/file/Path;)Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;"
         )]
     )
@@ -195,7 +195,7 @@ abstract class GridLayoutsHeightFix(@Origin val layout: GridLayout) {
         return original
     }
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract val rowSpacing: Int
 
     companion object {
@@ -283,6 +283,6 @@ abstract class ModServerConfigServerShortcut {
     val modServerConfig: ModServerConfig? get() = levelStorage.readModServerConfig()
 
     @MappingName("storageSource")
-    @KShadow(Modifier.PROTECTED, Modifier.FINAL)
+    @KShadow(PROTECTED, FINAL)
     abstract val levelStorage: LevelStorageAccess
 }

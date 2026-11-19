@@ -20,7 +20,7 @@ import net.minecraft.server.PlayerAdvancements
 import net.minecraft.server.advancements.AdvancementVisibilityEvaluator
 import org.spongepowered.asm.mixin.injection.At
 import java.util.function.Predicate
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.PRIVATE
 
 @KMixin<AdvancementVisibilityEvaluator>(Side.Common)
 class AdvancementsRevealer {
@@ -84,7 +84,7 @@ abstract class AdvancementTabsRevealer {
         return false
     }
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract fun markForVisibilityUpdate(advancement: AdvancementHolder)
 }
 

@@ -10,6 +10,7 @@ import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.client.AchieveToDoClient
 import io.github.diskria.achievetodo.client.gui.DesignCodePalette
+import io.github.diskria.achievetodo.extensions.buildTechnicalAdvancement
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
 import net.minecraft.ChatFormatting
 import net.minecraft.advancements.Advancement
@@ -60,10 +61,8 @@ class AbilityAdvancementsTabGenerator(
     private fun generateAdvancements(): List<CompletableFuture<*>> {
         val futures = mutableListOf<CompletableFuture<*>>()
         val backgroundPath = BuiltInRegistries.BLOCK.getKey(TAB_BACKGROUND).path
-
-        val rootAdvancement = Advancement.Builder
-            .recipeAdvancement()
-            .rootDisplay(
+        val rootAdvancement = buildTechnicalAdvancement(buildAdvancementId("root")) {
+            rootDisplay(
                 /* icon = */ Items.BARRIER,
                 /* title = */ Component.literal(AchieveToDoMod.NAME),
                 /* description = */ AchieveToDoClient.translate("description"),
@@ -73,9 +72,8 @@ class AbilityAdvancementsTabGenerator(
                 /* announceChat = */ false,
                 /* hidden = */ false,
             )
-            .addCriterion("tick", tickCriterion)
-            .build(buildAdvancementId("root"))
-
+            addCriterion("tick", tickCriterion)
+        }
         futures += output.writeText(
             text = rootAdvancement.value().toCompactJson(Advancement.CODEC),
             path = advancementsDir.json(rootAdvancement.id()),
@@ -83,11 +81,9 @@ class AbilityAdvancementsTabGenerator(
 
         AbilityType.entries.forEach { ability ->
             val rewardFunctionId = buildAdvancementId(ability.id)
-
-            val advancement = Advancement.Builder
-                .recipeAdvancement()
-                .parent(rootAdvancement)
-                .display(
+            val advancement = buildTechnicalAdvancement(buildAdvancementId(ability)) {
+                parent(rootAdvancement)
+                display(
                     /* icon = */ ability.icon ?: error("Unexpected icon for ability '${ability.id}'."),
                     /* title = */ ability.title,
                     /* description = */ ability.description,
@@ -96,11 +92,10 @@ class AbilityAdvancementsTabGenerator(
                     /* announceChat = */ false,
                     /* hidden = */ false,
                 )
-                .rewards(AdvancementRewards.Builder.function(rewardFunctionId))
-                .addCriterion(DEMYSTIFIED_CRITERION, impossibleCriterion)
-                .addCriterion(UNLOCKED_CRITERION, impossibleCriterion)
-                .build(buildAdvancementId(ability))
-
+                rewards(AdvancementRewards.Builder.function(rewardFunctionId))
+                addCriterion(DEMYSTIFIED_CRITERION, impossibleCriterion)
+                addCriterion(UNLOCKED_CRITERION, impossibleCriterion)
+            }
             futures += output.writeText(
                 text = advancement.value().toCompactJson(Advancement.CODEC),
                 path = advancementsDir.json(advancement.id()),

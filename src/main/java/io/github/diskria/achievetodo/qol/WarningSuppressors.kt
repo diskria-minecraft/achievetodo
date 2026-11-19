@@ -24,7 +24,7 @@ class WorldCreateWarningSuppressors {
     @WrapOperation(
         method = ["onCreate"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/worldselection/WorldOpenFlows;confirmWorldCreation(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/gui/screens/worldselection/CreateWorldScreen;Lcom/mojang/serialization/Lifecycle;Ljava/lang/Runnable;Z)V"
         )]
     )

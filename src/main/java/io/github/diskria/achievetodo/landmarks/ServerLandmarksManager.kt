@@ -37,7 +37,7 @@ import net.minecraft.world.level.levelgen.structure.Structure
 import net.minecraft.world.level.levelgen.structure.StructureStart
 import org.spongepowered.asm.mixin.injection.At
 import java.util.concurrent.ConcurrentHashMap
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.PUBLIC
 import kotlin.jvm.optionals.getOrNull
 
 object ServerLandmarksManager {
@@ -91,7 +91,7 @@ abstract class ChunkLandmarksData {
             markUnsaved()
         }
 
-    @KShadow(Modifier.PUBLIC)
+    @KShadow(PUBLIC)
     abstract fun markUnsaved()
 }
 
@@ -236,7 +236,7 @@ class FeatureLandmarkGeneratorTracker {
     @WrapOperation(
         method = ["applyBiomeDecoration"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/world/level/levelgen/placement/FeaturePlacer;placeWithBiomeCheck(Lnet/minecraft/world/level/levelgen/placement/PlacedFeature;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
         )]
     )
@@ -281,7 +281,7 @@ class PlaceCommandPatches {
         @WrapOperation(
             method = ["placeFeature"],
             at = [At(
-                "INVOKE",
+                value = "INVOKE",
                 target = "Lnet/minecraft/world/level/levelgen/feature/Feature;place(Lnet/minecraft/world/level/WorldGenLevel;Lnet/minecraft/world/level/chunk/ChunkGenerator;Lnet/minecraft/util/RandomSource;Lnet/minecraft/core/BlockPos;)Z"
             )]
         )

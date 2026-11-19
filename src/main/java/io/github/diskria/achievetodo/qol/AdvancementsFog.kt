@@ -15,7 +15,6 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
-import net.minecraft.advancements.Advancement
 import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.advancements.AdvancementNode
 import net.minecraft.advancements.AdvancementType
@@ -35,7 +34,8 @@ import net.minecraft.util.CommonColors
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
 import org.spongepowered.asm.mixin.injection.At
-import javax.lang.model.element.Modifier
+import javax.lang.model.element.Modifier.FINAL
+import javax.lang.model.element.Modifier.PRIVATE
 
 object AdvancementsFogManager {
 
@@ -125,7 +125,7 @@ abstract class AdvancementsFogTracker {
     @WrapOperation(
         method = ["flushDirty"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/server/network/ServerGamePacketListenerImpl;send(Lnet/minecraft/network/protocol/Packet;)V"
         )]
     )
@@ -179,11 +179,11 @@ abstract class AdvancementsFogTracker {
         op(connection, packet)
     }
 
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract val isFirstPacket: Boolean
 
     @MappingName("visible")
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val revealed: Set<AdvancementHolder>
 
     private val AdvancementNode.isRevealed: Boolean get() = holder() in revealed
@@ -205,7 +205,7 @@ abstract class AdvancementTabFog(@Origin val tab: AdvancementTab) {
         widget.attachFogHintsToParent(tab)
     }
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val widgets: MutableMap<AdvancementHolder, AdvancementWidget>
 }
 
@@ -222,13 +222,13 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
 
     @Extension
     fun attachFogHintsToParent(tab: AdvancementTab) {
-        val builderBase = Advancement.Builder.recipeAdvancement().parent(widget.advancement)
         AdvancementsFogManager.Client.getHintsFor(advancementNode.holder().id).orEmpty().forEachIndexed { index, hint ->
-            val childHolder = builderBase
-                .display(hint.icon, Component.empty(), Component.empty(), AdvancementType.TASK, false, false, false)
-                .build(Identifier.fromNamespaceAndPath(HINT_NAMESPACE, "${id.namespace}/${id.path}/$index"))
-            val childNode = AdvancementNode(childHolder, advancementNode).apply { setLocation(hint.x, hint.y) }
-            tab.addAdvancement(childNode)
+            val id = Identifier.fromNamespaceAndPath(HINT_NAMESPACE, "${id.namespace}/${id.path}/$index")
+            val childHolder = buildTechnicalAdvancement(id) {
+                parent(widget.advancement)
+                display(hint.icon, Component.empty(), Component.empty(), AdvancementType.TASK, false, false, false)
+            }
+            tab.addAdvancement(advancementNode.child(childHolder) { setLocation(hint.x, hint.y) })
         }
         moveFogHintsToFront()
     }
@@ -247,14 +247,14 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
         children.sortByDescending { it.advancement.isFogHint }
     }
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val advancementNode: AdvancementNode
 
-    @KShadow(Modifier.PRIVATE, Modifier.FINAL)
+    @KShadow(PRIVATE, FINAL)
     abstract val children: MutableList<AdvancementWidget>
 
     @MappingName("parent")
-    @KShadow(Modifier.PRIVATE)
+    @KShadow(PRIVATE)
     abstract val parentWidget: AdvancementWidget?
 }
 
@@ -296,7 +296,7 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
     @WrapWithCondition(
         method = ["extractRenderState"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blitSprite(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIII)V"
         )]
     )
@@ -311,7 +311,7 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
     @WrapOperation(
         method = ["extractRenderState"],
         at = [At(
-            "INVOKE",
+            value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
         )]
     )

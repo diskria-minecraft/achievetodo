@@ -35,7 +35,6 @@ dependencies {
     implementation(libs.fabric.api)
 
     implementation("maven.modrinth:7BgsROit:c9u0nVfv")
-    implementation("maven.modrinth:Ccho67RI:mFc7amLp")
 }
 
 tasks.withType<Jar> {
@@ -107,5 +106,4 @@ dependencies {
 //    runtimeOnly("maven.modrinth:w7ThoJFB:RUBpNu00") // Zoomify                  https://modrinth.com/mod/zoomify/version/2.17.0+mc26.3
     runtimeOnly("maven.modrinth:mOgUt4GM:kyy7dbrZ") // Mod Menu                 https://modrinth.com/mod/modmenu/version/21.0.0
     runtimeOnly("maven.modrinth:7BgsROit:c9u0nVfv") // Advancements Fullscreen
-    runtimeOnly("maven.modrinth:Ccho67RI:mFc7amLp") // Advancements Search
 }

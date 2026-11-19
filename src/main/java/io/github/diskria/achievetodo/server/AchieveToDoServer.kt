@@ -424,7 +424,7 @@ class AchieveToDoServer {
 
     private fun unlockAbility(player: ServerPlayer, ability: AbilityType) {
         val advancement = findAbilityAdvancement(player, ability) ?: return
-        player.advancements.getOrStartProgress(advancement).getRemainingCriteria().forEach { criterion ->
+        player.advancements.getOrStartProgress(advancement).remainingCriteria.forEach { criterion ->
             player.advancements.award(advancement, criterion)
         }
     }
