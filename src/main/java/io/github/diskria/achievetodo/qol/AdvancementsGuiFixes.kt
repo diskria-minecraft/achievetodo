@@ -10,11 +10,31 @@ import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.KShadow
 import io.github.diskria.lapis.annotations.Side
 import net.minecraft.advancements.AdvancementType
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
 import org.spongepowered.asm.mixin.injection.At
 import javax.lang.model.element.Modifier.PRIVATE
+
+@KMixin<AdvancementsScreen>(Side.Client)
+class AdvancementsScreenFixes {
+    @WrapOperation(
+        method = ["mouseScrolled(DDDD)Z"],
+        at = [At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/gui/screens/advancements/AdvancementTab;scroll(DD)V"
+        )]
+    )
+    fun horizontalScrollByShift(instance: AdvancementTab, x: Double, y: Double, op: Op<Unit>) {
+        if (Minecraft.getInstance().hasShiftDown()) {
+            op(instance, y, 0.toDouble())
+        } else {
+            op(instance, x, y)
+        }
+    }
+}
 
 @KMixin<AdvancementTab>(Side.Client)
 abstract class AdvancementTabFixes {

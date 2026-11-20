@@ -13,8 +13,10 @@ import io.github.diskria.achievetodo.extensions.*
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Widget
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Window
 import io.github.diskria.achievetodo.utils.addWidget
-import io.github.diskria.achievetodo.utils.clearChildren
 import io.github.diskria.achievetodo.utils.getWidget
+import io.github.diskria.achievetodo.utils.markCentered
+import io.github.diskria.achievetodo.utils.resetHovered
+import io.github.diskria.achievetodo.utils.resetSearchResults
 import io.github.diskria.achievetodo.utils.setInitialFocus
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.advancements.*
@@ -334,6 +336,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
 
     private fun refreshSearchResults() {
         searchResultsTab.resetSearchResults()
+        searchResultsTab.markCentered()
         if (searchResults.isEmpty()) return
         var parentNode = searchResultsRootNode
         var col = 0
@@ -397,26 +400,6 @@ abstract class SearchingAdvancementTab(@Origin val tab: AdvancementTab) {
 
     private val isSearchResults get() = tab.rootAdvancement.isSearchResultsRoot
 
-    @Extension
-    fun resetSearchResults() {
-        widgets.clear()
-        widgets[root.advancement] = root.apply { clearChildren() }
-        resetHovered()
-        minX = Int.MAX_VALUE
-        minY = Int.MAX_VALUE
-        maxX = Int.MIN_VALUE
-        maxY = Int.MIN_VALUE
-        scrollX = tab.screen.searchResultsOriginX.toDouble()
-        scrollY = 0.toDouble()
-        centered = true
-    }
-
-    @Extension
-    fun resetHovered() {
-        hovered = null
-        fade = 0.0f
-    }
-
     @WrapMethod(method = ["tick"])
     fun AdvancementTab.saveHoveredSearchResult(relativeMouseX: Int, relativeMouseY: Int, op: Op<Unit>) {
         op(relativeMouseX, relativeMouseY)
@@ -465,36 +448,6 @@ abstract class SearchingAdvancementTab(@Origin val tab: AdvancementTab) {
         originX: Int, originY: Int,
         isBorderPass: Boolean,
     ) = !isSearchResults
-
-    @KShadow(PRIVATE, FINAL)
-    abstract val root: AdvancementWidget
-
-    @KShadow(PRIVATE, FINAL)
-    abstract val widgets: MutableMap<AdvancementHolder, AdvancementWidget>
-
-    @KShadow(PRIVATE)
-    abstract var scrollX: Double
-
-    @KShadow(PRIVATE)
-    abstract var scrollY: Double
-
-    @KShadow(PRIVATE)
-    abstract var minX: Int
-
-    @KShadow(PRIVATE)
-    abstract var minY: Int
-
-    @KShadow(PRIVATE)
-    abstract var maxX: Int
-
-    @KShadow(PRIVATE)
-    abstract var maxY: Int
-
-    @KShadow(PRIVATE)
-    abstract var fade: Float
-
-    @KShadow(PRIVATE)
-    abstract var centered: Boolean
 
     @KShadow(PRIVATE)
     abstract var hovered: AdvancementWidget?
