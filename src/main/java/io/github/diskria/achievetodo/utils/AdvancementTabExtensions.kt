@@ -1,6 +1,5 @@
 package io.github.diskria.achievetodo.utils
 
-import io.github.diskria.achievetodo.qol.searchResultsOriginX
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
@@ -12,16 +11,13 @@ import javax.lang.model.element.Modifier.*
 abstract class AdvancementTabExtensions(@Origin val tab: AdvancementTab) {
 
     @Extension
-    fun resetSearchResults() {
+    fun resetContents() {
         widgets.clear()
         widgets[root.advancement] = root.apply { clearChildren() }
         resetHovered()
-        minX = Int.MAX_VALUE
-        minY = Int.MAX_VALUE
-        maxX = Int.MIN_VALUE
-        maxY = Int.MIN_VALUE
-        scrollX = tab.screen.searchResultsOriginX.toDouble()
-        scrollY = 0.toDouble()
+        setMin(Int.MAX_VALUE, Int.MAX_VALUE)
+        setMax(Int.MIN_VALUE, Int.MIN_VALUE)
+        setScroll(0.toDouble(), 0.toDouble())
         invalidateCentered()
     }
 
@@ -46,6 +42,24 @@ abstract class AdvancementTabExtensions(@Origin val tab: AdvancementTab) {
         val dx = -(scrollX + x)
         val dy = -(scrollY + y)
         scrollBy(dx, dy)
+    }
+
+    @Extension
+    fun setMin(x: Int?, y: Int?) {
+        x?.let { minX = it }
+        y?.let { minY = it }
+    }
+
+    @Extension
+    fun setMax(x: Int?, y: Int?) {
+        x?.let { maxX = it }
+        y?.let { maxY = it }
+    }
+
+    @Extension
+    fun setScroll(x: Double?, y: Double?) {
+        x?.let { scrollX = it }
+        y?.let { scrollY = it }
     }
 
     @Extension

@@ -14,6 +14,7 @@ object AdvancementsGuiConstants {
 
     object Widget {
         const val FRAME_SPRITE_SIZE = 26
+        const val FRAME_ITEM_MAX_SIZE = 28
         const val FRAME_X_OFFSET = 3
     }
 }

@@ -12,12 +12,7 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.*
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Widget
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Window
-import io.github.diskria.achievetodo.utils.addWidget
-import io.github.diskria.achievetodo.utils.getWidget
-import io.github.diskria.achievetodo.utils.markCentered
-import io.github.diskria.achievetodo.utils.resetHovered
-import io.github.diskria.achievetodo.utils.resetSearchResults
-import io.github.diskria.achievetodo.utils.setInitialFocus
+import io.github.diskria.achievetodo.utils.*
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.advancements.*
 import net.minecraft.client.Minecraft
@@ -47,14 +42,8 @@ import kotlin.jvm.optionals.getOrNull
 @KMixin<AdvancementsScreen>(Side.Client)
 abstract class SearchingAdvancementsScreen(@Origin private val screen: AdvancementsScreen) {
 
-    @Extension
-    var searchResultsOriginX: Int = 0
-
-    @Extension
-    var hoveredSearchResultWidget: AdvancementWidget? = null
-
-    private val searchResultsRootNode by lazy {
-        val rootHolder = buildTechnicalAdvancement(ROOT_ADVANCEMENT_ID) {
+    private val searchResultsRoot by lazy {
+        val holder = buildTechnicalAdvancement(ROOT_ADVANCEMENT_ID) {
             rootDisplay(
                 /* icon = */ Items.STONE,
                 /* title = */ SEARCH_TAB_TITLE,
@@ -66,19 +55,23 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
                 /* hidden = */ true,
             )
         }
-        AdvancementNode(rootHolder, null)
+        AdvancementNode(holder, null)
     }
 
     private val searchResultsTab by lazy {
-        requireNotNull(AdvancementTab.create(Minecraft.getInstance(), screen, 0, searchResultsRootNode))
+        requireNotNull(AdvancementTab.create(Minecraft.getInstance(), screen, 0, searchResultsRoot))
     }
 
     private val searchResults = mutableListOf<SearchResult>()
 
     private var searchBox: EditBox? = null
-    private var searchResultsMaxColumns = 0
     private var isSearchActive = false
-    private var clickedSearchResultWidget: AdvancementWidget? = null
+
+    private var resultsColumns = 0
+    private var resultsOriginX = 0
+
+    private var hoveredResultWidget: AdvancementWidget? = null
+    private var clickedResultWidget: AdvancementWidget? = null
 
     @Extension
     fun repositionSearch(width: Int, height: Int) {
@@ -89,6 +82,11 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         if (searchBox.value.isNotEmpty()) {
             refreshSearchResults()
         }
+    }
+
+    @Extension
+    fun onSearchResultHovered(widget: AdvancementWidget?) {
+        hoveredResultWidget = widget
     }
 
     @Extension
@@ -151,20 +149,23 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         mouseY: Int,
         op: Op<Unit>
     ) {
-        val maxItemSize = 28
-        val columnsCount = treeWidth / maxItemSize
-        val rowWidth = maxItemSize * columnsCount
+        val columnsCount = treeWidth / Widget.FRAME_ITEM_MAX_SIZE
+        val rowWidth = Widget.FRAME_ITEM_MAX_SIZE * columnsCount
         val hPad = treeWidth - rowWidth - Widget.FRAME_X_OFFSET
         val originX = hPad / 2
-        if (searchResultsMaxColumns != columnsCount || searchResultsOriginX != originX) {
-            searchResultsMaxColumns = columnsCount
-            searchResultsOriginX = originX
+        if (resultsColumns != columnsCount || resultsOriginX != originX) {
+            resultsColumns = columnsCount
+            resultsOriginX = originX
             if (isSearchActive) {
                 refreshSearchResults()
             }
         }
+        if (hoveredResultWidget != null) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
         val boxSpriteX = leftPos +
-                Window.TREE_HORIZONTAL_MARGIN + treeWidth + Window.TREE_BORDER_SIZE - SearchTexture.BoxPart.WIDTH
+                Window.TREE_HORIZONTAL_MARGIN + treeWidth + Window.TREE_BORDER_SIZE -
+                SearchTexture.BoxPart.WIDTH
         val boxSpriteY = topPos + Window.BEVEL_SIZE + (Window.HEADER_HEIGHT - SearchTexture.BoxPart.HEIGHT) / 2
         graphics.blit(
             /* renderPipeline = */ RenderPipelines.GUI_TEXTURED,
@@ -194,34 +195,34 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
             if (isSearchActive) stopFlashing()
             return true
         }
-        if (hoveredSearchResultWidget != null && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
-            clickedSearchResultWidget = hoveredSearchResultWidget
+        if (hoveredResultWidget != null && event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            clickedResultWidget = hoveredResultWidget
         }
         return op(event, isDouble)
     }
 
     @WrapMethod(method = ["mouseScrolled"])
     fun resetClickedResultOnScroll(x: Double, y: Double, scrollX: Double, scrollY: Double, op: Op<Boolean>): Boolean {
-        clickedSearchResultWidget = null
+        clickedResultWidget = null
         return op(x, y, scrollX, scrollY)
     }
 
     @WrapMethod(method = ["mouseDragged"])
     fun resetClickedResultOnDrag(event: MouseButtonEvent, dx: Double, dy: Double, op: Op<Boolean>): Boolean {
-        clickedSearchResultWidget = null
+        clickedResultWidget = null
         return op(event, dx, dy)
     }
 
     @WrapMethod(method = ["mouseReleased"])
     fun AdvancementsScreen.jumpToClickedResult(event: MouseButtonEvent, op: Op<Boolean>): Boolean {
         if (event.button() != InputConstants.MOUSE_BUTTON_LEFT) return op(event)
-        val hovered = hoveredSearchResultWidget ?: return op(event)
-        val clicked = clickedSearchResultWidget ?: return op(event)
+        val hovered = hoveredResultWidget ?: return op(event)
+        val clicked = clickedResultWidget ?: return op(event)
         if (clicked.advancement.id != hovered.advancement.id) return op(event)
         val targetTab = advancements.tree().get(clicked.advancement.id)?.root() ?: return op(event)
         isSearchActive = false
-        hoveredSearchResultWidget = null
-        clickedSearchResultWidget = null
+        hoveredResultWidget = null
+        clickedResultWidget = null
         searchResultsTab.resetHovered()
         advancements.setSelectedTab(targetTab.holder(), true)
         selectedTab?.getWidget(clicked.advancement.id)?.let { startFlashing(it) }
@@ -335,12 +336,13 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     }
 
     private fun refreshSearchResults() {
-        searchResultsTab.resetSearchResults()
-        searchResultsTab.markCentered()
+        searchResultsTab.resetContents()
         if (searchResults.isEmpty()) return
-        var parentNode = searchResultsRootNode
-        var col = 0
-        var row = 0
+        searchResultsTab.setScroll(resultsOriginX.toDouble(), Window.TREE_PADDING.toDouble())
+        searchResultsTab.markCentered()
+        var parentNode = searchResultsRoot
+        var x = 0
+        var y = 0
         searchResults.forEach { result ->
             val originalAdvancement = result.holder.value
             val childHolder = buildTechnicalAdvancement(result.holder.id) {
@@ -350,15 +352,15 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
                 originalAdvancement.criteria.forEach { (name, criterion) -> addCriterion(name, criterion) }
                 requirements(originalAdvancement.requirements)
             }
-            val childNode = parentNode.child(childHolder) { setLocation(col.toFloat(), row.toFloat()) }
+            val childNode = parentNode.child(childHolder) { setLocation(x.toFloat(), y.toFloat()) }
             searchResultsTab.addWidget(childNode) { setProgress(result.progress) }
-            if (col == searchResultsMaxColumns - 1) {
-                parentNode = searchResultsRootNode
-                col = 0
-                row++
+            if (x == resultsColumns - 1) {
+                parentNode = searchResultsRoot
+                x = 0
+                y++
             } else {
                 parentNode = childNode
-                col++
+                x++
             }
         }
     }
@@ -401,22 +403,9 @@ abstract class SearchingAdvancementTab(@Origin val tab: AdvancementTab) {
     private val isSearchResults get() = tab.rootAdvancement.isSearchResultsRoot
 
     @WrapMethod(method = ["tick"])
-    fun AdvancementTab.saveHoveredSearchResult(relativeMouseX: Int, relativeMouseY: Int, op: Op<Unit>) {
+    fun AdvancementTab.onWidgetHovered(relativeMouseX: Int, relativeMouseY: Int, op: Op<Unit>) {
         op(relativeMouseX, relativeMouseY)
-        screen.hoveredSearchResultWidget = if (isSearchResults) hovered else null
-    }
-
-    @WrapMethod(method = ["extractContents"])
-    fun AdvancementTab.markHoveredSearchResultAsClickable(
-        graphics: GuiGraphicsExtractor,
-        windowLeft: Int,
-        windowTop: Int,
-        op: Op<Unit>
-    ) {
-        if (screen.hoveredSearchResultWidget != null) {
-            graphics.requestCursor(CursorTypes.POINTING_HAND)
-        }
-        op(graphics, windowLeft, windowTop)
+        screen.onSearchResultHovered(if (isSearchResults) hovered else null)
     }
 
     @WrapWithCondition(
