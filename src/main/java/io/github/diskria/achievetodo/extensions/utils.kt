@@ -9,6 +9,8 @@ import net.minecraft.server.packs.metadata.MetadataSectionType
 import net.minecraft.server.packs.repository.Pack
 import net.minecraft.server.packs.repository.PackCompatibility
 import net.minecraft.world.flag.FeatureFlagSet
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.stream.Stream
@@ -51,3 +53,14 @@ object EmptyPackResourcesSupplier : Pack.ResourcesSupplier {
 typealias Op<R> = Operation<R>
 
 operator fun <R> Op<R>.invoke(vararg args: Any?): R = call(*args)
+
+typealias Cancel = CallbackInfo
+typealias Return<R> = CallbackInfoReturnable<R>
+
+operator fun Cancel.invoke() {
+    cancel()
+}
+
+operator fun <R> Return<R>.invoke(value: R) {
+    returnValue = value
+}

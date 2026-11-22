@@ -140,7 +140,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         )]
     )
     context(
-        @Local(name = ["a"], argsOnly = true) alpha: Float,
+        @Local(argsOnly = true, name = ["a"]) alpha: Float,
     )
     fun AdvancementsScreen.drawSearchBox(
         screen: AdvancementsScreen,
@@ -219,13 +219,12 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         val hovered = hoveredResultWidget ?: return op(event)
         val clicked = clickedResultWidget ?: return op(event)
         if (clicked.advancement.id != hovered.advancement.id) return op(event)
-        val targetTab = advancements.tree().get(clicked.advancement.id)?.root() ?: return op(event)
-        isSearchActive = false
-        hoveredResultWidget = null
-        clickedResultWidget = null
-        searchResultsTab.resetHovered()
-        advancements.setSelectedTab(targetTab.holder(), true)
-        selectedTab?.getWidget(clicked.advancement.id)?.let { startFlashing(it) }
+        if (startFlashing(clicked.advancement.id, AdvancementFlashingMode.FRAME)) {
+            isSearchActive = false
+            hoveredResultWidget = null
+            clickedResultWidget = null
+            searchResultsTab.resetHovered()
+        }
         return op(event)
     }
 
@@ -240,7 +239,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         clientAdvancements: ClientAdvancements,
         selectedTab: AdvancementHolder,
         tellServer: Boolean,
-        op: Op<Unit>,
+        op: Op<Unit>
     ) {
         isSearchActive = false
         op(clientAdvancements, selectedTab, tellServer)
@@ -307,13 +306,16 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         val searchBox = searchBox ?: return
         val searchTerm = searchBox.value
         isSearchActive = searchTerm.isNotEmpty()
+        if (isSearchActive) screen.stopFlashing()
         searchResults.clear()
         if (!isSearchActive) return
+        val progresses = advancements.progress()
         searchResults.addAll(
-            advancements.progress().entries.asSequence().mapNotNull { (holder, progress) ->
-                val advancement = holder.value
+            advancements.tree().nodes().asSequence().mapNotNull { node ->
+                val holder = node.holder()
                 if (holder.isAchieveToDoAbility) return@mapNotNull null
-                val display = advancement.display.getOrNull() ?: return@mapNotNull null
+                val display = holder.value.display.getOrNull() ?: return@mapNotNull null
+                val progress = progresses[holder] ?: return@mapNotNull null
                 if (display.hidden && !progress.isDone) return@mapNotNull null
 
                 val matches = display.title.string.contains(searchTerm, ignoreCase = true) ||

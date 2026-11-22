@@ -301,9 +301,9 @@ class AchieveToDoServer {
 
     fun init() {
         registerPayloadListeners()
-        ServerLandmarksManager.registerHooks()
-        ModServerConfigManager.registerHooks()
-        SuitePack.register()
+        ServerLandmarksManager.init()
+        ModServerConfigManager.init()
+        SuitePack.init()
         AdvancementsFogManager.init()
         /*
         registerInternalDataPacks()
@@ -435,5 +435,5 @@ class AchieveToDoServer {
     }
 
     private fun findAbilityAdvancement(player: ServerPlayer, ability: AbilityType): AdvancementHolder? =
-        player.level().server.advancements.get(AbilityAdvancementsTabGenerator.buildAdvancementId(ability))
+        player.level().server.advancements[AbilityAdvancementsTabGenerator.buildAdvancementId(ability)]
 }

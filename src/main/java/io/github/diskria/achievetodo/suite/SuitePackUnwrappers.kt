@@ -10,6 +10,7 @@ import com.mojang.serialization.Dynamic
 import io.github.diskria.achievetodo.config.modServerConfig
 import io.github.diskria.achievetodo.config.readModServerConfig
 import io.github.diskria.achievetodo.config.validateDedicatedModServerConfig
+import io.github.diskria.achievetodo.extensions.Cancel
 import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.*
@@ -31,7 +32,6 @@ import net.minecraft.world.level.WorldDataConfiguration
 import net.minecraft.world.level.storage.LevelDataAndDimensions.WorldDataAndGenSettings
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.spongepowered.asm.mixin.injection.At
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 import java.nio.file.Path
 import java.util.function.Consumer
 import javax.lang.model.element.Modifier.PRIVATE
@@ -215,7 +215,7 @@ abstract class SuitePackWorldOpenResolvers {
     )
     context(
         @Local(argsOnly = true, name = ["onCancel"]) onCancel: Runnable,
-        @Cancellable ci: CallbackInfo,
+        @Cancellable cancel: Cancel
     )
     fun validateAndResolveComponentsOnOpen(
         worldOpenFlows: WorldOpenFlows,
@@ -234,7 +234,7 @@ abstract class SuitePackWorldOpenResolvers {
                 onCancel.run()
             }
             if (!SuitePack.validateInstalled(components, onRetry, onExit)) {
-                ci.cancel()
+                cancel()
                 return null
             }
             packRepository.suiteComponents = components
@@ -266,7 +266,7 @@ class SuitePackDedicatedServerResolver {
         )
         context(
             @Local(name = ["settings"]) settings: DedicatedServerSettings,
-            @Cancellable ci: CallbackInfo,
+            @Cancellable cancel: Cancel
         )
         fun validateAndResolveComponentsOnStart(
             levelStorage: LevelStorageAccess,
@@ -274,7 +274,7 @@ class SuitePackDedicatedServerResolver {
         ): PackRepository? {
             val config = levelStorage.validateDedicatedModServerConfig()
             if (config == null) {
-                ci.cancel()
+                cancel()
                 return null
             }
             val isHardcore = settings.properties.hardcore
@@ -283,7 +283,7 @@ class SuitePackDedicatedServerResolver {
             if (missingComponents.isNotEmpty()) {
                 SuiteInstallers.sendDedicatedServerReport(missingComponents)
                 SuitePack.dir.createDirectories()
-                ci.cancel()
+                cancel()
                 return null
             }
             return op(levelStorage).apply { suiteComponents = components }

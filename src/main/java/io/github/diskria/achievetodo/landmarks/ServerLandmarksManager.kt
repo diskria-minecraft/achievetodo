@@ -44,22 +44,7 @@ object ServerLandmarksManager {
 
     val loadedLandmarks = ConcurrentHashMap<ResourceKey<Level>, ConcurrentHashMap<ChunkPos, MutableSet<Landmark>>>()
 
-    fun addLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
-        if (ModServerConfig.current == null) return
-        loadedLandmarks
-            .getOrPut(level.dimension()) { ConcurrentHashMap() }
-            .getOrPut(chunkPos) { ConcurrentHashMap.newKeySet() }
-            .add(landmark)
-    }
-
-    fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
-        if (ModServerConfig.current == null) return
-        val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
-        inChunk.remove(current)
-        inChunk.add(resized)
-    }
-
-    fun registerHooks() {
+    fun init() {
         ServerChunkEvents.CHUNK_LOAD.register { level, chunk, _ ->
             if (ModServerConfig.current == null) return@register
             val chunkPos = chunk.pos
@@ -79,6 +64,21 @@ object ServerLandmarksManager {
         ServerLifecycleEvents.SERVER_STOPPED.register {
             loadedLandmarks.clear()
         }
+    }
+
+    fun addLandmark(level: ServerLevel, chunkPos: ChunkPos, landmark: Landmark) {
+        if (ModServerConfig.current == null) return
+        loadedLandmarks
+            .getOrPut(level.dimension()) { ConcurrentHashMap() }
+            .getOrPut(chunkPos) { ConcurrentHashMap.newKeySet() }
+            .add(landmark)
+    }
+
+    fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
+        if (ModServerConfig.current == null) return
+        val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
+        inChunk.remove(current)
+        inChunk.add(resized)
     }
 }
 
@@ -138,7 +138,7 @@ class ChunkLandmarksNbt {
             @Local(argsOnly = true, name = ["chunkData"]) compound: CompoundTag,
         )
         fun readFromNbt(result: SerializableChunkData) = result.apply {
-            landmarksNbt = compound.get(LANDMARKS_TAG_NAME)
+            landmarksNbt = compound[LANDMARKS_TAG_NAME]
         }
 
         @ModifyReturnValue(method = ["copyOf"], at = [At("TAIL")])
@@ -187,8 +187,8 @@ class StructureLandmarkNbt {
             @Local(argsOnly = true, name = ["tag"]) compound: CompoundTag,
         )
         fun readFromNbt(result: StructureStart) = result.apply {
-            landmarkType = compound.get(LANDMARK_TYPE_TAG_NAME)?.decodeOrNull(LandmarkType.CODEC)
-            landmark = compound.get(LANDMARK_TAG_NAME)?.decodeOrNull(Landmark.CODEC)
+            landmarkType = compound[LANDMARK_TYPE_TAG_NAME]?.decodeOrNull(LandmarkType.CODEC)
+            landmark = compound[LANDMARK_TAG_NAME]?.decodeOrNull(Landmark.CODEC)
         }
     }
 }

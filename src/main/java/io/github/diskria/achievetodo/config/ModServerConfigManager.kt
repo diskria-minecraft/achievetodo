@@ -8,6 +8,7 @@ import com.llamalad7.mixinextras.sugar.Cancellable
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.extensions.Op
+import io.github.diskria.achievetodo.extensions.Return
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.suite.onModServerConfigChanged
 import io.github.diskria.lapis.annotations.*
@@ -35,7 +36,6 @@ import net.minecraft.world.level.LevelSettings
 import net.minecraft.world.level.storage.LevelDataAndDimensions.WorldDataAndGenSettings
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.spongepowered.asm.mixin.injection.At
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable
 import java.nio.file.Path
 import java.util.*
 import javax.lang.model.element.Modifier.*
@@ -46,7 +46,7 @@ import kotlin.io.path.outputStream
 
 object ModServerConfigManager {
 
-    fun registerHooks() {
+    fun init() {
         ServerLifecycleEvents.SERVER_STARTING.register { server ->
             ModServerConfig.current = server.modServerConfig?.takeIf { it.modEnabled }
         }
@@ -117,7 +117,7 @@ class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
         )]
     )
     context(
-        @Cancellable cir: CallbackInfoReturnable<Boolean>,
+        @Cancellable cancel: Return<Boolean>
     )
     fun CreateWorldScreen.saveModServerConfig(
         worldOpenFlows: WorldOpenFlows,
@@ -128,11 +128,10 @@ class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
         gameRules: Optional<*>,
         op: Op<Unit>
     ) {
-        if (levelStorage.saveModServerConfig(uiState.modServerConfig)) {
-            op(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
-        } else {
-            cir.returnValue = false
+        if (!levelStorage.saveModServerConfig(uiState.modServerConfig)) {
+            return cancel(false)
         }
+        op(worldOpenFlows, levelStorage, serverResources, registry, worldDataAndGenSettings, gameRules)
     }
 }
 

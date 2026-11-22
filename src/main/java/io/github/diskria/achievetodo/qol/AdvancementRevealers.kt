@@ -36,7 +36,7 @@ class AdvancementsRevealer {
             method = ["evaluateVisiblityForUnfinishedNode"], at = [At("CONSTANT", args = ["intValue=2"])]
         )
         context(
-            @Local(name = ["ascendants"], argsOnly = true) ascendants: Stack<*>,
+            @Local(argsOnly = true, name = ["ascendants"]) ascendants: Stack<*>,
         )
         fun resolveRevealDepth(original: Int): Int {
             if (ascendants !is ObjectArrayList<*>) return original

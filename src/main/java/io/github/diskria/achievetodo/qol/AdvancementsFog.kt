@@ -59,7 +59,7 @@ object AdvancementsFogManager {
             ClientPlayConnectionEvents.DISCONNECT.register { _, _ -> hints.clear() }
         }
 
-        fun getHintsFor(id: Identifier) = hints[id]
+        fun getHintsFor(advancementId: Identifier) = hints[advancementId]
     }
 }
 
@@ -317,7 +317,7 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
     )
     fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
         if (!isFogHint) return op(graphics, itemStack, x, y)
-        graphics.itemTempAlpha = 0.8_800_555_35_35.toFloat() / 2
+        graphics.itemTempAlpha = 0.45f
         try {
             op(graphics, itemStack, x, y)
         } finally {

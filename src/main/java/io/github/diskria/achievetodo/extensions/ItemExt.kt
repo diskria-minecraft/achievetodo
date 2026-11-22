@@ -31,7 +31,7 @@ private val armorMaterials = listOf(
 
 val Item.toolMaterial: ToolMaterial?
     get() {
-        val tool = components().get(DataComponents.TOOL) ?: return null
+        val tool = components()[DataComponents.TOOL] ?: return null
         val deniesDropsRule = tool.rules.find { it.correctForDrops.getOrNull() == false } ?: return null
         val tagKey = deniesDropsRule.blocks.unwrapKey().getOrNull() ?: return null
         return toolMaterials.firstOrNull { it.incorrectBlocksForDrops() == tagKey }
@@ -39,7 +39,7 @@ val Item.toolMaterial: ToolMaterial?
 
 val Item.isPickaxe: Boolean
     get() {
-        val tool = components().get(DataComponents.TOOL) ?: return false
+        val tool = components()[DataComponents.TOOL] ?: return false
         val minesAndDropsRule = tool.rules.find { it.correctForDrops.getOrNull() == true } ?: return false
         val tagKey = minesAndDropsRule.blocks.unwrapKey().getOrNull() ?: return false
         return tagKey == BlockTags.MINEABLE_WITH_PICKAXE
@@ -47,13 +47,13 @@ val Item.isPickaxe: Boolean
 
 val Item.armorMaterial: ArmorMaterial?
     get() {
-        val repairable = components().get(DataComponents.REPAIRABLE) ?: return null
+        val repairable = components()[DataComponents.REPAIRABLE] ?: return null
         val tagKey = repairable.items.unwrapKey().getOrNull() ?: return null
         return armorMaterials.firstOrNull { it.repairIngredient == tagKey }
     }
 
 val Item.isHumanoidChestplateArmor: Boolean
     get() {
-        val equipmentSlot = components().get(DataComponents.EQUIPPABLE)?.slot ?: return false
+        val equipmentSlot = components()[DataComponents.EQUIPPABLE]?.slot ?: return false
         return equipmentSlot.type == EquipmentSlot.Type.HUMANOID_ARMOR && equipmentSlot == EquipmentSlot.CHEST
     }

@@ -28,7 +28,7 @@ object SuitePack {
     val coloredName = AchieveToDoMod.COLORED_NAME.copy().append(" ").append(NAME.capitalized())
     val dir by lazy { FabricLoader.getInstance().gameDir / PATH }
 
-    fun register() {
+    fun init() {
         val modContainer = FabricLoader.getInstance().getModContainer(AchieveToDoMod.ID).getOrNull() ?: return
         ResourceLoader.registerBuiltinPack(id, modContainer, coloredName, PackActivationType.ALWAYS_ENABLED)
     }
