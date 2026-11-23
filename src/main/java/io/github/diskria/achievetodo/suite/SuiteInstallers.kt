@@ -324,7 +324,7 @@ abstract class SuiteInstallerPackEntryBase {
 
     @MappingName("this$0")
     @KShadow(FINAL)
-    abstract var model: PackSelectionModel
+    abstract val model: PackSelectionModel
 }
 
 @KMixin<TransferableSelectionList.PackEntry>(Side.Client)

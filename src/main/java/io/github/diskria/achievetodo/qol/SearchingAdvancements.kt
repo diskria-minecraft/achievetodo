@@ -441,7 +441,7 @@ abstract class SearchingAdvancementTab(@Origin val tab: AdvancementTab) {
     ) = !isSearchResults
 
     @KShadow(PRIVATE)
-    abstract var hovered: AdvancementWidget?
+    abstract val hovered: AdvancementWidget?
 }
 
 private object SearchTexture {

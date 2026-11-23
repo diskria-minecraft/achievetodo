@@ -102,5 +102,6 @@ dependencies {
 //    runtimeOnly("maven.modrinth:VSNURh3q:gKKkuSYc") // C2ME                     https://modrinth.com/mod/c2me-fabric/version/0.4.2-alpha.0.106+26.3
 //    runtimeOnly("maven.modrinth:8shC1gFX:XB7u4eSf") // BetterF3                 https://modrinth.com/mod/betterf3/version/20.0.0
 //    runtimeOnly("maven.modrinth:w7ThoJFB:RUBpNu00") // Zoomify                  https://modrinth.com/mod/zoomify/version/2.17.0+mc26.3
-    runtimeOnly("maven.modrinth:mOgUt4GM:kyy7dbrZ") // Mod Menu                 https://modrinth.com/mod/modmenu/version/21.0.0
+    runtimeOnly("maven.modrinth:mOgUt4GM:kyy7dbrZ") // Mod Menu                   https://modrinth.com/mod/modmenu/version/21.0.0
+    runtimeOnly("maven.modrinth:ZS0HNETF:h6gtFPqk") // Third Person Nametags      https://modrinth.com/mod/third-person-nametags/version/1.8.0
 }

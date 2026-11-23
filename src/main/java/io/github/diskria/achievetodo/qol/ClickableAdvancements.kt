@@ -122,9 +122,9 @@ class AdvancementDoneMessageCustomizer {
     companion object {
         private val clickableFooter = Component.empty()
             .append(CommonComponents.NEW_LINE)
-            .append("-> (").append(BacapI18N.CLICK_TO_VIEW).append(")")
+            .append("-> (").append(I18N.CLICK_TO_VIEW).append(")")
 
-        private fun MutableComponent.grayItalic() = withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)
+        private fun MutableComponent.withGrayItalicStyle() = withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)
 
         @ModifyReturnValue(method = ["getRawComponent"], at = [At("RETURN")])
         context(
@@ -132,15 +132,14 @@ class AdvancementDoneMessageCustomizer {
         )
         fun customizeAdvancementDoneMessage(original: Component): Component {
             val doneAdvancementId = context.source.doneAdvancementId ?: return original
-            println("doneAdvancementId = $doneAdvancementId")
             val doneAdvancement = context.source.server.advancements[doneAdvancementId] ?: return original
             val dataTag = doneAdvancementId.toNbtOrNull(Identifier.CODEC) ?: return original
             val clickEvent = ClickEvent.Custom(FLASH_ADVANCEMENT_ACTION_ID, Optional.of(dataTag))
             if (doneAdvancement.value.isRoot) {
                 val translateKey = (original.contents as? TranslatableContents)?.key ?: return original
-                val (tabName) = BacapI18N.TAB_UNLOCKED_REGEX.matchEntire(translateKey)?.destructured ?: return original
+                val (tabName) = I18N.TAB_UNLOCKED_REGEX.matchEntire(translateKey)?.destructured ?: return original
                 return original.copy().withStyle {
-                    val textToShow = BacapI18N.tabComponent(tabName).append(clickableFooter).grayItalic()
+                    val textToShow = I18N.tab(tabName).append(clickableFooter).withGrayItalicStyle()
                     it.withHoverEvent(HoverEvent.ShowText(textToShow)).withClickEvent(clickEvent)
                 }
             }
@@ -152,7 +151,7 @@ class AdvancementDoneMessageCustomizer {
             result.style = run {
                 if (style.clickEvent != null) return@run style
                 val rawText = (style.hoverEvent as? HoverEvent.ShowText)?.value ?: return@run style
-                val textToShow = rawText.copy().append(clickableFooter.grayItalic())
+                val textToShow = rawText.copy().append(clickableFooter.withGrayItalicStyle())
                 style.withHoverEvent(HoverEvent.ShowText(textToShow)).withClickEvent(clickEvent)
             }
             siblings.forEach { result.append(it.withClickableHover(clickEvent)) }

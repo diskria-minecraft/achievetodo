@@ -1,5 +1,6 @@
 package io.github.diskria.achievetodo
 
+import io.github.diskria.achievetodo.AchieveToDoMod.Companion.lerpBrandColor
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.client.AchieveToDoClient
@@ -9,6 +10,7 @@ import io.github.diskria.achievetodo.server.AchieveToDoServer
 import net.fabricmc.api.ModInitializer
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.MutableComponent
 import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.ARGB
@@ -42,17 +44,14 @@ class AchieveToDoMod : ModInitializer {
         const val NAME: String = "AchieveToDo"
         const val ID: String = "achievetodo"
 
+        const val COLOR_BLUE = 0x07C5FA
+        const val COLOR_YELLOW = 0xFFFF00
+
+        fun lerpBrandColor(factor: Float): Int = ARGB.srgbLerp(factor, COLOR_BLUE, COLOR_YELLOW)
+
         val COLORED_NAME: Component by lazy {
-            val colorFrom = 0x07C5FA
-            val colorTo = 0xFFFF00
             val mid = NAME.lastIndex / 2.0f
-            Component.empty().apply {
-                NAME.forEachIndexed { index, char ->
-                    val factor = 1.0f - abs(index - mid) / mid
-                    val color = ARGB.srgbLerp(factor, colorFrom, colorTo)
-                    append(Component.literal(char.toString()).withStyle { it.withColor(color) })
-                }
-            }
+            NAME.toBrandGradientComponent { index -> 1.0f - abs(index - mid) / mid }
         }
 
         val server = AchieveToDoServer()
@@ -91,3 +90,12 @@ class AchieveToDoMod : ModInitializer {
         }
     }
 }
+
+inline fun CharSequence.toBrandGradientComponent(factorProvider: (index: Int) -> Float): MutableComponent =
+    Component.empty().apply {
+        forEachIndexed { index, char ->
+            val factor = factorProvider(index)
+            val color = lerpBrandColor(factor)
+            append(Component.literal(char.toString()).withStyle { it.withColor(color) })
+        }
+    }
