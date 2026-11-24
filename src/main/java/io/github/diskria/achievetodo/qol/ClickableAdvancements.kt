@@ -205,12 +205,12 @@ class AdvancementDoneFlashActionClickListener {
             }
             val advancementId = packet.payload.getOrNull()?.decodeOrNull(Identifier.CODEC) ?: return cancel()
             val clientAdvancements = player.connection.advancements
-            val knownAdvancement = clientAdvancements[advancementId] ?: return cancel()
+            val advancementProgress = clientAdvancements.getProgressFor(advancementId) ?: return cancel()
             with(Minecraft.getInstance()) {
                 val returnScreen = if (currentScreen is ChatScreen) null else currentScreen
                 val advancementsScreen = AdvancementsScreen(clientAdvancements, returnScreen)
                 gui.setScreen(advancementsScreen)
-                val flashingMode = if (clientAdvancements.progress()[knownAdvancement]?.isDone == true) {
+                val flashingMode = if (advancementProgress.isDone) {
                     AdvancementFlashingMode.OBTAINED_STATUS
                 } else {
                     AdvancementFlashingMode.FRAME

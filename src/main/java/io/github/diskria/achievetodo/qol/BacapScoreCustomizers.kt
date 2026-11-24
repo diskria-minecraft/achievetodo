@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
 import com.llamalad7.mixinextras.sugar.Local
 import io.github.diskria.achievetodo.extensions.Op
+import io.github.diskria.achievetodo.extensions.getProgressFor
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.toBrandGradientComponent
 import io.github.diskria.lapis.annotations.Extension
@@ -16,6 +17,7 @@ import net.minecraft.advancements.AdvancementRequirements
 import net.minecraft.advancements.CriterionProgress
 import net.minecraft.client.gui.screens.DeathScreen
 import net.minecraft.client.player.LocalPlayer
+import net.minecraft.network.chat.CommonComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.HoverEvent
 import net.minecraft.network.chat.MutableComponent
@@ -68,7 +70,7 @@ abstract class BacapScoreboardEntityBelowNameCustomizer {
     )
     fun customizeBelowName(original: Component?): Component? {
         if (objective.name !in BacapScoreboardMode.ALL) return original
-        return objective.displayName.copy().append(": ").append(formattedValue)
+        return CommonComponents.optionNameValue(objective.displayName, formattedValue)
     }
 }
 
@@ -99,11 +101,10 @@ abstract class BacapScoreGameOverCustomizer {
     fun customizeScore(original: MutableComponent): MutableComponent {
         if (!hardcore) return original
         val clientAdvancements = player.connection.advancements
-        val doneAdvancements = clientAdvancements[ADVANCEMENT_LEGEND_ID]
-            ?.let { clientAdvancements.progress()[it] }
+        val advancementLegendProgress = clientAdvancements.getProgressFor(ADVANCEMENT_LEGEND_ID)
             ?.getColoredProgressText()
             ?: return original
-        return I18N.ADVANCEMENTS.append(": ").append(doneAdvancements)
+        return CommonComponents.optionNameValue(I18N.ADVANCEMENTS, advancementLegendProgress)
     }
 
     @KShadow(PRIVATE, FINAL)
@@ -124,8 +125,8 @@ abstract class BacapAdvancementLegendProgressCustomizer {
     fun getColoredProgressText(): Component? {
         if (criteria.isEmpty()) return null
         val total = requirements.size().takeIf { it > 1 } ?: return null
-        val done = BacapScoreFormat.format(countCompletedRequirements())
-        return Component.translatable("advancements.progress", done, total)
+        val completed = BacapScoreFormat.format(countCompletedRequirements())
+        return Component.translatable("advancements.progress", completed, total)
     }
 
     @KShadow(PRIVATE, FINAL)

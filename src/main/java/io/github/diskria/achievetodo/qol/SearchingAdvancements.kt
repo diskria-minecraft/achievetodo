@@ -28,6 +28,7 @@ import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.input.PreeditEvent
 import net.minecraft.client.multiplayer.ClientAdvancements
 import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.util.CommonColors
@@ -63,6 +64,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     }
 
     private val searchResults = mutableListOf<SearchResult>()
+    private val searchTextCache = HashMap<DisplayInfo, String>()
 
     private var searchBox: EditBox? = null
     private var isSearchActive = false
@@ -304,25 +306,18 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
 
     private fun processSearch() {
         val searchBox = searchBox ?: return
-        val searchTerm = searchBox.value
+        val searchTerm = searchBox.value.lowercase()
         isSearchActive = searchTerm.isNotEmpty()
         if (isSearchActive) screen.stopFlashing()
         searchResults.clear()
         if (!isSearchActive) return
-        val progresses = advancements.progress()
         searchResults.addAll(
-            advancements.tree().nodes().asSequence().mapNotNull { node ->
+            advancements.nodesWithProgress().mapNotNull { (node, progress) ->
                 val holder = node.holder()
                 if (holder.isAchieveToDoAbility) return@mapNotNull null
                 val display = holder.value.display.getOrNull() ?: return@mapNotNull null
-                val progress = progresses[holder] ?: return@mapNotNull null
                 if (display.hidden && !progress.isDone) return@mapNotNull null
-
-                val matches = display.title.string.contains(searchTerm, ignoreCase = true) ||
-                        display.description.string.contains(searchTerm, ignoreCase = true) ||
-                        display.icon.rawHoverName?.contains(searchTerm, ignoreCase = true) == true
-                if (!matches) return@mapNotNull null
-
+                if (!display.matches(searchTerm)) return@mapNotNull null
                 SearchResult(holder, display, progress)
             }.sortedWith(
                 compareBy<SearchResult> { it.progress.isDone }
@@ -335,6 +330,19 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
             )
         )
         refreshSearchResults()
+    }
+
+    private fun DisplayInfo.matches(searchTerm: String): Boolean {
+        val cachedText = searchTextCache.getOrPut(this) {
+            listOfNotNull(
+                title.string,
+                description.string,
+                icon[DataComponents.ITEM_NAME]?.string,
+                icon[DataComponents.CUSTOM_NAME]?.string,
+                icon[DataComponents.WRITTEN_BOOK_CONTENT]?.title?.raw,
+            ).joinToString("\n")
+        }
+        return cachedText.contains(searchTerm, ignoreCase = true)
     }
 
     private fun refreshSearchResults() {
