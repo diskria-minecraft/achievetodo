@@ -29,6 +29,7 @@ import net.minecraft.client.input.PreeditEvent
 import net.minecraft.client.multiplayer.ClientAdvancements
 import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.core.component.DataComponents
+import net.minecraft.locale.Language
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.util.CommonColors
@@ -64,7 +65,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     }
 
     private val searchResults = mutableListOf<SearchResult>()
-    private val searchTextCache = HashMap<DisplayInfo, String>()
+    private val displayTextCache = HashMap<DisplayInfo, String>()
 
     private var searchBox: EditBox? = null
     private var isSearchActive = false
@@ -74,6 +75,8 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
 
     private var hoveredResultWidget: AdvancementWidget? = null
     private var clickedResultWidget: AdvancementWidget? = null
+
+    private var lastLanguage = Language.getInstance()
 
     @Extension
     fun repositionSearch(width: Int, height: Int) {
@@ -100,11 +103,11 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     fun feedCharToSearch(event: CharacterEvent): Boolean {
         val searchBox = searchBox ?: return false
         val oldText = searchBox.value
-        val processed = searchBox.charTyped(event)
-        if (processed && oldText != searchBox.value) {
+        val consumed = searchBox.charTyped(event)
+        if (consumed && oldText != searchBox.value) {
             processSearch()
         }
-        return processed
+        return consumed
     }
 
     @Extension
@@ -158,9 +161,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         if (resultsColumns != columnsCount || resultsOriginX != originX) {
             resultsColumns = columnsCount
             resultsOriginX = originX
-            if (isSearchActive) {
-                refreshSearchResults()
-            }
+            refreshSearchResults()
         }
         if (hoveredResultWidget != null) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
@@ -221,10 +222,10 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         val hovered = hoveredResultWidget ?: return op(event)
         val clicked = clickedResultWidget ?: return op(event)
         if (clicked.advancement.id != hovered.advancement.id) return op(event)
+        hoveredResultWidget = null
+        clickedResultWidget = null
         if (startFlashing(clicked.advancement.id, AdvancementFlashingMode.FRAME)) {
             isSearchActive = false
-            hoveredResultWidget = null
-            clickedResultWidget = null
             searchResultsTab.resetHovered()
         }
         return op(event)
@@ -293,24 +294,38 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     @WrapMethod(method = ["keyPressed"])
     fun feedKeyToSearch(event: KeyEvent, op: Operation<Boolean>): Boolean {
         val searchBox = searchBox ?: return op(event)
+        if (InputConstants.isKeyDown(InputConstants.KEY_F3)) return op(event)
         val oldText = searchBox.value
-        val processed = searchBox.keyPressed(event)
-        if (processed && oldText != searchBox.value) {
+        val consumed = searchBox.keyPressed(event)
+        if (consumed && oldText != searchBox.value) {
             processSearch()
         }
-        if (processed || searchBox.capturesInput() && !event.isEscape) {
+        if (consumed || searchBox.capturesInput() && !event.isEscape) {
             return true
         }
         return op(event)
     }
 
-    private fun processSearch() {
+    @WrapMethod(method = ["tick"])
+    fun onLanguageChanged(op: Op<Unit>) {
+        op()
+        val currentLanguage = Language.getInstance()
+        if (lastLanguage !== currentLanguage) {
+            displayTextCache.clear()
+            processSearch(background = true)
+            lastLanguage = currentLanguage
+        }
+    }
+
+    private fun processSearch(background: Boolean = false) {
         val searchBox = searchBox ?: return
         val searchTerm = searchBox.value.lowercase()
-        isSearchActive = searchTerm.isNotEmpty()
-        if (isSearchActive) screen.stopFlashing()
+        if (!background) {
+            isSearchActive = searchTerm.isNotEmpty()
+            if (isSearchActive) screen.stopFlashing()
+        }
         searchResults.clear()
-        if (!isSearchActive) return
+        if (searchTerm.isEmpty()) return
         searchResults.addAll(
             advancements.nodesWithProgress().mapNotNull { (node, progress) ->
                 val holder = node.holder()
@@ -333,7 +348,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     }
 
     private fun DisplayInfo.matches(searchTerm: String): Boolean {
-        val cachedText = searchTextCache.getOrPut(this) {
+        val cachedText = displayTextCache.getOrPut(this) {
             listOfNotNull(
                 title.string,
                 description.string,

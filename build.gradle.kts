@@ -84,7 +84,7 @@ loom {
                     "mixin.debug.export" to "true",
                     "mixin.debug.verify" to "true",
                     // "mixin.debug.verbose" to "true",
-                    "mixin.debug.countInjections" to "true",
+                    // "mixin.debug.countInjections" to "true",
                     "mixin.dumpTargetOnFailure" to "true",
                     "mixin.checks.interfaces" to "true",
                 )
@@ -127,18 +127,18 @@ loom {
 }
 
 dependencies {
-    runtimeOnly("maven.modrinth:9s6osm5g:fg2uyxOW") // ClothConfigApi         | 26.3.159+fabric            | https://modrinth.com/mod/cloth-config/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:1eAoo2KR:s9SjoFu1") // YetAnotherConfigLib    | 3.9.7+26.3-fabric          | https://modrinth.com/mod/yacl/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:sodium:mc26.3-0.9.2-fabric") // Sodium                 | mc26.3-0.9.2-fabric        | https://modrinth.com/mod/sodium/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:sodium-extra:mc26.3-0.9.5+fabric") // Sodium Extra           | mc26.3-0.9.5+fabric        | https://modrinth.com/mod/sodium-extra/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:reeses-sodium-options:mc26.3-2.2.4+fabric") // Reese's Sodium Options | mc26.3-2.2.4+fabric        | https://modrinth.com/mod/reeses-sodium-options/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:gvQqBUqZ:fWv5bnZk") // Lithium                | mc26.3-0.26.3-fabric       | https://modrinth.com/mod/lithium/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:fQEb0iXm:UugdIYJw") // Krypton                | 0.3.2                      | https://modrinth.com/mod/krypton/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:VSNURh3q:gKKkuSYc") // C2ME                   | 0.4.2-alpha.0.106+26.3     | https://modrinth.com/mod/c2me-fabric/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:8shC1gFX:XB7u4eSf") // BetterF3               | 20.0.0                     | https://modrinth.com/mod/betterf3/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:w7ThoJFB:RUBpNu00") // Zoomify                | 2.17.0+mc26.3              | https://modrinth.com/mod/zoomify/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:uLbm7CG6:QVn4cccd") // Language Reload        | 1.7.8+26.3                 | https://modrinth.com/mod/language-reload/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:ZS0HNETF:h6gtFPqk") // Third Person Nametags  | 1.8.0                      | https://modrinth.com/mod/third-person-nametags/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:YL57xq9U:vTN4NRGW") // Iris Shaders           | 1.11.7+26.3-fabric         | https://modrinth.com/mod/iris/versions?g=26.3&l=fabric
-    runtimeOnly("maven.modrinth:mOgUt4GM:kyy7dbrZ") // Mod Menu               | 21.0.0                     | https://modrinth.com/mod/modmenu/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:cloth-config:26.3.159+fabric")              // https://modrinth.com/mod/cloth-config/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:yacl:3.9.7+26.3-fabric")                    // https://modrinth.com/mod/yacl/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:sodium:mc26.3-0.9.2-fabric")                // https://modrinth.com/mod/sodium/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:sodium-extra:mc26.3-0.9.5+fabric")          // https://modrinth.com/mod/sodium-extra/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:reeses-sodium-options:mc26.3-2.2.4+fabric") // https://modrinth.com/mod/reeses-sodium-options/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:lithium:mc26.3-0.26.3-fabric")              // https://modrinth.com/mod/lithium/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:krypton:0.3.2")                             // https://modrinth.com/mod/krypton/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:c2me-fabric:0.4.2-alpha.0.106+26.3")        // https://modrinth.com/mod/c2me-fabric/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:betterf3:20.0.0")                           // https://modrinth.com/mod/betterf3/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:zoomify:2.17.0+mc26.3")                     // https://modrinth.com/mod/zoomify/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:language-reload:1.7.8+26.3")                // https://modrinth.com/mod/language-reload/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:third-person-nametags:1.8.0")               // https://modrinth.com/mod/third-person-nametags/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:iris:1.11.7+26.3-fabric")                   // https://modrinth.com/mod/iris/versions?g=26.3&l=fabric
+    runtimeOnly("maven.modrinth:modmenu:21.0.0")                            // https://modrinth.com/mod/modmenu/versions?g=26.3&l=fabric
 }
