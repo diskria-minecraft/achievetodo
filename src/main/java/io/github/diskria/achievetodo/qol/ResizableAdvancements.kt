@@ -24,6 +24,7 @@ import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementTabType
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
 import net.minecraft.client.input.MouseButtonEvent
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.texture.SpriteContents
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.client.resources.metadata.animation.FrameSize
@@ -197,7 +198,29 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
             windowWidth, windowHeight,
             CommonColors.WHITE
         )
-        if (isHoveringResizeCorner(mouseX, mouseY) || isDraggingResize) {
+        drawResizeCorner(graphics, texture, textureWidth, textureHeight, mouseX, mouseY)
+    }
+
+    private fun drawResizeCorner(
+        graphics: GuiGraphicsExtractor,
+        texture: Identifier,
+        texWidth: Int, texHeight: Int,
+        mouseX: Int, mouseY: Int,
+    ) {
+        val isHoveringOrDragging = isHoveringResizeCorner(mouseX, mouseY) || isDraggingResize
+        val cx = rightPos - Window.BEVEL_SIZE - Tree.HORIZONTAL_MARGIN / 3
+        val cy = bottomPos - Window.BEVEL_SIZE - Tree.BOTTOM_MARGIN / 3
+        val highlightPixel = 3f to 3f
+        val shadowPixel = (Window.WIDTH - 3f) to (Window.HEIGHT - 3f)
+        val (tu, tv) = if (isHoveringOrDragging) highlightPixel else shadowPixel
+        val (bu, bv) = if (isHoveringOrDragging) shadowPixel else highlightPixel
+        (0..2).forEach { shift ->
+            val px = cx - shift
+            val py = cy - (2 - shift)
+            graphics.blit(RenderPipelines.GUI_TEXTURED, texture, px, py, tu, tv, 1, 1, texWidth, texHeight)
+            graphics.blit(RenderPipelines.GUI_TEXTURED, texture, px + 1, py + 1, bu, bv, 1, 1, texWidth, texHeight)
+        }
+        if (isHoveringOrDragging) {
             graphics.requestCursor(RESIZE_NWSE)
         }
     }
