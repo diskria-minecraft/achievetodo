@@ -441,7 +441,8 @@ abstract class SearchingAdvancementTab(@Origin val tab: AdvancementTab) {
     )
     fun hideSearchResultsBackground(
         graphics: GuiGraphicsExtractor,
-        renderPipeline: RenderPipeline, texture: Identifier,
+        renderPipeline: RenderPipeline,
+        texture: Identifier,
         x: Int, y: Int,
         u: Float, v: Float,
         width: Int, height: Int,

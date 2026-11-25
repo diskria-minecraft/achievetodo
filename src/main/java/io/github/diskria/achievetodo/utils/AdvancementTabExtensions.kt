@@ -24,7 +24,7 @@ abstract class AdvancementTabExtensions(@Origin val tab: AdvancementTab) {
     @Extension
     fun resetHovered() {
         hovered = null
-        fade = 0.0f
+        fade = 0f
     }
 
     @Extension

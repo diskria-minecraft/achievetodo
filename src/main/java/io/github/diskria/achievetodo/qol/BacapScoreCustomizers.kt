@@ -37,7 +37,7 @@ object BacapScoreFormat : NumberFormat {
         val text = number.toString()
         return text.toBrandGradientComponent { index ->
             val rightOffset = text.lastIndex - index
-            (1.0f - rightOffset / 3.0f).coerceIn(0.0f, 1.0f)
+            (1f - rightOffset / 3f).coerceIn(0f, 1f)
         }
     }
 

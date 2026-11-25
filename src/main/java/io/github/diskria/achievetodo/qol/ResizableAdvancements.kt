@@ -1,14 +1,15 @@
 package io.github.diskria.achievetodo.qol
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue
-import com.llamalad7.mixinextras.injector.v2.WrapWithCondition
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
+import com.llamalad7.mixinextras.sugar.Local
 import com.mojang.blaze3d.platform.NativeImage
+import com.mojang.blaze3d.platform.cursor.CursorType
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
+import io.github.diskria.achievetodo.extensions.toEven
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Tab
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Tree
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Window
@@ -16,42 +17,45 @@ import io.github.diskria.achievetodo.utils.invalidateCentered
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.Font
 import net.minecraft.client.gui.GuiGraphicsExtractor
-import net.minecraft.client.gui.components.AbstractWidget
 import net.minecraft.client.gui.layouts.HeaderAndFooterLayout
-import net.minecraft.client.gui.layouts.LayoutElement
+import net.minecraft.client.gui.navigation.ScreenRectangle
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementTabType
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
+import net.minecraft.client.input.MouseButtonEvent
 import net.minecraft.client.renderer.texture.SpriteContents
 import net.minecraft.client.renderer.texture.TextureAtlasSprite
 import net.minecraft.client.resources.metadata.animation.FrameSize
 import net.minecraft.client.resources.metadata.gui.GuiSpriteScaling
-import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.util.CommonColors
+import net.minecraft.util.Mth
 import org.spongepowered.asm.mixin.injection.At
-import java.util.function.Consumer
 import javax.lang.model.element.Modifier.*
+import kotlin.math.roundToInt
 
 @KMixin<AdvancementsScreen>(Side.Client)
 abstract class ResizableAdvancementsScreen(@Origin private val screen: AdvancementsScreen) {
 
     @Extension
-    val isResized: Boolean get() = FULLSCREEN
+    val isResized: Boolean get() = windowWidth > minWindowWidth || windowHeight > minWindowHeight
 
     @Extension
-    val windowWidth: Int get() = if (FULLSCREEN) screen.width - fullscreenHorizontalMargin * 2 else Window.WIDTH
+    val windowWidth: Int
+        get() = (Mth.lerp(widthRatio, minWindowWidth / 2f, maxWindowWidth / 2f).roundToInt() * 2)
+            .coerceIn(minWindowWidth, maxWindowWidth)
 
     @Extension
-    val windowHeight: Int get() = if (FULLSCREEN) screen.height - fullscreenVerticalMargin * 2 else Window.HEIGHT
+    val windowHeight: Int
+        get() = (Mth.lerp(heightRatio, minWindowHeight / 2f, maxWindowHeight / 2f).roundToInt() * 2)
+            .coerceIn(minWindowHeight, maxWindowHeight)
 
     @Extension
-    val horizontalMargin: Int get() = (screen.width - windowWidth) / 2
+    val windowHorizontalMargin: Int get() = (screen.width - windowWidth) / 2
 
     @Extension
-    val verticalMargin: Int get() = (screen.height - windowHeight) / 2
+    val windowVerticalMargin: Int get() = (screen.height - windowHeight) / 2
 
     @Extension
     val treeWidth: Int get() = windowWidth - Tree.HORIZONTAL_MARGIN * 2
@@ -59,23 +63,101 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
     @Extension
     val treeHeight: Int get() = windowHeight - Tree.TOP_MARGIN - Tree.BOTTOM_MARGIN
 
-    private val fullscreenHorizontalMargin get() = Tab.HORIZONTAL_PROTRUSION + FULLSCREEN_PADDING
-    private val fullscreenVerticalMargin get() = Tab.VERTICAL_PROTRUSION + FULLSCREEN_PADDING
+    @Extension
+    val resizeRatio: Float get() = ((widthRatio + heightRatio) / 2f).coerceIn(0f, 1f)
 
-    private val nineSlice by lazy {
-        GuiSpriteScaling.NineSlice(
-            Window.WIDTH, Window.HEIGHT,
-            GuiSpriteScaling.NineSlice.Border(
-                Tree.HORIZONTAL_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
-                Tree.TOP_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
-                Tree.HORIZONTAL_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
-                Tree.BOTTOM_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
-            ),
-            true,
-        )
+    private val rightPos get() = leftPos + windowWidth
+    private val bottomPos get() = topPos + windowHeight
+    private val minWindowWidth get() = Window.WIDTH
+    private val minWindowHeight get() = Window.HEIGHT
+    private val maxWindowWidth: Int
+        get() {
+            val hPad = Tab.HORIZONTAL_PROTRUSION + FULLSCREEN_PADDING
+            val remainingWidth = screen.width - hPad * 2
+            return remainingWidth.toEven().coerceAtLeast(minWindowWidth)
+        }
+    private val maxWindowHeight: Int
+        get() {
+            val vPad = Tab.VERTICAL_PROTRUSION + FULLSCREEN_PADDING
+            val remainingHeight = screen.height - vPad * 2
+            return remainingHeight.toEven().coerceAtLeast(minWindowHeight)
+        }
+
+    private var widthRatio = savedWidthRatio
+    private var heightRatio = savedHeightRatio
+    private var isDraggingResize = false
+    private var dragStartX = 0.0
+    private var dragStartY = 0.0
+    private var dragStartWidth = 0
+    private var dragStartHeight = 0
+    private var sprite: TextureAtlasSprite? = null
+
+    @WrapMethod(method = ["mouseClicked(Lnet/minecraft/client/input/MouseButtonEvent;Z)Z"])
+    fun startResizing(event: MouseButtonEvent, doubleClick: Boolean, op: Op<Boolean>): Boolean {
+        if (isHoveringResizeCorner(event.x.toInt(), event.y.toInt())) {
+            isDraggingResize = true
+            dragStartX = event.x
+            dragStartY = event.y
+            dragStartWidth = windowWidth
+            dragStartHeight = windowHeight
+            return true
+        }
+        return op(event, doubleClick)
     }
 
-    private var sprite: TextureAtlasSprite? = null
+    @WrapMethod(method = ["mouseDragged(Lnet/minecraft/client/input/MouseButtonEvent;DD)Z"])
+    fun updateResizing(event: MouseButtonEvent, dx: Double, dy: Double, op: Op<Boolean>): Boolean {
+        if (isDraggingResize) {
+            val widthRange = maxWindowWidth - minWindowWidth
+            if (widthRange > 0) {
+                val delta = event.x - dragStartX
+                val targetWidth = (delta + dragStartWidth + delta).roundToInt().toFloat()
+                widthRatio = ((targetWidth - minWindowWidth) / widthRange).coerceIn(0f, 1f)
+            }
+            val heightRange = maxWindowHeight - minWindowHeight
+            if (heightRange > 0) {
+                val delta = event.y - dragStartY
+                val targetHeight = (delta + dragStartHeight + delta).roundToInt().toFloat()
+                heightRatio = ((targetHeight - minWindowHeight) / heightRange).coerceIn(0f, 1f)
+            }
+            repositionElements()
+            return true
+        }
+        return op(event, dx, dy)
+    }
+
+    @WrapMethod(method = ["mouseReleased(Lnet/minecraft/client/input/MouseButtonEvent;)Z"])
+    fun stopResizing(event: MouseButtonEvent, op: Op<Boolean>): Boolean {
+        if (isDraggingResize) {
+            isDraggingResize = false
+            return true
+        }
+        return op(event)
+    }
+
+    @WrapMethod(method = ["repositionElements()V"])
+    fun updateLayout(op: Op<Unit>) {
+        op()
+        val topTabs = if (tabs.values.any { it.type == AdvancementTabType.ABOVE }) Tab.VERTICAL_PROTRUSION else 0
+        val bottomTabs = if (tabs.values.any { it.type == AdvancementTabType.BELOW }) Tab.VERTICAL_PROTRUSION else 0
+        val leftTabs = if (tabs.values.any { it.type == AdvancementTabType.LEFT }) Tab.HORIZONTAL_PROTRUSION else 0
+        val rightTabs = if (tabs.values.any { it.type == AdvancementTabType.RIGHT }) Tab.HORIZONTAL_PROTRUSION else 0
+        val clearance = 5
+        val topEdge = topPos - topTabs - clearance
+        val bottomEdge = bottomPos + bottomTabs + clearance
+        val leftEdge = leftPos - leftTabs - clearance
+        val rightEdge = rightPos + rightTabs + clearance
+        val windowBounds = ScreenRectangle(leftEdge, topEdge, rightEdge - leftEdge, bottomEdge - topEdge)
+        layout.visitWidgets { it.visible = !it.rectangle.intersects(windowBounds) }
+        tabs.values.forEach { it.invalidateCentered() }
+    }
+
+    @WrapMethod(method = ["removed()V"])
+    fun saveSizeOnClose(op: Op<Unit>) {
+        savedWidthRatio = widthRatio
+        savedHeightRatio = heightRatio
+        op()
+    }
 
     @WrapOperation(
         method = ["extractWindow(Lnet/minecraft/client/gui/GuiGraphicsExtractor;II)V"],
@@ -83,6 +165,10 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
             value = "INVOKE",
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;blit(Lcom/mojang/renderpearl/api/pipeline/RenderPipeline;Lnet/minecraft/resources/Identifier;IIFFIIII)V",
         )]
+    )
+    context(
+        @Local(argsOnly = true, name = ["mouseX"]) mouseX: Int,
+        @Local(argsOnly = true, name = ["mouseY"]) mouseY: Int,
     )
     fun renderWindow(
         graphics: GuiGraphicsExtractor,
@@ -94,9 +180,6 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
         textureWidth: Int, textureHeight: Int,
         op: Op<Unit>
     ) {
-        if (!FULLSCREEN) {
-            return op(graphics, renderPipeline, texture, x, y, u, v, width, height, textureWidth, textureHeight)
-        }
         val sprite = sprite ?: TextureAtlasSprite(
             texture,
             SpriteContents(
@@ -107,50 +190,20 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
             textureWidth, textureHeight,
             0, 0,
             0,
-        ).also { this.sprite = it }
+        ).also { sprite = it }
         graphics.blitNineSlicedSprite(
-            renderPipeline, sprite, nineSlice,
+            renderPipeline, sprite, NINE_SLICE,
             x, y,
             windowWidth, windowHeight,
             CommonColors.WHITE
         )
-    }
-
-    @WrapMethod(method = ["repositionElements()V"])
-    fun calculateOnReposition(op: Op<Unit>) {
-        op()
-        if (FULLSCREEN) {
-            tabs.values.forEach { it.invalidateCentered() }
+        if (isHoveringResizeCorner(mouseX, mouseY) || isDraggingResize) {
+            graphics.requestCursor(RESIZE_NWSE)
         }
     }
 
-    @WrapWithCondition(
-        method = ["init()V"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;addTitleHeader(Lnet/minecraft/network/chat/Component;Lnet/minecraft/client/gui/Font;)V",
-        )]
-    )
-    fun hideTitleHeader(layout: HeaderAndFooterLayout, component: Component, font: Font) = !FULLSCREEN
-
-    @WrapOperation(
-        method = ["init()V"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;addToFooter(Lnet/minecraft/client/gui/layouts/LayoutElement;)Lnet/minecraft/client/gui/layouts/LayoutElement;",
-        )]
-    )
-    fun hideFooter(layout: HeaderAndFooterLayout, child: LayoutElement, op: Operation<LayoutElement>): LayoutElement? =
-        if (!FULLSCREEN) op(layout, child) else null
-
-    @WrapWithCondition(
-        method = ["init()V"],
-        at = [At(
-            value = "INVOKE",
-            target = "Lnet/minecraft/client/gui/layouts/HeaderAndFooterLayout;visitWidgets(Ljava/util/function/Consumer;)V",
-        )]
-    )
-    fun hideWidgets(layout: HeaderAndFooterLayout, consumer: Consumer<AbstractWidget>) = !FULLSCREEN
+    private fun isHoveringResizeCorner(mouseX: Int, mouseY: Int): Boolean =
+        mouseX in (rightPos - Tree.HORIZONTAL_MARGIN)..rightPos && mouseY in (bottomPos - Tree.BOTTOM_MARGIN)..bottomPos
 
     @ModifyExpressionValue(
         method = [
@@ -174,28 +227,59 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
         method = ["extractInside(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"],
         at = [At(value = "CONSTANT", args = ["intValue=${Tree.WIDTH}"])]
     )
-    fun modifyEmptyBackgroundWidth(original: Int) = treeWidth
+    fun modifyTreeWidth(original: Int) = treeWidth
 
     @ModifyExpressionValue(
         method = ["extractInside(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"],
         at = [At(value = "CONSTANT", args = ["intValue=${Tree.HEIGHT}"])]
     )
-    fun modifyEmptyBackgroundHeight(original: Int) = treeHeight
+    fun modifyTreeHeight(original: Int) = treeHeight
 
     @ModifyExpressionValue(
         method = ["extractInside(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"],
         at = [At(value = "CONSTANT", args = ["intValue=${Tree.WIDTH / 2}"])]
     )
-    fun modifyEmptyTextX(original: Int) = treeWidth / 2
+    fun modifyTreeCenterX(original: Int) = treeWidth / 2
 
     @ModifyExpressionValue(
         method = ["extractInside(Lnet/minecraft/client/gui/GuiGraphicsExtractor;)V"],
         at = [At(value = "CONSTANT", args = ["intValue=${Tree.HEIGHT / 2}"])]
     )
-    fun modifyEmptyTextY(original: Int) = treeHeight / 2
+    fun modifyTreeCenterY(original: Int) = treeHeight / 2
+
+    @KShadow(PRIVATE)
+    abstract var leftPos: Int
+
+    @KShadow(PRIVATE)
+    abstract var topPos: Int
+
+    @KShadow(PRIVATE, FINAL)
+    abstract val layout: HeaderAndFooterLayout
 
     @KShadow(PRIVATE, FINAL)
     abstract val tabs: Map<AdvancementHolder, AdvancementTab>
+
+    @KShadow(PROTECTED)
+    abstract fun repositionElements()
+
+    companion object {
+        private const val FULLSCREEN_PADDING = 4
+
+        private val RESIZE_NWSE = CursorType.createStandardCursor(5, "resize_nwse", CursorType.DEFAULT)
+        private val NINE_SLICE = GuiSpriteScaling.NineSlice(
+            Window.WIDTH, Window.HEIGHT,
+            GuiSpriteScaling.NineSlice.Border(
+                Tree.HORIZONTAL_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
+                Tree.TOP_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
+                Tree.HORIZONTAL_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
+                Tree.BOTTOM_MARGIN + Tree.SHADOW_VIGNETTE_SIZE,
+            ),
+            true,
+        )
+
+        private var savedWidthRatio = 1f
+        private var savedHeightRatio = 1f
+    }
 }
 
 @KMixin<AdvancementTab>(Side.Client)
@@ -253,20 +337,26 @@ abstract class ResizableAdvancementTab {
     fun modifyBackgroundTileRows(original: Int): Int =
         advancementsScreen.treeHeight / AdvancementsScreen.BACKGROUND_TILE_HEIGHT + 1
 
-    @ModifyExpressionValue(method = ["tick(II)V"], at = [At(value = "CONSTANT", args = ["floatValue=0.06"])])
-    fun modifyFadeInSpeed(original: Float): Float {
-        if (!FULLSCREEN) return original
-        val target = 0.3f
-        val distance = target - fade
-        return (distance * 0.25f).coerceAtLeast(0.01f)
+    @WrapOperation(
+        method = ["tick(II)V"],
+        at = [At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(FFF)F", ordinal = 0)]
+    )
+    fun smoothFadeIn(value: Float, min: Float, max: Float, op: Op<Float>): Float {
+        val distance = max - fade
+        val smoothStep = (distance * 0.25f).coerceAtLeast(0.01f)
+        val finalValue = Mth.lerp(advancementsScreen.resizeRatio, value, fade + smoothStep)
+        return op(finalValue, min, max)
     }
 
-    @ModifyExpressionValue(method = ["tick(II)V"], at = [At(value = "CONSTANT", args = ["floatValue=0.12"])])
-    fun modifyFadeOutSpeed(original: Float): Float {
-        if (!FULLSCREEN) return original
-        val target = 0.0f
-        val distance = fade - target
-        return (distance * 0.1f).coerceAtLeast(0.002f)
+    @WrapOperation(
+        method = ["tick(II)V"],
+        at = [At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;clamp(FFF)F", ordinal = 1)]
+    )
+    fun smoothFadeOut(value: Float, min: Float, max: Float, op: Op<Float>): Float {
+        val distance = fade - min
+        val smoothStep = (distance * 0.1f).coerceAtLeast(0.002f)
+        val finalValue = Mth.lerp(advancementsScreen.resizeRatio, value, fade - smoothStep)
+        return op(finalValue, min, max)
     }
 
     @KShadow(PRIVATE)
@@ -285,14 +375,11 @@ abstract class ResizableAdvancementTabType {
         method = ["getX(I)I"],
         at = [At(value = "CONSTANT", args = ["intValue=${Window.WIDTH - Tab.OVERLAP}"])]
     )
-    fun modifyRightX(original: Int): Int = advancementsScreen?.let { it.windowWidth - Tab.OVERLAP } ?: original
+    fun modifyRightX(original: Int) = advancementsScreen?.let { it.windowWidth - Tab.OVERLAP } ?: original
 
     @ModifyExpressionValue(
         method = ["getY(I)I"],
         at = [At(value = "CONSTANT", args = ["intValue=${Window.HEIGHT - Tab.OVERLAP}"])]
     )
-    fun modifyBelowY(original: Int): Int = advancementsScreen?.let { it.windowHeight - Tab.OVERLAP } ?: original
+    fun modifyBelowY(original: Int) = advancementsScreen?.let { it.windowHeight - Tab.OVERLAP } ?: original
 }
-
-private const val FULLSCREEN = true
-private const val FULLSCREEN_PADDING = 4

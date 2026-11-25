@@ -50,8 +50,8 @@ class AchieveToDoMod : ModInitializer {
         fun lerpBrandColor(factor: Float): Int = ARGB.srgbLerp(factor, COLOR_BLUE, COLOR_YELLOW)
 
         val COLORED_NAME: Component by lazy {
-            val mid = NAME.lastIndex / 2.0f
-            NAME.toBrandGradientComponent { index -> 1.0f - abs(index - mid) / mid }
+            val mid = NAME.lastIndex / 2f
+            NAME.toBrandGradientComponent { index -> 1f - abs(index - mid) / mid }
         }
 
         val server = AchieveToDoServer()

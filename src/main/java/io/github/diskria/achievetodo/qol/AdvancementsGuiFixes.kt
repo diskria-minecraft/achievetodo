@@ -100,28 +100,27 @@ abstract class AdvancementTabTypeFixes(@Origin private val type: AdvancementTabT
         @Local(name = ["sprites"]) sprites: Sprites,
     )
     fun fixSpriteAlignment(
-        instance: GuiGraphicsExtractor,
+        graphics: GuiGraphicsExtractor,
         renderPipeline: RenderPipeline,
-        location: Identifier,
+        originalTexture: Identifier,
         x: Int, y: Int,
         width: Int, height: Int,
         op: Op<Unit>
     ) {
         val screen = advancementsScreen
-        if (screen == null || !screen.isResized) {
-            return op(instance, renderPipeline, location, x, y, width, height)
-        }
-        val isVertical = type == AdvancementTabType.ABOVE || type == AdvancementTabType.BELOW
-        val tabPosition = if (isVertical) x else y
-        val tabSize = if (isVertical) width else height
-        val screenMargin = if (isVertical) screen.horizontalMargin else screen.verticalMargin
-        val screenSize = if (isVertical) screen.width else screen.height
-        val sprite = when {
-            tabPosition == screenMargin -> sprites.first
-            tabPosition + tabSize == screenSize - screenMargin -> sprites.last
-            else -> sprites.middle
-        }
-        op(instance, renderPipeline, sprite, x, y, width, height)
+        val finalTexture = if (screen?.isResized == true) {
+            val isVertical = type == AdvancementTabType.ABOVE || type == AdvancementTabType.BELOW
+            val tabPosition = if (isVertical) x else y
+            val tabSize = if (isVertical) width else height
+            val windowMargin = if (isVertical) screen.windowHorizontalMargin else screen.windowVerticalMargin
+            val screenSize = if (isVertical) screen.width else screen.height
+            when {
+                tabPosition == windowMargin -> sprites.first
+                tabPosition + tabSize == screenSize - windowMargin -> sprites.last
+                else -> sprites.middle
+            }
+        } else originalTexture
+        op(graphics, renderPipeline, finalTexture, x, y, width, height)
     }
 }
 
@@ -151,24 +150,25 @@ class AdvancementWidgetFixes {
         at = [At(value = "STORE")]
     )
     fun fixHoverOutOfScreen(
-        topSide: Boolean,
+        originalTopMode: Boolean,
         @Local(name = ["titleTop"]) titleTop: Int,
         @Local(name = ["titleBarBottom"]) titleBarBottom: Int,
-        @Local(name = ["descriptionTextHeight"]) descriptionTextHeight: Int,
         @Local(name = ["descriptionHeight"]) descriptionHeight: Int,
     ): Boolean {
-        val screen = advancementsScreen ?: return topSide
-        val hoverBottom = titleBarBottom + descriptionHeight
-        val hoverTop = titleTop - descriptionTextHeight + 1
-        val backgroundTop = descriptionHeight - descriptionTextHeight
-        val windowBottom = screen.treeHeight + Tree.TOP_MARGIN + screen.verticalMargin
-        val windowTop = -(Tree.HORIZONTAL_MARGIN + screen.verticalMargin)
-        return when {
-            hoverBottom < screen.treeHeight -> false
-            hoverTop >= backgroundTop -> true
-            hoverBottom <= windowBottom -> false
-            hoverTop >= windowTop -> true
-            else -> Minecraft.getInstance().hasAltDown()
-        }
+        val screen = advancementsScreen
+        val finalTopMode = if (screen != null) {
+            val tooltipBottom = titleBarBottom + descriptionHeight
+            val tooltipTop = titleTop - descriptionHeight
+            val screenBottom = screen.treeHeight + Tree.BOTTOM_MARGIN + screen.windowVerticalMargin
+            val screenTop = -(screen.windowVerticalMargin + Tree.TOP_MARGIN)
+            when {
+                tooltipBottom < screen.treeHeight -> false
+                tooltipTop >= 0 -> true
+                tooltipBottom <= screenBottom -> false
+                tooltipTop >= screenTop -> true
+                else -> Minecraft.getInstance().hasAltDown()
+            }
+        } else originalTopMode
+        return finalTopMode
     }
 }

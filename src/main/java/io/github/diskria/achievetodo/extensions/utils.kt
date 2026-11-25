@@ -17,6 +17,8 @@ import java.util.stream.Stream
 import java.util.zip.ZipFile
 import kotlin.io.path.outputStream
 
+fun Int.toEven(): Int = this and 1.inv()
+
 fun String.capitalized(): String =
     replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
