@@ -76,7 +76,8 @@ object ServerLandmarksManager {
 
     fun resizeLandmark(level: ServerLevel, chunkPos: ChunkPos, current: Landmark, resized: Landmark) {
         if (ModServerConfig.current == null) return
-        val inChunk = loadedLandmarks[level.dimension()]?.get(chunkPos) ?: return
+        val inDimension = loadedLandmarks[level.dimension()] ?: return
+        val inChunk = inDimension[chunkPos] ?: return
         inChunk.remove(current)
         inChunk.add(resized)
     }

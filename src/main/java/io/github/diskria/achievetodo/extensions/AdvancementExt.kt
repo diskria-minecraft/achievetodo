@@ -7,9 +7,7 @@ import net.minecraft.advancements.*
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
 import net.minecraft.client.multiplayer.ClientAdvancements
-import net.minecraft.core.component.DataComponents
 import net.minecraft.resources.Identifier
-import net.minecraft.world.item.ItemStackTemplate
 import kotlin.jvm.optionals.getOrNull
 
 val AdvancementNode.isDisplayable: Boolean

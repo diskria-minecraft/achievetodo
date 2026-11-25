@@ -40,7 +40,7 @@ abstract class FlashingAdvancementsScreen(@Origin val screen: AdvancementsScreen
     @Extension
     fun startFlashing(id: Identifier, mode: AdvancementFlashingMode): Boolean {
         stopFlashing()
-        val targetTab = advancements.tree().get(id)?.root() ?: return false
+        val targetTab = advancements.tree()[id]?.root() ?: return false
         advancements.setSelectedTab(targetTab.holder(), true)
         val targetWidget = selectedTab?.getWidget(id) ?: return false
         flashingTicks = mode.totalTicks

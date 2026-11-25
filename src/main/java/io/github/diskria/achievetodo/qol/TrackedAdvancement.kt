@@ -49,7 +49,7 @@ sealed class TrackedAdvancement(val advancementId: String) {
         companion object {
             val BY_STAT = trackedAdvancements.values
                 .filterIsInstance<Statistics<*>>()
-                .groupBy { it.type.get(it.argument) }
+                .groupBy { it.type[it.argument] }
 
             fun fromStat(stat: Stat<*>) = BY_STAT[stat]
         }

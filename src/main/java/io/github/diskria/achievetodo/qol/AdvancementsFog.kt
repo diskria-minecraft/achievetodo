@@ -144,7 +144,7 @@ abstract class AdvancementsFogTracker {
                 }
             }
             removedNodeIds.forEach { id ->
-                val node = tree.get(id) ?: return@forEach
+                val node = tree[id] ?: return@forEach
                 if (!node.isDisplayable) return@forEach
                 node.parent()?.let { parent ->
                     if (parent.isRevealed) add(parent)
@@ -153,7 +153,7 @@ abstract class AdvancementsFogTracker {
         }
         val added = mutableMapOf<Identifier, List<AdvancementFogHint>>()
         val removed = removedNodeIds.filterTo(mutableSetOf()) { id ->
-            val node = tree.get(id) ?: return@filterTo true
+            val node = tree[id] ?: return@filterTo true
             node.isDisplayable && node.children().any { it.isDisplayable }
         }
         nodesToCheck.forEach { node ->
@@ -218,9 +218,6 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
     val fogHints: List<AdvancementWidget> get() = children.filter { it.advancement.isFogHint }
 
     @Extension
-    val parent: AdvancementWidget? get() = parentWidget
-
-    @Extension
     fun attachFogHintsToParent(tab: AdvancementTab) {
         AdvancementsFogManager.Client.getHintsFor(advancementNode.holder().id).orEmpty().forEachIndexed { index, hint ->
             val id = Identifier.fromNamespaceAndPath(HINT_NAMESPACE, "${id.namespace}/${id.path}/$index")
@@ -253,9 +250,12 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
     @KShadow(PRIVATE, FINAL)
     abstract val children: MutableList<AdvancementWidget>
 
+    @Extension
+    val parent: AdvancementWidget? get() = parentInternal
+
     @MappingName("parent")
     @KShadow(PRIVATE)
-    abstract val parentWidget: AdvancementWidget?
+    abstract val parentInternal: AdvancementWidget?
 }
 
 @KMixin<AdvancementWidget>(Side.Client)

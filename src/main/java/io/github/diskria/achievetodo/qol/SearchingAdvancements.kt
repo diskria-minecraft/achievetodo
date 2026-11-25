@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.InputConstants
 import com.mojang.blaze3d.platform.cursor.CursorTypes
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.*
+import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Tree
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Widget
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Window
 import io.github.diskria.achievetodo.utils.*
@@ -65,7 +66,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     }
 
     private val searchResults = mutableListOf<SearchResult>()
-    private val displayTextCache = HashMap<DisplayInfo, String>()
+    private val displayTextCache = mutableMapOf<DisplayInfo, String>()
 
     private var searchBox: EditBox? = null
     private var isSearchActive = false
@@ -166,9 +167,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         if (hoveredResultWidget != null) {
             graphics.requestCursor(CursorTypes.POINTING_HAND)
         }
-        val boxSpriteX = leftPos +
-                Window.TREE_HORIZONTAL_MARGIN + treeWidth + Window.TREE_BORDER_SIZE -
-                SearchTexture.BoxPart.WIDTH
+        val boxSpriteX = leftPos + Tree.HORIZONTAL_MARGIN + treeWidth + Tree.BORDER_SIZE - SearchTexture.BoxPart.WIDTH
         val boxSpriteY = topPos + Window.BEVEL_SIZE + (Window.HEADER_HEIGHT - SearchTexture.BoxPart.HEIGHT) / 2
         graphics.blit(
             /* renderPipeline = */ RenderPipelines.GUI_TEXTURED,
@@ -265,7 +264,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
         op: Op<Unit>
     ) {
         val searchSeparatorWidth = left - leftPos - Window.BEVEL_SIZE
-        val right = left + treeWidth + Window.TREE_BORDER_SIZE * 2 - SearchTexture.BoxPart.WIDTH - searchSeparatorWidth
+        val right = left + treeWidth + Tree.BORDER_SIZE * 2 - SearchTexture.BoxPart.WIDTH - searchSeparatorWidth
         val bottom = top + font.lineHeight
         graphics.enableScissor(left, top, right, bottom)
         op(graphics, font, text, left, top, color, dropShadow)
@@ -363,7 +362,7 @@ abstract class SearchingAdvancementsScreen(@Origin private val screen: Advanceme
     private fun refreshSearchResults() {
         searchResultsTab.resetContents()
         if (searchResults.isEmpty()) return
-        searchResultsTab.setScroll(resultsOriginX.toDouble(), Window.TREE_PADDING.toDouble())
+        searchResultsTab.setScroll(resultsOriginX.toDouble(), Tree.PADDING.toDouble())
         searchResultsTab.markCentered()
         var parentNode = searchResultsRoot
         var x = 0
