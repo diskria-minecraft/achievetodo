@@ -38,10 +38,11 @@ abstract class ScoreboardSidebarHoverSupport {
     ) {
         op(graphics, font, text, x, y, color, dropShadow)
         if (minecraft.gui.screen() == null || minecraft.mouseHandler.isMouseGrabbed) return
-        val mouseX = (minecraft.mouseHandler.xpos() / minecraft.window.guiScale).toInt()
-        val mouseY = (minecraft.mouseHandler.ypos() / minecraft.window.guiScale).toInt()
+        val mouseX = minecraft.mouseHandler.getScaledXPos(minecraft.window).toInt()
+        val mouseY = minecraft.mouseHandler.getScaledYPos(minecraft.window).toInt()
         val textWidth = font.width(text)
-        if (mouseX in x..(x + textWidth) && mouseY in y..(y + minecraft.font.lineHeight)) {
+        val textHeight = font.lineHeight
+        if (mouseX in x..(x + textWidth) && mouseY in y..(y + textHeight)) {
             val hoverComponent = (text.style.hoverEvent as? HoverEvent.ShowText)?.value ?: return
             graphics.setTooltipForNextFrame(font, hoverComponent, mouseX, mouseY)
         }

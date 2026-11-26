@@ -18,9 +18,12 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking
 import net.minecraft.advancements.AdvancementHolder
 import net.minecraft.advancements.AdvancementNode
 import net.minecraft.advancements.AdvancementType
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.render.GuiRenderer
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
+import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
 import net.minecraft.network.chat.Component
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
@@ -260,14 +263,14 @@ abstract class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementW
         at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V")]
     )
     context(
-        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
-        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
+        @Local(argsOnly = true, name = ["xo"]) offsetX: Int,
+        @Local(argsOnly = true, name = ["yo"]) offsetY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
     )
     fun drawHorizontalZebra(graphics: GuiGraphicsExtractor, x0: Int, x1: Int, y: Int, color: Int, op: Op<Unit>) {
         if (!isFogHint) return op(graphics, x0, x1, y, color)
         if (isBorderPass) return
-        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
+        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardCell(graphics, x, y, offsetX, offsetY) }
     }
 
     @WrapOperation(
@@ -275,14 +278,14 @@ abstract class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementW
         at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;verticalLine(IIII)V")]
     )
     context(
-        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
-        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
+        @Local(argsOnly = true, name = ["xo"]) offsetX: Int,
+        @Local(argsOnly = true, name = ["yo"]) offsetY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
     )
     fun drawVerticalZebra(graphics: GuiGraphicsExtractor, x: Int, y0: Int, y1: Int, color: Int, op: Op<Unit>) {
         if (!isFogHint) return op(graphics, x, y0, y1, color)
         if (isBorderPass) return
-        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
+        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardCell(graphics, x, y, offsetX, offsetY) }
     }
 
     @WrapWithCondition(
@@ -307,24 +310,36 @@ abstract class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementW
             target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fakeItem(Lnet/minecraft/world/item/ItemStack;II)V"
         )]
     )
-    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, x: Int, y: Int, op: Op<Unit>) {
-        if (!isFogHint) return op(graphics, itemStack, x, y)
+    fun fadeFogHintItem(graphics: GuiGraphicsExtractor, itemStack: ItemStack, itemX: Int, itemY: Int, op: Op<Unit>) {
+        if (!isFogHint) return op(graphics, itemStack, itemX, itemY)
         graphics.itemTempAlpha = 0.45f
         try {
-            op(graphics, itemStack, x, y)
+            op(graphics, itemStack, itemX, itemY)
         } finally {
             graphics.itemTempAlpha = null
+        }
+        val screen = minecraft.gui.screen() as? AdvancementsScreen ?: return
+        val mouseX = minecraft.mouseHandler.getScaledXPos(minecraft.window).toInt()
+        val mouseY = minecraft.mouseHandler.getScaledYPos(minecraft.window).toInt()
+        val relativeMouseX = mouseX - screen.treeX
+        val relativeMouseY = mouseY - screen.treeY
+        val itemSize = GuiRenderer.DEFAULT_ITEM_SIZE
+        if (relativeMouseX in itemX..(itemX + itemSize) && relativeMouseY in itemY..(itemY + itemSize)) {
+            graphics.setTooltipForNextFrame(minecraft.font, Component.literal("???"), mouseX, mouseY)
         }
     }
 
     @WrapMethod(method = ["isMouseOver"])
-    fun disableFogHintHover(scrollX: Int, scrollY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
-        !isFogHint && op(scrollX, scrollY, mouseX, mouseY)
+    fun disableFogHintHover(offsetX: Int, offsetY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
+        !isFogHint && op(offsetX, offsetY, mouseX, mouseY)
 
-    private fun drawChessboardPixel(graphics: GuiGraphicsExtractor, x: Int, y: Int, scrollX: Int, scrollY: Int) {
-        val isWhiteCell = ((x - scrollX) + (y - scrollY)).isEven()
-        graphics.fill(x, y, x + 1, y + 1, if (isWhiteCell) CommonColors.WHITE else CommonColors.BLACK)
+    private fun drawChessboardCell(graphics: GuiGraphicsExtractor, px: Int, py: Int, offsetX: Int, offsetY: Int) {
+        val isWhiteCell = ((px - offsetX) + (py - offsetY)).isEven()
+        graphics.fill(px, py, px + 1, py + 1, if (isWhiteCell) CommonColors.WHITE else CommonColors.BLACK)
     }
+
+    @KShadow(PRIVATE, FINAL)
+    abstract val minecraft: Minecraft
 }
 
 val AdvancementHolder.isFogHint get() = id.namespace == AdvancementsFogHint.ID_NAMESPACE

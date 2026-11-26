@@ -59,6 +59,12 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
     val windowVerticalMargin: Int get() = (screen.height - windowHeight) / 2
 
     @Extension
+    val treeX: Int get() = windowHorizontalMargin + Tree.HORIZONTAL_MARGIN
+
+    @Extension
+    val treeY: Int get() = windowVerticalMargin + Tree.TOP_MARGIN
+
+    @Extension
     val treeWidth: Int get() = windowWidth - Tree.HORIZONTAL_MARGIN * 2
 
     @Extension
@@ -111,14 +117,14 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
         if (isDraggingResize) {
             val widthRange = maxWindowWidth - minWindowWidth
             if (widthRange > 0) {
-                val delta = event.x - dragStartX
-                val targetWidth = (delta + dragStartWidth + delta).roundToInt().toFloat()
+                val deltaX = event.x - dragStartX
+                val targetWidth = (deltaX + dragStartWidth + deltaX).roundToInt().toFloat()
                 widthRatio = ((targetWidth - minWindowWidth) / widthRange).coerceIn(0f, 1f)
             }
             val heightRange = maxWindowHeight - minWindowHeight
             if (heightRange > 0) {
-                val delta = event.y - dragStartY
-                val targetHeight = (delta + dragStartHeight + delta).roundToInt().toFloat()
+                val deltaY = event.y - dragStartY
+                val targetHeight = (deltaY + dragStartHeight + deltaY).roundToInt().toFloat()
                 heightRatio = ((targetHeight - minWindowHeight) / heightRange).coerceIn(0f, 1f)
             }
             repositionElements()

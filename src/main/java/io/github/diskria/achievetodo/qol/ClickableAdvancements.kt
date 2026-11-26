@@ -71,9 +71,9 @@ abstract class ClickableAdvancementsScreen(@Origin val screen: AdvancementsScree
     }
 
     @WrapMethod(method = ["mouseScrolled"])
-    fun cancelClickOnScroll(x: Double, y: Double, scrollX: Double, scrollY: Double, op: Op<Boolean>): Boolean {
+    fun cancelClickOnScroll(mouseX: Double, mouseY: Double, dx: Double, dy: Double, op: Op<Boolean>): Boolean {
         clickedWidget = null
-        return op(x, y, scrollX, scrollY)
+        return op(mouseX, mouseY, dx, dy)
     }
 
     @WrapMethod(method = ["mouseDragged"])
