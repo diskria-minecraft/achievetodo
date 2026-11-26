@@ -40,9 +40,9 @@ abstract class FlashingAdvancementsScreen(@Origin val screen: AdvancementsScreen
     @Extension
     fun startFlashing(id: Identifier, mode: AdvancementFlashingMode): Boolean {
         stopFlashing()
-        val targetTab = advancements.tree()[id]?.root() ?: return false
-        advancements.setSelectedTab(targetTab.holder(), true)
-        val targetWidget = selectedTab?.getWidget(id) ?: return false
+        val targetTab = advancements.tree()[id]?.root()?.holder() ?: return false
+        val targetWidget = tabs[targetTab]?.getWidget(id) ?: return false
+        advancements.setSelectedTab(targetTab, true)
         flashingTicks = mode.totalTicks
         flashingWidget = targetWidget.apply { activeFlashingMode = mode }
         return true
@@ -107,6 +107,9 @@ abstract class FlashingAdvancementsScreen(@Origin val screen: AdvancementsScreen
 
     @KShadow(PRIVATE)
     abstract val selectedTab: AdvancementTab?
+
+    @KShadow(PRIVATE, FINAL)
+    abstract val tabs: Map<AdvancementHolder, AdvancementTab>
 }
 
 @KMixin<AdvancementTab>(Side.Client)

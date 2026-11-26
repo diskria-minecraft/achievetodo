@@ -49,7 +49,10 @@ abstract class BacapScoreboardObjectiveCustomizer {
     @ModifyReturnValue(method = ["getDisplayName"], at = [At("RETURN")])
     fun Objective.customizeDisplayName(original: Component): Component {
         val mode = BacapScoreboardMode.ALL[name] ?: return original
-        return mode.title.withStyle { original.style.withHoverEvent(HoverEvent.ShowText(mode.hoverText)) }
+        return mode.title.withStyle {
+            val showTooltip = HoverEvent.ShowText(mode.tooltip)
+            original.style.withHoverEvent(showTooltip)
+        }
     }
 
     @ModifyReturnValue(method = ["numberFormatOrDefault"], at = [At("RETURN")])
@@ -60,18 +63,15 @@ abstract class BacapScoreboardObjectiveCustomizer {
 @KMixin<Entity>(Side.Client)
 abstract class BacapScoreboardEntityBelowNameCustomizer {
 
-    @ModifyReturnValue(
-        method = ["belowNameDisplay"],
-        at = [At(value = "RETURN", ordinal = 0)]
-    )
+    @ModifyReturnValue(method = ["belowNameDisplay"], at = [At(value = "RETURN", ordinal = 0)])
     context(
         @Local(name = ["objective"]) objective: Objective,
         @Local(name = ["formattedValue"]) formattedValue: Component,
     )
-    fun customizeBelowName(original: Component?): Component? {
-        if (objective.name !in BacapScoreboardMode.ALL) return original
-        return CommonComponents.optionNameValue(objective.displayName, formattedValue)
-    }
+    fun customizeBelowName(original: Component?): Component? =
+        if (objective.name in BacapScoreboardMode.ALL) {
+            CommonComponents.optionNameValue(objective.displayName, formattedValue)
+        } else original
 }
 
 @KMixin<ReadOnlyScoreInfo>(Side.Client)
@@ -82,7 +82,7 @@ interface BacapPlayerNameScoreFormatRespecter {
 }
 
 @KMixin<PlayerScoreEntry>(Side.Client)
-class BacapSidebarScoreFormatRespecter {
+abstract class BacapSidebarScoreFormatRespecter {
     @WrapMethod(method = ["formatValue"])
     fun PlayerScoreEntry.respectBacapScoreFormat(defaultFormat: NumberFormat, op: Op<MutableComponent>) =
         if (defaultFormat === BacapScoreFormat) BacapScoreFormat.format(value()) else op(defaultFormat)

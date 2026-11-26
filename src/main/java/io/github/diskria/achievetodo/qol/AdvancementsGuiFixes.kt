@@ -7,6 +7,7 @@ import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Tree
 import io.github.diskria.achievetodo.qol.AdvancementsGuiConstants.Widget
+import io.github.diskria.achievetodo.utils.minecraft
 import io.github.diskria.lapis.annotations.KMixin
 import io.github.diskria.lapis.annotations.KShadow
 import io.github.diskria.lapis.annotations.Origin
@@ -21,10 +22,11 @@ import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
 import net.minecraft.resources.Identifier
 import org.spongepowered.asm.mixin.injection.At
 import org.spongepowered.asm.mixin.injection.ModifyVariable
+import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
 
 @KMixin<AdvancementsScreen>(Side.Client)
-class AdvancementsScreenFixes {
+abstract class AdvancementsScreenFixes {
     @WrapOperation(
         method = ["mouseScrolled(DDDD)Z"],
         at = [At(
@@ -32,8 +34,8 @@ class AdvancementsScreenFixes {
             target = "Lnet/minecraft/client/gui/screens/advancements/AdvancementTab;scroll(DD)V"
         )]
     )
-    fun horizontalScrollByShift(tab: AdvancementTab, x: Double, y: Double, op: Op<Unit>) =
-        if (Minecraft.getInstance().hasShiftDown()) op(tab, y, 0.0) else op(tab, x, y)
+    fun AdvancementsScreen.horizontalScrollByShift(tab: AdvancementTab, x: Double, y: Double, op: Op<Unit>) =
+        if (minecraft.hasShiftDown()) op(tab, y, 0.0) else op(tab, x, y)
 }
 
 @KMixin<AdvancementTab>(Side.Client)
@@ -125,9 +127,9 @@ abstract class AdvancementTabTypeFixes(@Origin private val type: AdvancementTabT
 }
 
 @KMixin<AdvancementWidget>(Side.Client)
-class AdvancementWidgetFixes {
+abstract class AdvancementWidgetFixes {
 
-    private val advancementsScreen get() = Minecraft.getInstance().gui.screen() as? AdvancementsScreen
+    private val advancementsScreen get() = minecraft.gui.screen() as? AdvancementsScreen
 
     @WrapOperation(
         method = ["extractConnectivity"],
@@ -166,9 +168,12 @@ class AdvancementWidgetFixes {
                 tooltipTop >= 0 -> true
                 tooltipBottom <= screenBottom -> false
                 tooltipTop >= screenTop -> true
-                else -> Minecraft.getInstance().hasAltDown()
+                else -> minecraft.hasAltDown()
             }
         } else originalTopMode
         return finalTopMode
     }
+
+    @KShadow(PRIVATE, FINAL)
+    abstract val minecraft: Minecraft
 }

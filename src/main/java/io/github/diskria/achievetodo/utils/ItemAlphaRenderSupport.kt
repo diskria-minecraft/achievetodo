@@ -20,7 +20,7 @@ import org.joml.Matrix3x2fc
 import org.spongepowered.asm.mixin.injection.At
 
 @KMixin<GuiGraphicsExtractor>(Side.Client)
-class ItemAlphaSupportGraphics {
+abstract class ItemAlphaSupportGraphics {
 
     @Extension
     var itemTempAlpha: Float? = null
@@ -39,13 +39,13 @@ class ItemAlphaSupportGraphics {
 }
 
 @KMixin<GuiItemRenderState>(Side.Client)
-class ItemAlphaSupportRenderState {
+abstract class ItemAlphaSupportRenderState {
     @Extension
     var tempAlpha: Float? = null
 }
 
 @KMixin<GuiRenderer>(Side.Client)
-class ItemAlphaSupportRenderer {
+abstract class ItemAlphaSupportRenderer {
 
     @WrapOperation(
         method = ["submitBlitFromItemAtlas"],

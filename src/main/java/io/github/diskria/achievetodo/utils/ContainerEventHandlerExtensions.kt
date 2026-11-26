@@ -13,7 +13,7 @@ import net.minecraft.client.input.CharacterEvent
 import net.minecraft.client.input.PreeditEvent
 
 @KMixin<ContainerEventHandler>(Side.Client)
-interface ContainerEventHandlerUtils {
+interface ContainerEventHandlerExtensions {
 
     @WrapMethod(method = ["charTyped"])
     fun ContainerEventHandler.overrideCharTyped(event: CharacterEvent, op: Op<Boolean>) = when (this) {

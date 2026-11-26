@@ -13,7 +13,7 @@ import net.minecraft.advancements.AdvancementNode
 import org.spongepowered.asm.mixin.injection.At
 
 @KMixin<AdvancementNode>(Side.Common)
-class AdvancementChildrenNormalizer(@Origin val current: AdvancementNode) {
+abstract class AdvancementChildrenNormalizer(@Origin val current: AdvancementNode) {
 
     private var normalizedChildren: List<AdvancementNode>? = null
 

@@ -23,7 +23,7 @@ import java.util.function.Predicate
 import javax.lang.model.element.Modifier.PRIVATE
 
 @KMixin<AdvancementVisibilityEvaluator>(Side.Common)
-class AdvancementsRevealer {
+abstract class AdvancementsRevealer {
     companion object {
         @ModifyExpressionValue(
             method = [$$"evaluateVisibility(Lnet/minecraft/advancements/AdvancementNode;Ljava/util/function/Predicate;Lnet/minecraft/server/advancements/AdvancementVisibilityEvaluator$Output;)V"],

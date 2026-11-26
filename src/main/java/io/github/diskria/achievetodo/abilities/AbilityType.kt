@@ -5,7 +5,7 @@ import io.github.diskria.achievetodo.abilities.AbilitiesHierarchyLayerType.*
 import io.github.diskria.achievetodo.client.AchieveToDoClient
 import io.github.diskria.achievetodo.client.gui.DesignCodePalette
 import io.github.diskria.achievetodo.client.gui.UnlockedToastType
-import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
+import io.github.diskria.achievetodo.datagen.AbilitiesTabGenerator
 import io.github.diskria.achievetodo.extensions.armorMaterial
 import io.github.diskria.achievetodo.landmarks.LandmarkType
 import net.fabricmc.loader.api.FabricLoader
@@ -340,7 +340,7 @@ enum class AbilityType(
         fun fromAdvancementId(id: Identifier): AbilityType? {
             if (id.namespace != AchieveToDoMod.ID) return null
             val path = id.path
-            val prefix = AbilityAdvancementsTabGenerator.ABILITY_PATH_PREFIX
+            val prefix = AbilitiesTabGenerator.ABILITY_PATH_PREFIX
             if (path.startsWith(prefix)) {
                 return fromAbilityId(path.removePrefix(prefix))
             }

@@ -2,9 +2,9 @@ package io.github.diskria.achievetodo.client.gui
 
 import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.client.AchieveToDoClient
+import io.github.diskria.achievetodo.extensions.withFooterStyle
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.minecraft.ChatFormatting
 import net.minecraft.advancements.AdvancementNode
 import net.minecraft.client.gui.screens.advancements.AdvancementTabType
 import net.minecraft.network.chat.Component
@@ -36,8 +36,7 @@ enum class AdvancementsTabType {
 
     val mystifiedTabTooltipText: Component
         get() = AchieveToDoClient.translate("advancements_tab_mystified_tooltip." + this.name)
-            .withStyle(ChatFormatting.ITALIC)
-            .withStyle(ChatFormatting.GRAY)
+            .withFooterStyle()
 
     val id: String get() = name.lowercase()
 

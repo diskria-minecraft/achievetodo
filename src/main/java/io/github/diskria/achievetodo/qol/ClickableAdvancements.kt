@@ -1,225 +1,130 @@
 package io.github.diskria.achievetodo.qol
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue
 import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
-import com.llamalad7.mixinextras.sugar.Cancellable
-import com.llamalad7.mixinextras.sugar.Local
-import com.mojang.brigadier.CommandDispatcher
-import com.mojang.brigadier.context.CommandContext
-import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.extensions.*
+import com.mojang.blaze3d.platform.InputConstants
+import com.mojang.blaze3d.platform.cursor.CursorTypes
+import io.github.diskria.achievetodo.extensions.Op
+import io.github.diskria.achievetodo.extensions.invoke
 import io.github.diskria.lapis.annotations.*
-import net.minecraft.ChatFormatting
-import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.screens.ChatScreen
-import net.minecraft.client.gui.screens.Screen
+import net.minecraft.client.gui.GuiGraphicsExtractor
+import net.minecraft.client.gui.screens.advancements.AdvancementTab
+import net.minecraft.client.gui.screens.advancements.AdvancementWidget
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
-import net.minecraft.client.multiplayer.ClientPacketListener
-import net.minecraft.client.player.LocalPlayer
-import net.minecraft.commands.CommandSourceStack
-import net.minecraft.commands.ExecutionCommandSource
-import net.minecraft.commands.arguments.ComponentArgument
-import net.minecraft.commands.execution.ExecutionContext
-import net.minecraft.commands.execution.Frame
-import net.minecraft.commands.execution.tasks.CallFunction
-import net.minecraft.commands.functions.InstantiatedFunction
-import net.minecraft.commands.functions.MacroFunction
-import net.minecraft.nbt.CompoundTag
-import net.minecraft.network.chat.*
-import net.minecraft.network.chat.contents.NbtContents
-import net.minecraft.network.chat.contents.ObjectContents
-import net.minecraft.network.chat.contents.SelectorContents
-import net.minecraft.network.chat.contents.TranslatableContents
-import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket
-import net.minecraft.resources.Identifier
-import org.spongepowered.asm.mixin.injection.At
-import java.util.*
-import javax.lang.model.element.Modifier.FINAL
+import net.minecraft.client.input.MouseButtonEvent
 import javax.lang.model.element.Modifier.PRIVATE
-import kotlin.jvm.optionals.getOrNull
 
-@KMixin<MacroFunction<*>>(Side.Common)
-class AdvancementDoneScopedMacro {
-    @WrapMethod(method = ["instantiate"])
-    fun MacroFunction<*>.initDoneAdvancementFunction(
-        args: CompoundTag,
-        dispatcher: CommandDispatcher<*>,
-        op: Op<InstantiatedFunction<*>>
-    ): InstantiatedFunction<*> {
-        if (id() != DoneAdvancementFunction.ID) return op(args, dispatcher)
-        var advId = args.getString(DoneAdvancementFunction.ADV_ID_ARGUMENT).getOrNull() ?: return op(args, dispatcher)
-        if (advId == "blazeandcave:bacap/benchmarking") {
-            advId = "minecraft:story/root"
-            args.putString(DoneAdvancementFunction.ADV_ID_ARGUMENT, advId)
-        }
-        val original = op(args, dispatcher)
-        val advancementId = Identifier.tryParse(advId) ?: return original
-        return DoneAdvancementFunction(original, advancementId)
-    }
-}
+typealias AdvancementClickListener = () -> Unit
 
-private class DoneAdvancementFunction<T : Any>(
-    delegate: InstantiatedFunction<T>,
-    val advancementId: Identifier,
-) : InstantiatedFunction<T> by delegate {
-    companion object {
-        val ID = Identifier.fromNamespaceAndPath("bacap_rewards", "advancement_made_macro")
-        const val ADV_ID_ARGUMENT = "adv_id"
-    }
-}
+@KMixin<AdvancementsScreen>(Side.Client)
+abstract class ClickableAdvancementsScreen(@Origin val screen: AdvancementsScreen) {
 
-@KMixin<CallFunction<*>>(Side.Common)
-abstract class AdvancementDoneScopedCall {
-
-    @WrapMethod(method = ["execute"])
-    fun bindDoneAdvancementId(stack: ExecutionCommandSource<*>, exec: ExecutionContext<*>, frame: Frame, op: Op<Unit>) {
-        if (stack !is CommandSourceStack) return op(stack, exec, frame)
-        val doneAdvancementFunction = function as? DoneAdvancementFunction ?: return op(stack, exec, frame)
-        op(stack.withDoneAdvancementId(doneAdvancementFunction.advancementId), exec, frame)
-    }
-
-    @KShadow(PRIVATE, FINAL)
-    abstract val function: InstantiatedFunction<*>
-}
-
-@KMixin<CommandSourceStack>(Side.Common)
-abstract class AdvancementDoneScopedStack(@Origin val current: CommandSourceStack) {
+    private var hoveredInTab: AdvancementTab? = null
+    private var hoveredWidget: AdvancementWidget? = null
+    private var clickedWidget: AdvancementWidget? = null
+    private var onClickListener: AdvancementClickListener? = null
+    private var clickStartX = 0.0
+    private var clickStartY = 0.0
 
     @Extension
-    var doneAdvancementId: Identifier? = null
+    fun onWidgetHovered(tab: AdvancementTab, widget: AdvancementWidget) {
+        if (hoveredInTab === tab && hoveredWidget === widget) return
+        val listener = screen.resolveAdvancementClickListener(tab, widget)
+        if (listener != null) {
+            hoveredInTab = tab
+            hoveredWidget = widget
+            onClickListener = listener
+        } else {
+            resetWidgetClick()
+        }
+    }
 
     @Extension
-    fun withDoneAdvancementId(id: Identifier): CommandSourceStack {
-        val baseCallback = current.callback()
-        return current.withCallback { success, result ->
-            baseCallback.onResult(success, result)
-        }.apply { doneAdvancementId = id }
+    fun resetWidgetClick() {
+        hoveredInTab = null
+        hoveredWidget = null
+        clickedWidget = null
+        onClickListener = null
     }
 
-    @ModifyReturnValue(
-        method = [
-            "withSource",
-            "withLevel",
-            "withEntity",
-            "withAnchor",
-            "withPosition",
-            "withRotation",
-            "withPermission",
-            "withSigningContext",
-            "withSuppressedOutput",
-            "withCallback(Lnet/minecraft/commands/CommandResultCallback;)Lnet/minecraft/commands/CommandSourceStack;",
-        ],
-        at = [At("RETURN")]
-    )
-    fun preserveDoneAdvancementId(changed: CommandSourceStack): CommandSourceStack =
-        changed.apply { doneAdvancementId = current.doneAdvancementId }
-}
+    @WrapMethod(method = ["extractRenderState"])
+    fun markHoveredAsClickable(
+        graphics: GuiGraphicsExtractor,
+        mouseX: Int,
+        mouseY: Int,
+        deltaTicks: Float,
+        op: Op<Unit>
+    ) {
+        op(graphics, mouseX, mouseY, deltaTicks)
+        if (hoveredWidget != null && !isScrolling) {
+            graphics.requestCursor(CursorTypes.POINTING_HAND)
+        }
+    }
 
-@KMixin<ComponentArgument>(Side.Common)
-class AdvancementDoneMessageCustomizer {
-    companion object {
-        private val clickableFooter = Component.empty()
-            .append(CommonComponents.NEW_LINE)
-            .append("-> (").append(I18N.CLICK_TO_VIEW).append(")")
+    @WrapMethod(method = ["mouseClicked"])
+    fun switchHoveredToClicked(event: MouseButtonEvent, doubleClick: Boolean, op: Op<Boolean>): Boolean {
+        if (hoveredWidget != null && event.isClickButton) {
+            clickedWidget = hoveredWidget
+            clickStartX = event.x()
+            clickStartY = event.y()
+        }
+        return op(event, doubleClick)
+    }
 
-        private fun MutableComponent.withGrayItalicStyle() = withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC)
+    @WrapMethod(method = ["mouseScrolled"])
+    fun cancelClickOnScroll(x: Double, y: Double, scrollX: Double, scrollY: Double, op: Op<Boolean>): Boolean {
+        clickedWidget = null
+        return op(x, y, scrollX, scrollY)
+    }
 
-        @ModifyReturnValue(method = ["getRawComponent"], at = [At("RETURN")])
-        context(
-            @Local(argsOnly = true, name = ["context"]) context: CommandContext<CommandSourceStack>,
-        )
-        fun customizeAdvancementDoneMessage(original: Component): Component {
-            val doneAdvancementId = context.source.doneAdvancementId ?: return original
-            val doneAdvancement = context.source.server.advancements[doneAdvancementId] ?: return original
-            val dataTag = doneAdvancementId.toNbtOrNull(Identifier.CODEC) ?: return original
-            val clickEvent = ClickEvent.Custom(FLASH_ADVANCEMENT_ACTION_ID, Optional.of(dataTag))
-            if (doneAdvancement.value.isRoot) {
-                val translateKey = (original.contents as? TranslatableContents)?.key ?: return original
-                val (tabName) = I18N.TAB_UNLOCKED_REGEX.matchEntire(translateKey)?.destructured ?: return original
-                return original.copy().withStyle {
-                    val textToShow = I18N.tab(tabName).append(clickableFooter).withGrayItalicStyle()
-                    it.withHoverEvent(HoverEvent.ShowText(textToShow)).withClickEvent(clickEvent)
+    @WrapMethod(method = ["mouseDragged"])
+    fun cancelClickOnDrag(event: MouseButtonEvent, dx: Double, dy: Double, op: Op<Boolean>): Boolean {
+        if (clickedWidget != null) {
+            val distX = event.x - clickStartX
+            val distY = event.y - clickStartY
+            if (distX * distX + distY * distY > 16.0) {
+                clickedWidget = null
+            }
+        }
+        return op(event, dx, dy)
+    }
+
+    @WrapMethod(method = ["mouseReleased"])
+    fun finalizeClick(event: MouseButtonEvent, op: Op<Boolean>): Boolean {
+        if (event.isClickButton) {
+            val hovered = hoveredWidget
+            val clicked = clickedWidget
+            val listener = onClickListener
+            if (hovered != null && clicked != null && listener != null) {
+                if (clicked.advancement.id == hovered.advancement.id) {
+                    listener()
                 }
             }
-            return original.withClickableHover(clickEvent)
+            resetWidgetClick()
         }
-
-        private fun Component.withClickableHover(clickEvent: ClickEvent): Component {
-            val result = MutableComponent.create(contents.transform(clickEvent))
-            result.style = run {
-                if (style.clickEvent != null) return@run style
-                val rawText = (style.hoverEvent as? HoverEvent.ShowText)?.value ?: return@run style
-                val textToShow = rawText.copy().append(clickableFooter.withGrayItalicStyle())
-                style.withHoverEvent(HoverEvent.ShowText(textToShow)).withClickEvent(clickEvent)
-            }
-            siblings.forEach { result.append(it.withClickableHover(clickEvent)) }
-            return result
-        }
-
-        private fun ComponentContents.transform(clickEvent: ClickEvent) = when (this) {
-            is TranslatableContents -> {
-                val args = args.map { if (it is Component) it.withClickableHover(clickEvent) else it }.toTypedArray()
-                TranslatableContents(key, fallback, args)
-            }
-
-            is SelectorContents -> {
-                val separator = separator.map { it.withClickableHover(clickEvent) }
-                SelectorContents(selector, separator)
-            }
-
-            is NbtContents -> {
-                val separator = separator.map { it.withClickableHover(clickEvent) }
-                NbtContents(nbtPath, interpreting, plain, separator, dataSource)
-            }
-
-            is ObjectContents -> {
-                val fallback = fallback.map { it.withClickableHover(clickEvent) }
-                ObjectContents(contents, fallback)
-            }
-
-            else -> this
-        }
+        return op(event)
     }
+
+    @WrapMethod(method = ["removed"])
+    fun resetOnClose(op: Op<Unit>) {
+        resetWidgetClick()
+        op()
+    }
+
+    @KShadow(PRIVATE)
+    abstract val isScrolling: Boolean
 }
 
-@KMixin<Screen>(Side.Client)
-class AdvancementDoneFlashActionClickListener {
-    companion object {
-        @WrapOperation(
-            method = ["defaultHandleGameClickEvent"],
-            at = [At(
-                value = "INVOKE",
-                target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;send(Lnet/minecraft/network/protocol/Packet;)V"
-            )]
-        )
-        context(
-            @Local(argsOnly = true, name = ["activeScreen"]) currentScreen: Screen,
-            @Local(name = ["player"]) player: LocalPlayer,
-            @Cancellable cancel: Cancel
-        )
-        fun onFlashAdvancementActionClick(connection: ClientPacketListener, packet: Packet<*>, op: Op<Unit>) {
-            if (packet !is ServerboundCustomClickActionPacket || packet.id != FLASH_ADVANCEMENT_ACTION_ID) {
-                return op(connection, packet)
-            }
-            val advancementId = packet.payload.getOrNull()?.decodeOrNull(Identifier.CODEC) ?: return cancel()
-            val clientAdvancements = player.connection.advancements
-            val advancementProgress = clientAdvancements.getProgressFor(advancementId) ?: return cancel()
-            with(Minecraft.getInstance()) {
-                val returnScreen = if (currentScreen is ChatScreen) null else currentScreen
-                val advancementsScreen = AdvancementsScreen(clientAdvancements, returnScreen)
-                gui.setScreen(advancementsScreen)
-                val flashingMode = if (advancementProgress.isDone) {
-                    AdvancementFlashingMode.OBTAINED_STATUS
-                } else {
-                    AdvancementFlashingMode.FRAME
-                }
-                advancementsScreen.startFlashing(advancementId, flashingMode)
-            }
-            return cancel()
-        }
+@KMixin<AdvancementTab>(Side.Client)
+abstract class ClickableAdvancementTab {
+
+    @WrapMethod(method = ["tick"])
+    fun AdvancementTab.updateHovered(relativeMouseX: Int, relativeMouseY: Int, op: Op<Unit>) {
+        op(relativeMouseX, relativeMouseY)
+        hovered?.let { screen.onWidgetHovered(this, it) } ?: screen.resetWidgetClick()
     }
+
+    @KShadow(PRIVATE)
+    abstract val hovered: AdvancementWidget?
 }
 
-private val FLASH_ADVANCEMENT_ACTION_ID = Identifier.fromNamespaceAndPath(AchieveToDoMod.ID, "action/flash_advancement")
+private val MouseButtonEvent.isClickButton get() = button() == InputConstants.MOUSE_BUTTON_LEFT

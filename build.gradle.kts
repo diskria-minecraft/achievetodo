@@ -19,7 +19,9 @@ loom {
 }
 
 fabricApi {
-    configureDataGeneration()
+    configureDataGeneration {
+        client = true
+    }
 }
 
 lapis {

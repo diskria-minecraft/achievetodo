@@ -6,12 +6,12 @@ import net.minecraft.network.chat.Component
 
 data class BacapScoreboardMode(
     val objectiveName: String,
-    val hoverLocaleKey: String,
-    val hoverColor: ChatFormatting,
+    private val tooltipText: String,
+    private val tooltipTextColor: ChatFormatting,
     val isPoints: Boolean = false,
 ) {
     val title get() = if (isPoints) I18N.ADVANCEMENT_POINTS else I18N.ADVANCEMENTS
-    val hoverText get() = Component.translatable(hoverLocaleKey).withStyle(hoverColor)
+    val tooltip get() = Component.translatable(tooltipText).withStyle(tooltipTextColor)
 
     companion object {
         val ALL = listOf(

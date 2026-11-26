@@ -1,8 +1,7 @@
 package io.github.diskria.achievetodo.extensions
 
 import io.github.diskria.achievetodo.AchieveToDoMod
-import io.github.diskria.achievetodo.qol.AdvancementsFogManager
-import io.github.diskria.achievetodo.qol.SearchingAdvancementsScreen
+import io.github.diskria.achievetodo.qol.SearchableAdvancementsScreen
 import net.minecraft.advancements.*
 import net.minecraft.client.gui.screens.advancements.AdvancementTab
 import net.minecraft.client.gui.screens.advancements.AdvancementWidget
@@ -13,14 +12,11 @@ import kotlin.jvm.optionals.getOrNull
 val AdvancementNode.isDisplayable: Boolean
     get() = advancement().display.isPresent
 
-val AdvancementHolder.isFogHint: Boolean
-    get() = id.namespace == AdvancementsFogManager.Client.HINT_NAMESPACE
-
 val AdvancementHolder.isSearchResultsRoot: Boolean
-    get() = id == SearchingAdvancementsScreen.ROOT_ADVANCEMENT_ID
+    get() = id == SearchableAdvancementsScreen.ROOT_ADVANCEMENT_ID
 
-val AdvancementHolder.isAchieveToDoAbility: Boolean
-    get() = id.namespace == AchieveToDoMod.ID
+val AdvancementHolder.isAbility: Boolean
+    get() = id.namespace == AchieveToDoMod.ID && id.path.startsWith("ability/")
 
 val AdvancementNode.isVisible: Boolean get() = getVisibleDisplay() != null
 

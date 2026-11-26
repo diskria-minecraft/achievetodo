@@ -1,4 +1,6 @@
 {
+  "achievetodo.ability_unlocked_chat_message": "%s has unlocked %s",
+
   "achievetodo.suite.description": "Manages BlazeandCave's Advancements Pack and automatically supports: %s",
   "achievetodo.suite.bacap.description": "AchieveToDo is fundamentally built around BACAP. The core gameplay loop relies on BACAP's 1000+ advancements to calculate progression and gradually unlock player abilities.",
   "achievetodo.suite.bacap_hardcore.description": "Required for completing BACAP in Hardcore mode.",
@@ -685,8 +687,5 @@
   "achievetodo.ability_unlocked_toast.block": "Block available",
   "achievetodo.ability_unlocked_toast.trading": "Trading available",
   "achievetodo.ability_unlocked_toast.portal": "Portal available",
-  "achievetodo.ability_unlocked_toast.landmark": "Structure available",
-
-  "achievetodo.tab_unlocked_chat_message": "Tab %s%s%s is unlocked",
-  "achievetodo.ability_unlocked_chat_message": "%s has unlocked %s%s%s"
+  "achievetodo.ability_unlocked_toast.landmark": "Structure available"
 }

@@ -20,7 +20,7 @@ private val SUPPRESS_BACKUP_WARNINGS get() = true
 private val SUPPRESS_EXPERIMENTAL_FEATURES_WARNINGS get() = true
 
 @KMixin<CreateWorldScreen>(Side.Client)
-class WorldCreateWarningSuppressors {
+abstract class WorldCreateWarningSuppressors {
     @WrapOperation(
         method = ["onCreate"],
         at = [At(
@@ -42,7 +42,7 @@ class WorldCreateWarningSuppressors {
 }
 
 @KMixin<WorldOpenFlows>(Side.Client)
-class WorldOpenWarningSuppressors {
+abstract class WorldOpenWarningSuppressors {
     @WrapMethod(method = ["askForBackup"])
     fun suppressBackupWarning(
         levelStorage: LevelStorageAccess,

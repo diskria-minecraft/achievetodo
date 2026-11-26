@@ -7,13 +7,15 @@ import io.github.diskria.achievetodo.qol.initSearchFocus
 import io.github.diskria.achievetodo.qol.isSearchInputCaptured
 import io.github.diskria.achievetodo.qol.repositionSearch
 import io.github.diskria.lapis.annotations.*
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.components.events.GuiEventListener
 import net.minecraft.client.gui.screens.Screen
 import net.minecraft.client.gui.screens.advancements.AdvancementsScreen
+import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PROTECTED
 
 @KMixin<Screen>(Side.Client)
-abstract class ScreenUtils {
+abstract class ScreenExtensions {
 
     @WrapMethod(method = ["resize"])
     fun Screen.overrideResize(width: Int, height: Int, op: Op<Unit>) = when (this) {
@@ -48,4 +50,11 @@ abstract class ScreenUtils {
     fun setInitialFocus(target: GuiEventListener) {
         setInitialFocusInternal(target)
     }
+
+    @MappingName("minecraft")
+    @KShadow(PROTECTED, FINAL)
+    abstract val minecraftInternal: Minecraft
+
+    @Extension
+    val minecraft: Minecraft get() = minecraftInternal
 }

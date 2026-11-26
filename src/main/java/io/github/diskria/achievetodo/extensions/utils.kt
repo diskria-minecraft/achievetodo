@@ -17,6 +17,7 @@ import java.util.stream.Stream
 import java.util.zip.ZipFile
 import kotlin.io.path.outputStream
 
+fun Int.isEven() = (this and 1) == 0
 fun Int.toEven(): Int = this and 1.inv()
 
 fun String.capitalized(): String =

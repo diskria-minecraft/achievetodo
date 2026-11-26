@@ -44,8 +44,8 @@ import kotlin.io.path.moveTo
 
 object SuiteInstallers {
 
-    fun openScreen(components: List<SuiteComponent>, callback: (result: Boolean) -> Unit) {
-        Minecraft.getInstance().gui.setScreen(SuiteInstallerScreen.create(components, callback))
+    fun openScreen(minecraft: Minecraft, components: List<SuiteComponent>, callback: (result: Boolean) -> Unit) {
+        minecraft.gui.setScreen(SuiteInstallerScreen.create(components, callback))
     }
 
     fun sendDedicatedServerReport(components: List<SuiteComponent>) {
@@ -83,7 +83,7 @@ object SuiteInstallers {
 }
 
 @KMixin<Pack>(Side.Common)
-class SuiteInstallerPackCustomizer {
+abstract class SuiteInstallerPackCustomizer {
 
     @Extension
     var isMissingSuiteComponent: Boolean = false
@@ -101,7 +101,7 @@ class SuiteInstallerPackCustomizer {
 }
 
 @KMixin<PackSelectionScreen>(Side.Client)
-class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
+abstract class SuiteInstallerScreen(@Origin val screen: PackSelectionScreen) {
 
     @Extension
     var isSuiteInstallerScreen: Boolean = false

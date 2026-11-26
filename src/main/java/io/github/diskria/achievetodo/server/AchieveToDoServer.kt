@@ -3,7 +3,7 @@ package io.github.diskria.achievetodo.server
 import io.github.diskria.achievetodo.abilities.AbilityType
 import io.github.diskria.achievetodo.abilities.DimensionType
 import io.github.diskria.achievetodo.config.ModServerConfigManager
-import io.github.diskria.achievetodo.datagen.AbilityAdvancementsTabGenerator
+import io.github.diskria.achievetodo.datagen.AbilitiesTabGenerator
 import io.github.diskria.achievetodo.landmarks.ServerLandmarksManager
 import io.github.diskria.achievetodo.payloads.serverbound.DemystifyAbilityPayload
 import io.github.diskria.achievetodo.qol.AdvancementsFogManager
@@ -419,7 +419,7 @@ class AchieveToDoServer {
 
     private fun demystifyAbility(player: ServerPlayer, ability: AbilityType) {
         val advancement = findAbilityAdvancement(player, ability) ?: return
-        player.advancements.award(advancement, AbilityAdvancementsTabGenerator.DEMYSTIFIED_CRITERION)
+        player.advancements.award(advancement, AbilitiesTabGenerator.DEMYSTIFIED_CRITERION)
     }
 
     private fun unlockAbility(player: ServerPlayer, ability: AbilityType) {
@@ -431,9 +431,9 @@ class AchieveToDoServer {
 
     private fun lockAbility(player: ServerPlayer, ability: AbilityType) {
         val advancement = findAbilityAdvancement(player, ability) ?: return
-        player.advancements.revoke(advancement, AbilityAdvancementsTabGenerator.UNLOCKED_CRITERION)
+        player.advancements.revoke(advancement, AbilitiesTabGenerator.UNLOCKED_CRITERION)
     }
 
     private fun findAbilityAdvancement(player: ServerPlayer, ability: AbilityType): AdvancementHolder? =
-        player.level().server.advancements[AbilityAdvancementsTabGenerator.buildAdvancementId(ability)]
+        player.level().server.advancements[AbilitiesTabGenerator.buildAdvancementId(ability)]
 }

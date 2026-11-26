@@ -13,6 +13,7 @@ import io.github.diskria.achievetodo.config.validateDedicatedModServerConfig
 import io.github.diskria.achievetodo.extensions.Cancel
 import io.github.diskria.achievetodo.extensions.Op
 import io.github.diskria.achievetodo.extensions.invoke
+import io.github.diskria.achievetodo.utils.minecraft
 import io.github.diskria.lapis.annotations.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
@@ -34,11 +35,12 @@ import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess
 import org.spongepowered.asm.mixin.injection.At
 import java.nio.file.Path
 import java.util.function.Consumer
+import javax.lang.model.element.Modifier.FINAL
 import javax.lang.model.element.Modifier.PRIVATE
 import kotlin.io.path.createDirectories
 
 @KMixin<PackRepository>(Side.Common)
-class SuitePackOpenUnwrapper {
+abstract class SuitePackOpenUnwrapper {
 
     @Extension
     var suiteComponents: List<SuiteComponent> = emptyList()
@@ -48,8 +50,7 @@ class SuitePackOpenUnwrapper {
 }
 
 @KMixin<MinecraftServer>(Side.Common)
-class SuitePackReloadUnwrapper {
-
+abstract class SuitePackReloadUnwrapper {
     @ModifyReturnValue(method = [$$"lambda$reloadResources$0"], at = [At("RETURN")])
     fun MinecraftServer.unwrapResources(resources: ImmutableList<PackResources>): ImmutableList<PackResources> =
         modServerConfig?.let { config ->
@@ -83,7 +84,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
         }
         val onRetry = { createWorld() }
         val onExit = { exitToWorldCreatorScreen() }
-        if (!SuitePack.validateInstalled(components, onRetry, onExit)) {
+        if (!SuitePack.validateInstalled(screen.minecraft, components, onRetry, onExit)) {
             return
         }
         startApplyDataPacks(components)
@@ -134,7 +135,7 @@ abstract class SuitePackWorldCreateInterceptor(@Origin val screen: CreateWorldSc
     }
 
     private fun exitToWorldCreatorScreen() {
-        Minecraft.getInstance().gui.setScreen(screen)
+        screen.minecraft.gui.setScreen(screen)
     }
 
     private fun resolveRequiredComponents() = with(screen.uiState) {
@@ -233,7 +234,7 @@ abstract class SuitePackWorldOpenResolvers {
                 levelStorage.safeClose()
                 onCancel.run()
             }
-            if (!SuitePack.validateInstalled(components, onRetry, onExit)) {
+            if (!SuitePack.validateInstalled(minecraft, components, onRetry, onExit)) {
                 cancel()
                 return null
             }
@@ -241,6 +242,9 @@ abstract class SuitePackWorldOpenResolvers {
         }
         return op(worldOpenFlows, levelStorage, levelDat, safeMode, packRepository)
     }
+
+    @KShadow(PRIVATE, FINAL)
+    abstract val minecraft: Minecraft
 
     @KShadow(PRIVATE)
     abstract fun openWorldLoadLevelStem(
@@ -255,7 +259,7 @@ abstract class SuitePackWorldOpenResolvers {
 }
 
 @KMixin<Main>(Side.Common)
-class SuitePackDedicatedServerResolver {
+abstract class SuitePackDedicatedServerResolver {
     companion object {
         @WrapOperation(
             method = ["main"],

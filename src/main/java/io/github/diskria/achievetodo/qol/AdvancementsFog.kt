@@ -6,8 +6,8 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation
 import com.llamalad7.mixinextras.sugar.Local
 import com.mojang.renderpearl.api.pipeline.RenderPipeline
 import io.github.diskria.achievetodo.extensions.*
-import io.github.diskria.achievetodo.qol.AdvancementsFogManager.Client.HINT_NAMESPACE
 import io.github.diskria.achievetodo.utils.itemTempAlpha
+import io.github.diskria.achievetodo.utils.parent
 import io.github.diskria.lapis.annotations.*
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -46,9 +46,7 @@ object AdvancementsFogManager {
     @Environment(EnvType.CLIENT)
     object Client {
 
-        const val HINT_NAMESPACE = "advancements_fog_hint"
-
-        private val hints: MutableMap<Identifier, List<AdvancementFogHint>> = mutableMapOf()
+        private val hints = mutableMapOf<Identifier, List<AdvancementsFogHint>>()
 
         fun init() {
             ClientboundUpdateAdvancementsFogPayload.Client.listen { shouldReset, added, removed ->
@@ -65,7 +63,7 @@ object AdvancementsFogManager {
 
 class ClientboundUpdateAdvancementsFogPayload private constructor(
     private val shouldReset: Boolean,
-    private val added: Map<Identifier, List<AdvancementFogHint>>,
+    private val added: Map<Identifier, List<AdvancementsFogHint>>,
     private val removed: Set<Identifier>,
 ) : CustomPacketPayload {
 
@@ -73,7 +71,8 @@ class ClientboundUpdateAdvancementsFogPayload private constructor(
 
     object Server {
         context(player: ServerPlayer)
-        fun send(shouldReset: Boolean, added: Map<Identifier, List<AdvancementFogHint>>, removed: Set<Identifier>) {
+        fun send(shouldReset: Boolean, added: Map<Identifier, List<AdvancementsFogHint>>, removed: Set<Identifier>) {
+            if (!ServerPlayNetworking.canSend(player, TYPE)) return
             ServerPlayNetworking.send(player, ClientboundUpdateAdvancementsFogPayload(shouldReset, added, removed))
         }
     }
@@ -83,7 +82,7 @@ class ClientboundUpdateAdvancementsFogPayload private constructor(
         fun listen(
             action: ClientPlayNetworking.Context.(
                 shouldReset: Boolean,
-                added: Map<Identifier, List<AdvancementFogHint>>,
+                added: Map<Identifier, List<AdvancementsFogHint>>,
                 removed: Set<Identifier>,
             ) -> Unit
         ) {
@@ -99,7 +98,7 @@ class ClientboundUpdateAdvancementsFogPayload private constructor(
         private val TYPE = payloadTypeOf<Payload>()
         private val CODEC = StreamCodec.composite(
             ByteBufCodecs.BOOL, Payload::shouldReset,
-            mapCodecOf(Identifier.STREAM_CODEC to listCodecOf(AdvancementFogHint.STREAM_CODEC)), Payload::added,
+            mapCodecOf(Identifier.STREAM_CODEC to listCodecOf(AdvancementsFogHint.STREAM_CODEC)), Payload::added,
             setCodecOf(Identifier.STREAM_CODEC), Payload::removed,
             ::Payload
         )
@@ -108,14 +107,19 @@ class ClientboundUpdateAdvancementsFogPayload private constructor(
     }
 }
 
-data class AdvancementFogHint(val icon: ItemStackTemplate, val x: Float, val y: Float) {
+data class AdvancementsFogHint(val icon: ItemStackTemplate, val x: Float, val y: Float) {
     companion object {
+        const val ID_NAMESPACE = "advancements_fog_hint"
+
         val STREAM_CODEC = StreamCodec.composite(
-            ItemStackTemplate.STREAM_CODEC, AdvancementFogHint::icon,
-            ByteBufCodecs.FLOAT, AdvancementFogHint::x,
-            ByteBufCodecs.FLOAT, AdvancementFogHint::y,
-            ::AdvancementFogHint
+            ItemStackTemplate.STREAM_CODEC, AdvancementsFogHint::icon,
+            ByteBufCodecs.FLOAT, AdvancementsFogHint::x,
+            ByteBufCodecs.FLOAT, AdvancementsFogHint::y,
+            ::AdvancementsFogHint
         )
+
+        fun idFor(parentId: Identifier, hintIndex: Int): Identifier =
+            Identifier.fromNamespaceAndPath(ID_NAMESPACE, "${parentId.namespace}/${parentId.path}/$hintIndex")
     }
 }
 
@@ -151,7 +155,7 @@ abstract class AdvancementsFogTracker {
                 }
             }
         }
-        val added = mutableMapOf<Identifier, List<AdvancementFogHint>>()
+        val added = mutableMapOf<Identifier, List<AdvancementsFogHint>>()
         val removed = removedNodeIds.filterTo(mutableSetOf()) { id ->
             val node = tree[id] ?: return@filterTo true
             node.isDisplayable && node.children().any { it.isDisplayable }
@@ -162,7 +166,7 @@ abstract class AdvancementsFogTracker {
                 if (child.isRevealed) return@mapNotNull null
                 val childDisplay = child.getVisibleDisplay() ?: return@mapNotNull null
                 if (childDisplay.hidden) return@mapNotNull null
-                AdvancementFogHint(childDisplay.icon, child.x(), child.y())
+                AdvancementsFogHint(childDisplay.icon, child.x(), child.y())
             }
             if (hints.isNotEmpty()) {
                 added[nodeId] = hints
@@ -220,14 +224,13 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
     @Extension
     fun attachFogHintsToParent(tab: AdvancementTab) {
         AdvancementsFogManager.Client.getHintsFor(advancementNode.holder().id).orEmpty().forEachIndexed { index, hint ->
-            val id = Identifier.fromNamespaceAndPath(HINT_NAMESPACE, "${id.namespace}/${id.path}/$index")
-            val childHolder = buildTechnicalAdvancement(id) {
+            val childHolder = buildTechnicalAdvancement(AdvancementsFogHint.idFor(id, index)) {
                 parent(widget.advancement)
                 display(hint.icon, Component.empty(), Component.empty(), AdvancementType.TASK, false, false, false)
             }
             tab.addAdvancement(advancementNode.child(childHolder) { setLocation(hint.x, hint.y) })
         }
-        moveFogHintsToFront()
+        children.sortByDescending { it.advancement.isFogHint }
     }
 
     @Extension
@@ -240,26 +243,15 @@ abstract class AdvancementWidgetFogHintChildren(@Origin val widget: AdvancementW
         attachFogHintsToParent(tab)
     }
 
-    private fun moveFogHintsToFront() {
-        children.sortByDescending { it.advancement.isFogHint }
-    }
-
     @KShadow(PRIVATE, FINAL)
     abstract val advancementNode: AdvancementNode
 
     @KShadow(PRIVATE, FINAL)
     abstract val children: MutableList<AdvancementWidget>
-
-    @Extension
-    val parent: AdvancementWidget? get() = parentInternal
-
-    @MappingName("parent")
-    @KShadow(PRIVATE)
-    abstract val parentInternal: AdvancementWidget?
 }
 
 @KMixin<AdvancementWidget>(Side.Client)
-class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
+abstract class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
 
     private val isFogHint get() = widget.advancement.isFogHint
 
@@ -268,14 +260,14 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
         at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;horizontalLine(IIII)V")]
     )
     context(
-        @Local(argsOnly = true, name = ["xo"]) originX: Int,
-        @Local(argsOnly = true, name = ["yo"]) originY: Int,
+        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
+        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
     )
     fun drawHorizontalZebra(graphics: GuiGraphicsExtractor, x0: Int, x1: Int, y: Int, color: Int, op: Op<Unit>) {
         if (!isFogHint) return op(graphics, x0, x1, y, color)
         if (isBorderPass) return
-        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardPixel(graphics, x, y, originX, originY) }
+        (minOf(x0, x1)..maxOf(x0, x1)).forEach { x -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
     }
 
     @WrapOperation(
@@ -283,14 +275,14 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
         at = [At("INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;verticalLine(IIII)V")]
     )
     context(
-        @Local(argsOnly = true, name = ["xo"]) originX: Int,
-        @Local(argsOnly = true, name = ["yo"]) originY: Int,
+        @Local(argsOnly = true, name = ["xo"]) scrollX: Int,
+        @Local(argsOnly = true, name = ["yo"]) scrollY: Int,
         @Local(argsOnly = true, name = ["background"]) isBorderPass: Boolean,
     )
     fun drawVerticalZebra(graphics: GuiGraphicsExtractor, x: Int, y0: Int, y1: Int, color: Int, op: Op<Unit>) {
         if (!isFogHint) return op(graphics, x, y0, y1, color)
         if (isBorderPass) return
-        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, originX, originY) }
+        (minOf(y0, y1)..maxOf(y0, y1)).forEach { y -> drawChessboardPixel(graphics, x, y, scrollX, scrollY) }
     }
 
     @WrapWithCondition(
@@ -326,11 +318,13 @@ class AdvancementWidgetFogHintRenderer(@Origin val widget: AdvancementWidget) {
     }
 
     @WrapMethod(method = ["isMouseOver"])
-    fun disableFogHintHover(originX: Int, originY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
-        !isFogHint && op(originX, originY, mouseX, mouseY)
+    fun disableFogHintHover(scrollX: Int, scrollY: Int, mouseX: Int, mouseY: Int, op: Op<Boolean>) =
+        !isFogHint && op(scrollX, scrollY, mouseX, mouseY)
 
-    private fun drawChessboardPixel(graphics: GuiGraphicsExtractor, x: Int, y: Int, originX: Int, originY: Int) {
-        val isWhiteCell = (((x - originX) + (y - originY)) and 1) == 0
+    private fun drawChessboardPixel(graphics: GuiGraphicsExtractor, x: Int, y: Int, scrollX: Int, scrollY: Int) {
+        val isWhiteCell = ((x - scrollX) + (y - scrollY)).isEven()
         graphics.fill(x, y, x + 1, y + 1, if (isWhiteCell) CommonColors.WHITE else CommonColors.BLACK)
     }
 }
+
+val AdvancementHolder.isFogHint get() = id.namespace == AdvancementsFogHint.ID_NAMESPACE

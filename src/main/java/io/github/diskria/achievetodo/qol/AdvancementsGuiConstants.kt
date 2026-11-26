@@ -22,7 +22,7 @@ object AdvancementsGuiConstants {
         const val BOTTOM_MARGIN = 9
         const val TOP_MARGIN = 18
         const val SHADOW_VIGNETTE_SIZE = 6
-        const val PADDING = 1
+        const val PADDING = 2
     }
 
     object Tab {

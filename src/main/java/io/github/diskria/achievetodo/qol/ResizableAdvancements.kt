@@ -193,32 +193,49 @@ abstract class ResizableAdvancementsScreen(@Origin private val screen: Advanceme
             0,
         ).also { sprite = it }
         graphics.blitNineSlicedSprite(
-            renderPipeline, sprite, NINE_SLICE,
+            renderPipeline,
+            sprite,
+            NINE_SLICE,
             x, y,
             windowWidth, windowHeight,
             CommonColors.WHITE
         )
-        drawResizeCorner(graphics, texture, textureWidth, textureHeight, mouseX, mouseY)
+        drawResizeGrip(graphics, texture, textureWidth, textureHeight, mouseX, mouseY)
     }
 
-    private fun drawResizeCorner(
+    private fun drawResizeGrip(
         graphics: GuiGraphicsExtractor,
         texture: Identifier,
         texWidth: Int, texHeight: Int,
         mouseX: Int, mouseY: Int,
     ) {
         val isHoveringOrDragging = isHoveringResizeCorner(mouseX, mouseY) || isDraggingResize
-        val cx = rightPos - Window.BEVEL_SIZE - Tree.HORIZONTAL_MARGIN / 3
-        val cy = bottomPos - Window.BEVEL_SIZE - Tree.BOTTOM_MARGIN / 3
-        val highlightPixel = 3f to 3f
-        val shadowPixel = (Window.WIDTH - 3f) to (Window.HEIGHT - 3f)
-        val (tu, tv) = if (isHoveringOrDragging) highlightPixel else shadowPixel
-        val (bu, bv) = if (isHoveringOrDragging) shadowPixel else highlightPixel
+        val bevel = Window.BEVEL_SIZE
+        val cx = rightPos - bevel - Tree.HORIZONTAL_MARGIN / 3
+        val cy = bottomPos - bevel - Tree.BOTTOM_MARGIN / 3
+        val highlightPixel = bevel to bevel
+        val shadowPixel = (Window.WIDTH - 1 - bevel) to (Window.HEIGHT - 1 - bevel)
+        val (topU, topV) = if (isHoveringOrDragging) highlightPixel else shadowPixel
+        val (bottomU, bottomV) = if (isHoveringOrDragging) shadowPixel else highlightPixel
         (0..2).forEach { shift ->
             val px = cx - shift
             val py = cy - (2 - shift)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, texture, px, py, tu, tv, 1, 1, texWidth, texHeight)
-            graphics.blit(RenderPipelines.GUI_TEXTURED, texture, px + 1, py + 1, bu, bv, 1, 1, texWidth, texHeight)
+            graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                texture,
+                px, py,
+                topU.toFloat(), topV.toFloat(),
+                1, 1,
+                texWidth, texHeight,
+            )
+            graphics.blit(
+                RenderPipelines.GUI_TEXTURED,
+                texture,
+                px + 1, py + 1,
+                bottomU.toFloat(), bottomV.toFloat(),
+                1, 1,
+                texWidth, texHeight,
+            )
         }
         if (isHoveringOrDragging) {
             graphics.requestCursor(RESIZE_NWSE)

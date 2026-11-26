@@ -8,39 +8,36 @@ import com.mojang.serialization.Codec
 import com.mojang.serialization.JsonOps
 import io.github.diskria.achievetodo.AchieveToDoMod
 import io.github.diskria.achievetodo.abilities.AbilityType
-import io.github.diskria.achievetodo.client.AchieveToDoClient
 import io.github.diskria.achievetodo.client.gui.DesignCodePalette
 import io.github.diskria.achievetodo.extensions.buildTechnicalAdvancement
+import io.github.diskria.achievetodo.extensions.withFooterStyle
+import io.github.diskria.achievetodo.qol.FlashAdvancementClickEvent
+import io.github.diskria.achievetodo.qol.I18N
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput
-import net.minecraft.ChatFormatting
 import net.minecraft.advancements.Advancement
 import net.minecraft.advancements.AdvancementRewards
 import net.minecraft.advancements.AdvancementType
 import net.minecraft.advancements.triggers.CriteriaTriggers
 import net.minecraft.advancements.triggers.ImpossibleTrigger
 import net.minecraft.advancements.triggers.PlayerTrigger
+import net.minecraft.client.data.models.model.TextureMapping
 import net.minecraft.commands.arguments.selector.EntitySelector
 import net.minecraft.core.HolderLookup
-import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.core.registries.Registries
 import net.minecraft.data.CachedOutput
 import net.minecraft.data.DataProvider
 import net.minecraft.data.PackOutput
-import net.minecraft.network.chat.ClickEvent
-import net.minecraft.network.chat.Component
-import net.minecraft.network.chat.ComponentSerialization
-import net.minecraft.network.chat.HoverEvent
+import net.minecraft.network.chat.*
 import net.minecraft.resources.Identifier
 import net.minecraft.resources.RegistryOps
 import net.minecraft.util.Util
 import net.minecraft.world.item.Items
-import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.CompletableFuture
 
-class AbilityAdvancementsTabGenerator(
+class AbilitiesTabGenerator(
     output: FabricPackOutput,
     private val registryLookup: CompletableFuture<HolderLookup.Provider>,
 ) : DataProvider {
@@ -60,13 +57,12 @@ class AbilityAdvancementsTabGenerator(
     context(output: CachedOutput, jsonSerializer: RegistryOps<JsonElement>)
     private fun generateAdvancements(): List<CompletableFuture<*>> {
         val futures = mutableListOf<CompletableFuture<*>>()
-        val backgroundPath = BuiltInRegistries.BLOCK.getKey(TAB_BACKGROUND).path
         val rootAdvancement = buildTechnicalAdvancement(buildAdvancementId("root")) {
             rootDisplay(
                 /* icon = */ Items.BARRIER,
                 /* title = */ Component.literal(AchieveToDoMod.NAME),
-                /* description = */ AchieveToDoClient.translate("description"),
-                /* background = */ Identifier.withDefaultNamespace("textures/block/$backgroundPath.png"),
+                /* description = */ Component.translatable("achievetodo.description"),
+                /* background = */ TextureMapping.getBlockTexture(BACKGROUND).sprite(),
                 /* frame = */ AdvancementType.TASK,
                 /* showToast = */ false,
                 /* announceChat = */ false,
@@ -108,56 +104,47 @@ class AbilityAdvancementsTabGenerator(
 
     context(output: CachedOutput, jsonSerializer: RegistryOps<JsonElement>)
     private fun generateRewardFunction(ability: AbilityType, rewardFunctionId: Identifier): CompletableFuture<*> {
-        val advancementId = buildAdvancementId(ability).toString()
-        val modId = AchieveToDoMod.ID
-        val modName = AchieveToDoMod.NAME
+        val advancementId = buildAdvancementId(ability)
+        val flashAdvancement = requireNotNull(FlashAdvancementClickEvent.create(advancementId))
         val color = DesignCodePalette.TEXT_COLOR
-        val hoverEvent = HoverEvent.ShowText(
-            ability.title
-                .withStyle { it.withColor(color) }
-                .append(Component.literal("\n"))
-                .append(ability.description.withStyle { it.withColor(color) })
-                .append(Component.literal("\n"))
-                .append(
-                    Component.translatable(
-                        "%s tab",
-                        Component.literal(modName)
-                    ).withStyle { it.withColor(ChatFormatting.GRAY).withItalic(true) }
-                )
-        )
-        val clickEvent = ClickEvent.RunCommand("advancementssearch highlight $advancementId obtained_status")
-        val abilityComponent = ability.title
-            .withStyle { it.withColor(color).withHoverEvent(hoverEvent).withClickEvent(clickEvent) }
-
-        val atSelf = EntitySelector.COMPILABLE_CODEC.parse(JsonOps.INSTANCE, JsonPrimitive(Selectors.SELF)).getOrThrow()
+        val displayTitle = ability.title.withStyle(color)
+        val title = displayTitle.copy().withStyle {
+            val tooltip = Component.empty()
+                .append(displayTitle)
+                .append(CommonComponents.NEW_LINE)
+                .append(ability.description.withStyle(color))
+                .append(CommonComponents.NEW_LINE)
+                .append(I18N.tab(AchieveToDoMod.NAME).withFooterStyle())
+                .append(FlashAdvancementClickEvent.clickableFooter)
+            val showTooltip = HoverEvent.ShowText(tooltip)
+            it.withHoverEvent(showTooltip).withClickEvent(flashAdvancement)
+        }
+        val atSelf = EntitySelector.COMPILABLE_CODEC.parse(
+            JsonOps.INSTANCE, JsonPrimitive(EntitySelectors.SELF)
+        ).getOrThrow()
         val message = Component.translatable(
-            "$modId.ability_unlocked_chat_message",
+            "${AchieveToDoMod.ID}.ability_unlocked_chat_message",
             Component.selector(atSelf, Optional.empty()),
-            Component.literal("[").withStyle { it.withColor(color) },
-            abilityComponent,
-            Component.literal("]").withStyle { it.withColor(color) },
+            ComponentUtils.wrapInSquareBrackets(title).withStyle(color)
         )
-        val command = "tellraw ${Selectors.EVERYONE} ${message.toCompactJson(ComponentSerialization.CODEC)}"
+        val command = "tellraw ${EntitySelectors.ALL} ${message.toCompactJson(ComponentSerialization.CODEC)}"
         return output.writeText(command, functionsDir.file(rewardFunctionId, "mcfunction"))
     }
 
-    object Selectors {
+    object EntitySelectors {
         const val SELF = "@s"
-        const val EVERYONE = "@a"
+        const val ALL = "@a"
     }
 
     companion object {
         const val DEMYSTIFIED_CRITERION: String = "demystified"
         const val UNLOCKED_CRITERION: String = "unlocked"
-        const val ABILITY_PATH_PREFIX: String = "abilities/"
+        const val ABILITY_PATH_PREFIX: String = "ability/"
 
-        val TAB_BACKGROUND: Block = Blocks.PALE_MOSS_BLOCK
+        val BACKGROUND = Blocks.YELLOW_POPLAR_LEAVES
 
-        fun buildAdvancementId(suffix: String): Identifier =
-            AchieveToDoMod.getIdentifier(ABILITY_PATH_PREFIX + suffix)
-
-        fun buildAdvancementId(ability: AbilityType): Identifier =
-            buildAdvancementId(ability.id)
+        fun buildAdvancementId(suffix: String): Identifier = AchieveToDoMod.getIdentifier(ABILITY_PATH_PREFIX + suffix)
+        fun buildAdvancementId(ability: AbilityType): Identifier = buildAdvancementId(ability.id)
     }
 }
 

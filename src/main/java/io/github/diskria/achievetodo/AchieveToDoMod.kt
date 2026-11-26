@@ -49,7 +49,7 @@ class AchieveToDoMod : ModInitializer {
 
         fun lerpBrandColor(factor: Float): Int = ARGB.srgbLerp(factor, COLOR_BLUE, COLOR_YELLOW)
 
-        val COLORED_NAME: Component by lazy {
+        val COLORED_NAME by lazy {
             val mid = NAME.lastIndex / 2f
             NAME.toBrandGradientComponent { index -> 1f - abs(index - mid) / mid }
         }
@@ -96,6 +96,6 @@ inline fun CharSequence.toBrandGradientComponent(factorProvider: (index: Int) ->
         forEachIndexed { index, char ->
             val factor = factorProvider(index)
             val color = lerpBrandColor(factor)
-            append(Component.literal(char.toString()).withStyle { it.withColor(color) })
+            append(Component.literal(char.toString()).withColor(color))
         }
     }

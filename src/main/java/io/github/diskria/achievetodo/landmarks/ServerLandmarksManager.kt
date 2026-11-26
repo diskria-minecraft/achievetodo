@@ -97,7 +97,7 @@ abstract class ChunkLandmarksData {
 }
 
 @KMixin<LevelChunk>(Side.Common)
-class LandmarksBridgeToLevelChunk {
+abstract class LandmarksBridgeToLevelChunk {
     @WrapOperation(
         method = [$$"<init>(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/level/chunk/ProtoChunk;Lnet/minecraft/world/level/chunk/LevelChunk$PostLoadProcessor;)V"],
         at = [At("INVOKE", target = "Lnet/minecraft/world/level/chunk/LevelChunk;setAllReferences(Ljava/util/Map;)V")]
@@ -112,7 +112,7 @@ class LandmarksBridgeToLevelChunk {
 }
 
 @KMixin<SerializableChunkData>(Side.Common)
-class ChunkLandmarksNbt {
+abstract class ChunkLandmarksNbt {
 
     @Extension
     var landmarksNbt: Tag? = null
@@ -153,7 +153,7 @@ class ChunkLandmarksNbt {
 }
 
 @KMixin<Structure>(Side.Common)
-class StructureLandmarkDetector {
+abstract class StructureLandmarkDetector {
     @ModifyReturnValue(method = ["generate"], at = [At("RETURN", ordinal = 0)])
     context(
         @Local(argsOnly = true, name = ["selected"]) holder: Holder<Structure>,
@@ -165,7 +165,7 @@ class StructureLandmarkDetector {
 }
 
 @KMixin<StructureStart>(Side.Common)
-class StructureLandmarkNbt {
+abstract class StructureLandmarkNbt {
 
     @Extension
     var landmarkType: LandmarkType? = null
@@ -195,7 +195,7 @@ class StructureLandmarkNbt {
 }
 
 @KMixin<StructureStart>(Side.Common)
-class StructureLandmarkGeneratorTracker {
+abstract class StructureLandmarkGeneratorTracker {
 
     @WrapMethod(method = ["placeInChunk"])
     fun StructureStart.trackGeneration(
@@ -233,7 +233,7 @@ class StructureLandmarkGeneratorTracker {
 }
 
 @KMixin<ChunkGenerator>(Side.Common)
-class FeatureLandmarkGeneratorTracker {
+abstract class FeatureLandmarkGeneratorTracker {
     @WrapOperation(
         method = ["applyBiomeDecoration"],
         at = [At(
@@ -260,7 +260,7 @@ class FeatureLandmarkGeneratorTracker {
 }
 
 @KMixin<PlaceCommand>(Side.Common)
-class PlaceCommandPatches {
+abstract class PlaceCommandPatches {
     companion object {
         @ModifyReturnValue(method = ["placeStructure"], at = [At("TAIL")])
         context(
@@ -306,7 +306,7 @@ class PlaceCommandPatches {
 }
 
 @KMixin<WorldGenRegion>(Side.Common, InitStrategy.Synchronized)
-class RegionBlockTracker {
+abstract class RegionBlockTracker {
     @ModifyReturnValue(method = ["setBlock"], at = [At("RETURN")])
     context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,
@@ -319,7 +319,7 @@ class RegionBlockTracker {
 }
 
 @KMixin<Level>(Side.Common, InitStrategy.Synchronized)
-class LevelBlockTracker {
+abstract class LevelBlockTracker {
     @ModifyReturnValue(method = ["setBlock"], at = [At("RETURN")])
     context(
         @Local(argsOnly = true, name = ["pos"]) pos: BlockPos,

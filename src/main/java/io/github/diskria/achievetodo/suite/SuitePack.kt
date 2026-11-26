@@ -9,6 +9,7 @@ import io.github.diskria.lapis.annotations.Side
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader
 import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType
 import net.fabricmc.loader.api.FabricLoader
+import net.minecraft.client.Minecraft
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.ComponentUtils
 import net.minecraft.server.packs.PackLocationInfo
@@ -69,11 +70,16 @@ object SuitePack {
     fun isInstalled(components: List<SuiteComponent>): Boolean =
         filterMissingComponents(components).isEmpty()
 
-    fun validateInstalled(components: List<SuiteComponent>, onDone: () -> Unit, onCancel: () -> Unit): Boolean {
+    fun validateInstalled(
+        minecraft: Minecraft,
+        components: List<SuiteComponent>,
+        onDone: () -> Unit,
+        onCancel: () -> Unit
+    ): Boolean {
         if (isInstalled(components)) {
             return true
         }
-        SuiteInstallers.openScreen(components) { result ->
+        SuiteInstallers.openScreen(minecraft, components) { result ->
             if (result) onDone()
             else onCancel()
         }
@@ -93,7 +99,7 @@ object SuitePack {
 }
 
 @KMixin<Pack>(Side.Common)
-class SuitePackCustomizer {
+abstract class SuitePackCustomizer {
     companion object {
         @WrapMethod(method = [$$"readPackMetadata(Lnet/minecraft/server/packs/PackLocationInfo;Lnet/minecraft/server/packs/repository/Pack$ResourcesSupplier;Lnet/minecraft/server/packs/metadata/pack/PackFormat;Lnet/minecraft/server/packs/PackType;)Lnet/minecraft/server/packs/repository/Pack$Metadata;"])
         fun overrideMetadata(

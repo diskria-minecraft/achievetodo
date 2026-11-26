@@ -84,7 +84,7 @@ data class ModServerConfig(
 }
 
 @KMixin<CreateWorldScreen>(Side.Client)
-class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
+abstract class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
 
     @Extension
     fun setModServerConfig(config: ModServerConfig) {
@@ -136,7 +136,7 @@ class ModServerConfigTabInjector(@Origin val screen: CreateWorldScreen) {
 }
 
 @KMixin<WorldListEntry>(Side.Client)
-class ModServerConfigBridgeOnRecreateWorld {
+abstract class ModServerConfigBridgeOnRecreateWorld {
 
     @WrapOperation(
         method = ["recreateWorld"],
@@ -206,7 +206,7 @@ abstract class GridLayoutsHeightFix(@Origin val layout: GridLayout) {
 }
 
 @KMixin<WorldCreationUiState>(Side.Client)
-class ModServerConfigViewState(@Origin val state: WorldCreationUiState) {
+abstract class ModServerConfigViewState(@Origin val state: WorldCreationUiState) {
     @Extension
     var modServerConfig: ModServerConfig = ModServerConfig.DEFAULT.acknowledge()
         set(value) {
@@ -217,7 +217,7 @@ class ModServerConfigViewState(@Origin val state: WorldCreationUiState) {
 }
 
 @KMixin<LevelStorageAccess>(Side.Common)
-class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
+abstract class ModServerConfigStorage(@Origin val levelStorage: LevelStorageAccess) {
 
     private val configPath by lazy { levelStorage.levelDirectory.path / CONFIG_PATH }
     private var modServerConfig: ModServerConfig? = null
